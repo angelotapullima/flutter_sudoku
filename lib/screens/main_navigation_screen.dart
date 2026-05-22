@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/gamification_provider.dart';
 import '../widgets/settings_dialog.dart';
 import 'home_screen.dart';
 import 'tournament_screen.dart';
@@ -172,6 +173,55 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                 ),
               ),
               const SizedBox(width: 8),
+              // Indicador de Misiones
+              Consumer(
+                builder: (context, ref, child) {
+                  final gamification = ref.watch(gamificationProvider);
+                  final completedCount = gamification.missions.where((m) => m.isCompleted).length;
+                  
+                  return GestureDetector(
+                    onTap: () => _showMissionsModal(context),
+                    child: Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.assignment_turned_in_rounded,
+                            size: 20,
+                            color: completedCount > 0 ? Colors.green : (isDark ? Colors.white38 : Colors.grey),
+                          ),
+                        ),
+                        if (completedCount > 0)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                              child: Text(
+                                '$completedCount',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }
+              ),
+              const SizedBox(width: 8),
               GestureDetector(
                 onTap: () => SettingsDialog.show(context),
                 child: Container(
@@ -279,6 +329,108 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showMissionsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Consumer(
+        builder: (context, ref, child) {
+          final gamification = ref.watch(gamificationProvider);
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'MISIONES DIARIAS',
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: gamification.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ListView.builder(
+                          itemCount: gamification.missions.length,
+                          itemBuilder: (context, index) {
+                            final mission = gamification.missions[index];
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50],
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: mission.isCompleted ? Colors.green : Colors.transparent,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          mission.title,
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                        Text(
+                                          mission.description,
+                                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        LinearProgressIndicator(
+                                          value: mission.requirementValue > 0 ? (mission.currentProgress / mission.requirementValue) : 0,
+                                          backgroundColor: Colors.grey[200],
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            mission.isCompleted ? Colors.green : Colors.amber,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    children: [
+                                      Text('🪙 +${mission.rewardCoins}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                      Text('⭐ +${mission.rewardXp}', style: const TextStyle(fontSize: 10)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

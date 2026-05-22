@@ -193,22 +193,19 @@ class ApiService {
   }
 
   /// OBTENER CLASIFICACIÓN GLOBAL (LEADERBOARD)
-  /// - [type]: 'level' (general por nivel/xp) o 'speed' (mejores tiempos de resolución)
-  /// - [difficulty]: 'Fácil', 'Medio', 'Difícil', 'Experto' (requerido si type='speed')
   static Future<Map<String, dynamic>> getLeaderboard({
     String type = 'level',
     String difficulty = 'Fácil',
   }) async {
     final url = Uri.parse('$baseUrl/leaderboard?type=$type&difficulty=$difficulty');
+    final headers = await _getHeaders();
     
     _log('REQ', 'GET', '/leaderboard?type=$type&difficulty=$difficulty');
 
     try {
       final response = await http.get(
         url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        headers: headers,
       ).timeout(const Duration(seconds: 8));
 
       final data = jsonDecode(response.body);
@@ -220,8 +217,105 @@ class ApiService {
         return {'success': false, 'message': data['error'] ?? 'Error al cargar clasificación.'};
       }
     } catch (e) {
-      _log('ERR', 'GET', '/leaderboard?type=$type&difficulty=$difficulty', error: e.toString());
-      return {'success': false, 'message': 'Sin conexión al servidor de clasificaciones.'};
+      _log('ERR', 'GET', '/leaderboard', error: e.toString());
+      return {'success': false, 'message': 'Sin conexión al servidor.'};
+    }
+  }
+
+  // --- NUEVOS MÉTODOS DE GAMIFICACIÓN ---
+
+  /// Crear un nuevo torneo comunitario
+  static Future<Map<String, dynamic>> createTournament({
+    required String title,
+    required String difficulty,
+    required String puzzleData,
+    required String solutionData,
+  }) async {
+    final url = Uri.parse('$baseUrl/gamification/tournament/create');
+    final headers = await _getHeaders();
+    final body = jsonEncode({
+      'title': title,
+      'difficulty': difficulty,
+      'puzzleData': puzzleData,
+      'solutionData': solutionData,
+    });
+
+    _log('REQ', 'POST', '/gamification/tournament/create');
+
+    try {
+      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 10));
+      final data = jsonDecode(response.body);
+      _log('RES', 'POST', '/gamification/tournament/create', statusCode: response.statusCode);
+      if (response.statusCode == 201) return {'success': true, 'tournament': data['tournament']};
+      return {'success': false, 'message': data['error'] ?? 'Error al crear torneo.'};
+    } catch (e) {
+      return {'success': false, 'message': 'Sin conexión.'};
+    }
+  }
+
+  /// Obtener el torneo global activo y su ranking
+  static Future<Map<String, dynamic>> getActiveTournament() async {
+    final url = Uri.parse('$baseUrl/gamification/tournament');
+    final headers = await _getHeaders();
+    _log('REQ', 'GET', '/gamification/tournament');
+
+    try {
+      final response = await http.get(url, headers: headers).timeout(const Duration(seconds: 10));
+      final data = jsonDecode(response.body);
+      _log('RES', 'GET', '/gamification/tournament', statusCode: response.statusCode);
+      if (response.statusCode == 200) return {'success': true, 'data': data};
+      return {'success': false, 'message': data['message'] ?? 'No hay torneos.'};
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión.'};
+    }
+  }
+
+  /// Enviar resultado de participación en torneo
+  static Future<Map<String, dynamic>> submitTournamentResult(int tournamentId, int time, int errors) async {
+    final url = Uri.parse('$baseUrl/gamification/tournament/submit');
+    final headers = await _getHeaders();
+    final body = jsonEncode({'tournamentId': tournamentId, 'timeInSeconds': time, 'errors': errors});
+    _log('REQ', 'POST', '/gamification/tournament/submit');
+
+    try {
+      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 10));
+      _log('RES', 'POST', '/gamification/tournament/submit', statusCode: response.statusCode);
+      return {'success': response.statusCode == 200};
+    } catch (e) {
+      return {'success': false};
+    }
+  }
+
+  /// Obtener misiones diarias asignadas al usuario
+  static Future<Map<String, dynamic>> getDailyMissions() async {
+    final url = Uri.parse('$baseUrl/gamification/missions');
+    final headers = await _getHeaders();
+    _log('REQ', 'GET', '/gamification/missions');
+
+    try {
+      final response = await http.get(url, headers: headers).timeout(const Duration(seconds: 10));
+      final data = jsonDecode(response.body);
+      _log('RES', 'GET', '/gamification/missions', statusCode: response.statusCode);
+      if (response.statusCode == 200) return {'success': true, 'missions': data['missions']};
+      return {'success': false};
+    } catch (e) {
+      return {'success': false};
+    }
+  }
+
+  /// Actualizar progreso de una misión específica
+  static Future<Map<String, dynamic>> updateMissionProgress(int missionId, int increment) async {
+    final url = Uri.parse('$baseUrl/gamification/missions/update');
+    final headers = await _getHeaders();
+    final body = jsonEncode({'missionId': missionId, 'increment': increment});
+    _log('REQ', 'POST', '/gamification/missions/update');
+
+    try {
+      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 10));
+      _log('RES', 'POST', '/gamification/missions/update', statusCode: response.statusCode);
+      return {'success': response.statusCode == 200};
+    } catch (e) {
+      return {'success': false};
     }
   }
 }
