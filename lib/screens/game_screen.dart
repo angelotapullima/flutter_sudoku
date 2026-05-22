@@ -5,9 +5,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/settings_provider.dart';
 import '../widgets/sudoku_grid.dart';
 import '../widgets/control_buttons.dart';
 import '../widgets/number_pad.dart';
+import '../widgets/settings_dialog.dart';
 
 class GameScreen extends ConsumerWidget {
   const GameScreen({super.key});
@@ -19,6 +21,7 @@ class GameScreen extends ConsumerWidget {
     final themeNotifier = ref.read(themeProvider.notifier);
     final sudokuTheme = themeNotifier.currentSudokuTheme;
     final isDark = themeState.isDarkMode;
+    final settings = ref.watch(settingsProvider);
 
     final min = (gameState.elapsedSeconds ~/ 60).toString().padLeft(2, '0');
     final sec = (gameState.elapsedSeconds % 60).toString().padLeft(2, '0');
@@ -26,7 +29,11 @@ class GameScreen extends ConsumerWidget {
     // Escuchar el estado de victoria para mostrar un modal premium inmediatamente
     ref.listen(gameProvider.select((s) => s.isGameWon), (prev, isWon) {
       if (isWon == true) {
-        _showVictoryDialog(context, ref, gameState.difficulty, gameState.elapsedSeconds, gameState.errorsCount);
+        if (gameState.isTournament) {
+          _showTournamentPodiumDialog(context, ref, gameState);
+        } else {
+          _showVictoryDialog(context, ref, gameState.difficulty, gameState.elapsedSeconds, gameState.errorsCount);
+        }
       }
     });
 
@@ -62,10 +69,12 @@ class GameScreen extends ConsumerWidget {
                       Column(
                         children: [
                           Text(
-                            gameState.difficulty.toUpperCase(),
+                            gameState.isTournament
+                                ? 'LIGA ${gameState.tournamentDivision.toUpperCase()}'
+                                : gameState.difficulty.toUpperCase(),
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: 16,
                               letterSpacing: 1.0,
                               color: sudokuTheme.primaryColor,
                             ),
@@ -73,7 +82,9 @@ class GameScreen extends ConsumerWidget {
                           const SizedBox(height: 2),
                           // Errores
                           Text(
-                            'Errores: ${gameState.errorsCount}/3',
+                            settings.enableErrorLimit
+                                ? 'Errores: ${gameState.errorsCount}/3'
+                                : 'Errores: ${gameState.errorsCount}',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -82,17 +93,19 @@ class GameScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      // Temporizador y Pausa
+                      // Temporizador y Pausa/Ajustes
                       Row(
                         children: [
-                          Text(
-                            '$min:$sec',
-                            style: GoogleFonts.shareTechMono(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
+                          if (settings.showTimer) ...[
+                            Text(
+                              '$min:$sec',
+                              style: GoogleFonts.shareTechMono(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
+                            const SizedBox(width: 6),
+                          ],
                           IconButton(
                             onPressed: () => ref.read(gameProvider.notifier).togglePause(),
                             icon: Icon(
@@ -102,6 +115,13 @@ class GameScreen extends ConsumerWidget {
                               size: 26,
                             ),
                           ),
+                          IconButton(
+                            onPressed: () => SettingsDialog.show(context),
+                            icon: const Icon(
+                              Icons.settings_outlined,
+                              size: 24,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -109,17 +129,17 @@ class GameScreen extends ConsumerWidget {
                 ),
 
                 const Divider(height: 1),
-                const Spacer(),
+                const SizedBox(height: 12),
 
                 // 2. Tablero de Sudoku
                 const SudokuGrid(),
 
-                const Spacer(),
+                const SizedBox(height: 12),
 
                 // 3. Controles (Deshacer, Borrar, Notas, Pista)
                 const ControlButtons(),
 
-                const Spacer(),
+                const SizedBox(height: 12),
 
                 // 4. Teclado Numérico
                 const NumberPad(),
@@ -305,13 +325,307 @@ class GameScreen extends ConsumerWidget {
     );
   }
 
+  void _showTournamentPodiumDialog(
+    BuildContext context,
+    WidgetRef ref,
+    GameState gameState,
+  ) {
+    final dark = ref.read(themeProvider).isDarkMode;
+    final theme = ref.read(themeProvider.notifier).currentSudokuTheme;
+
+    // Crear lista de posiciones ordenadas por tiempo
+    // Incluir al jugador y los bots
+    final List<Map<String, dynamic>> leaderboard = [];
+    leaderboard.add({
+      'name': 'Tú (Jugador)',
+      'time': gameState.elapsedSeconds,
+      'isPlayer': true,
+    });
+
+    for (int i = 0; i < gameState.tournamentOpponents.length; i++) {
+      leaderboard.add({
+        'name': gameState.tournamentOpponents[i],
+        'time': gameState.tournamentOpponentTimes[i],
+        'isPlayer': false,
+      });
+    }
+
+    // Ordenar de menor a mayor tiempo
+    leaderboard.sort((a, b) => (a['time'] as int).compareTo(b['time'] as int));
+
+    // Determinar índice y clasificación del jugador
+    final playerIndex = leaderboard.indexWhere((item) => item['isPlayer'] == true);
+    final placement = playerIndex + 1;
+
+    // Calcular copa y recompensas
+    String cupEmoji = '🏆';
+    String cupName = 'Sin Podio';
+    Color cupColor = Colors.grey;
+    int coinsReward = 0;
+    int xpReward = 0;
+
+    if (placement == 1) {
+      cupEmoji = '🥇';
+      cupName = 'Copa de Oro';
+      cupColor = const Color(0xFFFFD700);
+      if (gameState.tournamentDivision == 'Oro') {
+        coinsReward = 250;
+        xpReward = 600;
+      } else if (gameState.tournamentDivision == 'Plata') {
+        coinsReward = 150;
+        xpReward = 400;
+      } else {
+        coinsReward = 80;
+        xpReward = 250;
+      }
+    } else if (placement == 2) {
+      cupEmoji = '🥈';
+      cupName = 'Copa de Plata';
+      cupColor = const Color(0xFFC0C0C0);
+      if (gameState.tournamentDivision == 'Oro') {
+        coinsReward = 120;
+        xpReward = 400;
+      } else if (gameState.tournamentDivision == 'Plata') {
+        coinsReward = 80;
+        xpReward = 250;
+      } else {
+        coinsReward = 40;
+        xpReward = 150;
+      }
+    } else if (placement == 3) {
+      cupEmoji = '🥉';
+      cupName = 'Copa de Bronce';
+      cupColor = const Color(0xFFCD7F32);
+      if (gameState.tournamentDivision == 'Oro') {
+        coinsReward = 60;
+        xpReward = 200;
+      } else if (gameState.tournamentDivision == 'Plata') {
+        coinsReward = 40;
+        xpReward = 150;
+      } else {
+        coinsReward = 20;
+        xpReward = 100;
+      }
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            backgroundColor: dark ? const Color(0xFF1E1E2E) : Colors.white,
+            contentPadding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icono e indicación de trofeo
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        cupEmoji,
+                        style: const TextStyle(fontSize: 64),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        placement <= 3 ? '¡PODIO CONSEGUIDO!' : '¡TORNEO COMPLETADO!',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: cupColor,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      Text(
+                        placement <= 3 ? cupName.toUpperCase() : 'PUESTO #$placement',
+                        style: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: dark ? Colors.white : const Color(0xFF2B2B36),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Liga ${gameState.tournamentDivision}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: dark ? Colors.grey[400] : Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Divider(height: 1, color: Colors.white24),
+                const SizedBox(height: 16),
+
+                // Lista de Clasificación
+                Text(
+                  'Clasificación Final',
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: dark ? Colors.grey[350] : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Contenedor de la lista
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 180),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: leaderboard.length,
+                    itemBuilder: (context, index) {
+                      final item = leaderboard[index];
+                      final isCurrentPlayer = item['isPlayer'] as bool;
+                      final rawSecs = item['time'] as int;
+                      final minStr = (rawSecs ~/ 60).toString().padLeft(2, '0');
+                      final secStr = (rawSecs % 60).toString().padLeft(2, '0');
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isCurrentPlayer
+                              ? theme.primaryColor.withOpacity(0.12)
+                              : (dark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.01)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isCurrentPlayer
+                                ? theme.primaryColor.withOpacity(0.4)
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              '${index + 1}º',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: index == 0
+                                    ? const Color(0xFFFFD700)
+                                    : (index == 1
+                                        ? const Color(0xFFC0C0C0)
+                                        : (index == 2 ? const Color(0xFFCD7F32) : Colors.grey)),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                item['name'],
+                                style: TextStyle(
+                                  fontWeight: isCurrentPlayer ? FontWeight.bold : FontWeight.normal,
+                                  fontSize: 13,
+                                  color: isCurrentPlayer
+                                      ? (dark ? Colors.white : Colors.black)
+                                      : (dark ? Colors.grey[300] : Colors.grey[800]),
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '$minStr:$secStr',
+                              style: GoogleFonts.shareTechMono(
+                                fontWeight: isCurrentPlayer ? FontWeight.bold : FontWeight.normal,
+                                fontSize: 13,
+                                color: isCurrentPlayer ? theme.primaryColor : Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: Colors.white24),
+                const SizedBox(height: 14),
+
+                // Recompensas Obtenidas
+                if (coinsReward > 0 || xpReward > 0) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      if (coinsReward > 0)
+                        Row(
+                          children: [
+                            const Text('🪙 ', style: TextStyle(fontSize: 18)),
+                            Text(
+                              '+$coinsReward S-Coins',
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Colors.amber[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      if (xpReward > 0)
+                        Row(
+                          children: [
+                            const Text('👑 ', style: TextStyle(fontSize: 18)),
+                            Text(
+                              '+$xpReward XP',
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: theme.primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // Botón
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      ref.read(gameProvider.notifier).quitGame();
+                      Navigator.of(context).pop(); // Cierra diálogo
+                      Navigator.of(context).pop(); // Vuelve al Home
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      placement <= 3 ? 'Reclamar Premios' : 'Volver al Menú',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showGameOverDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         final dark = ref.read(themeProvider).isDarkMode;
-        final theme = ref.read(themeProvider.notifier).currentSudokuTheme;
         final userProfile = ref.watch(profileProvider);
         final canRevive = userProfile.coins >= 50;
 

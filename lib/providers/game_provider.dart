@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/sudoku_cell.dart';
 import '../utils/sudoku_generator.dart';
 import '../services/storage_service.dart';
 import 'storage_provider.dart';
 import 'profile_provider.dart';
+import 'settings_provider.dart';
 
 class GameState {
   final List<List<SudokuCell>> grid;
@@ -21,6 +23,14 @@ class GameState {
   final int hintsUsed;
   final bool hasStarted;
 
+  // Campos de torneo y retos
+  final bool isTournament;
+  final String tournamentDivision;
+  final List<String> tournamentOpponents;
+  final List<int> tournamentOpponentTimes;
+  final int tournamentPlacement;
+  final bool isDailyChallenge;
+
   const GameState({
     this.grid = const [],
     this.selectedRow = -1,
@@ -34,6 +44,12 @@ class GameState {
     this.isPaused = false,
     this.hintsUsed = 0,
     this.hasStarted = false,
+    this.isTournament = false,
+    this.tournamentDivision = '',
+    this.tournamentOpponents = const [],
+    this.tournamentOpponentTimes = const [],
+    this.tournamentPlacement = 0,
+    this.isDailyChallenge = false,
   });
 
   GameState copyWith({
@@ -49,6 +65,12 @@ class GameState {
     bool? isPaused,
     int? hintsUsed,
     bool? hasStarted,
+    bool? isTournament,
+    String? tournamentDivision,
+    List<String>? tournamentOpponents,
+    List<int>? tournamentOpponentTimes,
+    int? tournamentPlacement,
+    bool? isDailyChallenge,
   }) {
     return GameState(
       grid: grid ?? this.grid,
@@ -63,12 +85,20 @@ class GameState {
       isPaused: isPaused ?? this.isPaused,
       hintsUsed: hintsUsed ?? this.hintsUsed,
       hasStarted: hasStarted ?? this.hasStarted,
+      isTournament: isTournament ?? this.isTournament,
+      tournamentDivision: tournamentDivision ?? this.tournamentDivision,
+      tournamentOpponents: tournamentOpponents ?? this.tournamentOpponents,
+      tournamentOpponentTimes:
+          tournamentOpponentTimes ?? this.tournamentOpponentTimes,
+      tournamentPlacement: tournamentPlacement ?? this.tournamentPlacement,
+      isDailyChallenge: isDailyChallenge ?? this.isDailyChallenge,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'grid': grid.map((row) => row.map((cell) => cell.toJson()).toList()).toList(),
+      'grid':
+          grid.map((row) => row.map((cell) => cell.toJson()).toList()).toList(),
       'selectedRow': selectedRow,
       'selectedCol': selectedCol,
       'errorsCount': errorsCount,
@@ -80,6 +110,12 @@ class GameState {
       'isPaused': isPaused,
       'hintsUsed': hintsUsed,
       'hasStarted': hasStarted,
+      'isTournament': isTournament,
+      'tournamentDivision': tournamentDivision,
+      'tournamentOpponents': tournamentOpponents,
+      'tournamentOpponentTimes': tournamentOpponentTimes,
+      'tournamentPlacement': tournamentPlacement,
+      'isDailyChallenge': isDailyChallenge,
     };
   }
 
@@ -104,6 +140,14 @@ class GameState {
       isPaused: json['isPaused'] as bool? ?? false,
       hintsUsed: json['hintsUsed'] as int? ?? 0,
       hasStarted: json['hasStarted'] as bool? ?? false,
+      isTournament: json['isTournament'] as bool? ?? false,
+      tournamentDivision: json['tournamentDivision'] as String? ?? '',
+      tournamentOpponents: List<String>.from(
+          json['tournamentOpponents'] as List<dynamic>? ?? []),
+      tournamentOpponentTimes: List<int>.from(
+          json['tournamentOpponentTimes'] as List<dynamic>? ?? []),
+      tournamentPlacement: json['tournamentPlacement'] as int? ?? 0,
+      isDailyChallenge: json['isDailyChallenge'] as bool? ?? false,
     );
   }
 }
@@ -131,7 +175,10 @@ class GameNotifier extends StateNotifier<GameState> {
       try {
         final parsed = jsonDecode(savedJson) as Map<String, dynamic>;
         state = GameState.fromJson(parsed);
-        if (state.hasStarted && !state.isGameOver && !state.isGameWon && !state.isPaused) {
+        if (state.hasStarted &&
+            !state.isGameOver &&
+            !state.isGameWon &&
+            !state.isPaused) {
           _startTimer();
         }
       } catch (_) {
@@ -176,6 +223,81 @@ class GameNotifier extends StateNotifier<GameState> {
     _saveGameToStorage();
   }
 
+  /// Genera un reto diario con una semilla específica y dificultad.
+  void startDailyChallengeGame(int seed, String difficulty) {
+    _timer?.cancel();
+    _undoStack.clear();
+
+    final sudokuData = SudokuGenerator.generate(difficulty: difficulty, seed: seed);
+    final board = sudokuData['board']!;
+    final solution = sudokuData['solution']!;
+
+    List<List<SudokuCell>> newGrid = List.generate(9, (r) {
+      return List.generate(9, (c) {
+        final val = board[r][c];
+        return SudokuCell(
+          row: r,
+          col: c,
+          value: val,
+          solutionValue: solution[r][c],
+          isOriginal: val != 0,
+        );
+      });
+    });
+
+    state = GameState(
+      grid: newGrid,
+      difficulty: difficulty,
+      hasStarted: true,
+      isDailyChallenge: true,
+    );
+
+    _startTimer();
+    _saveGameToStorage();
+  }
+
+  /// Genera una nueva partida de torneo (Liga).
+  void startTournamentGame(
+      String division, List<String> opponents, List<int> opponentTimes) {
+    _timer?.cancel();
+    _undoStack.clear();
+
+    String difficulty = 'Medio';
+    if (division == 'Bronce') difficulty = 'Fácil';
+    if (division == 'Oro') difficulty = 'Difícil';
+
+    final sudokuData = SudokuGenerator.generate(difficulty: difficulty);
+    final board = sudokuData['board']!;
+    final solution = sudokuData['solution']!;
+
+    List<List<SudokuCell>> newGrid = List.generate(9, (r) {
+      return List.generate(9, (c) {
+        final val = board[r][c];
+        return SudokuCell(
+          row: r,
+          col: c,
+          value: val,
+          solutionValue: solution[r][c],
+          isOriginal: val != 0,
+        );
+      });
+    });
+
+    state = GameState(
+      grid: newGrid,
+      difficulty: difficulty,
+      hasStarted: true,
+      isTournament: true,
+      tournamentDivision: division,
+      tournamentOpponents: opponents,
+      tournamentOpponentTimes: opponentTimes,
+      tournamentPlacement: 0,
+    );
+
+    _startTimer();
+    _saveGameToStorage();
+  }
+
   /// Alterna el modo pausa.
   void togglePause() {
     if (!state.hasStarted || state.isGameOver || state.isGameWon) return;
@@ -201,7 +323,11 @@ class GameNotifier extends StateNotifier<GameState> {
     final r = state.selectedRow;
     final c = state.selectedCol;
 
-    if (r == -1 || c == -1 || state.isPaused || state.isGameOver || state.isGameWon) return;
+    if (r == -1 ||
+        c == -1 ||
+        state.isPaused ||
+        state.isGameOver ||
+        state.isGameWon) return;
 
     final cell = state.grid[r][c];
     if (cell.isOriginal) return; // Las celdas iniciales son inmutables
@@ -218,7 +344,8 @@ class GameNotifier extends StateNotifier<GameState> {
         newNotes.add(num);
       }
 
-      final updatedCell = cell.copyWith(notes: newNotes, value: 0, isError: false);
+      final updatedCell =
+          cell.copyWith(notes: newNotes, value: 0, isError: false);
       _updateGridCell(r, c, updatedCell);
     } else {
       // MODO VALOR FINAL
@@ -234,11 +361,21 @@ class GameNotifier extends StateNotifier<GameState> {
       _updateGridCell(r, c, updatedCell);
 
       if (isError) {
-        final newErrors = state.errorsCount + 1;
-        state = state.copyWith(errorsCount: newErrors);
+        final settings = _ref.read(settingsProvider);
 
-        if (newErrors >= 3) {
-          _triggerGameOver();
+        // Vibración háptica solo si está activada en la configuración
+        if (settings.enableVibration) {
+          HapticFeedback.vibrate();
+        }
+
+        // Límite de 3 errores estricto solo si está activado en la configuración
+        if (settings.enableErrorLimit) {
+          final newErrors = state.errorsCount + 1;
+          state = state.copyWith(errorsCount: newErrors);
+
+          if (newErrors >= 3) {
+            _triggerGameOver();
+          }
         }
       } else {
         // Correcto: Verificar si hemos resuelto el Sudoku entero
@@ -254,7 +391,11 @@ class GameNotifier extends StateNotifier<GameState> {
     final r = state.selectedRow;
     final c = state.selectedCol;
 
-    if (r == -1 || c == -1 || state.isPaused || state.isGameOver || state.isGameWon) return;
+    if (r == -1 ||
+        c == -1 ||
+        state.isPaused ||
+        state.isGameOver ||
+        state.isGameWon) return;
 
     final cell = state.grid[r][c];
     if (cell.isOriginal || cell.value == 0 && cell.notes.isEmpty) return;
@@ -274,7 +415,10 @@ class GameNotifier extends StateNotifier<GameState> {
 
   /// Deshace la última jugada de la pila de historial.
   void undo() {
-    if (_undoStack.isEmpty || state.isPaused || state.isGameOver || state.isGameWon) return;
+    if (_undoStack.isEmpty ||
+        state.isPaused ||
+        state.isGameOver ||
+        state.isGameWon) return;
 
     final previousGrid = _undoStack.removeLast();
     state = state.copyWith(grid: previousGrid);
@@ -282,20 +426,23 @@ class GameNotifier extends StateNotifier<GameState> {
   }
 
   /// Proporciona una pista en la celda seleccionada.
-  bool useHint() {
+  String useHint() {
     final r = state.selectedRow;
     final c = state.selectedCol;
 
-    if (r == -1 || c == -1 || state.isPaused || state.isGameOver || state.isGameWon) return false;
+    if (r == -1 || c == -1) return 'noSelection';
+    if (state.isPaused || state.isGameOver || state.isGameWon)
+      return 'invalidState';
 
     final cell = state.grid[r][c];
-    if (cell.isOriginal || cell.value == cell.solutionValue) return false;
+    if (cell.isOriginal || cell.value == cell.solutionValue)
+      return 'alreadyCorrect';
 
-    // Verificar si cuesta monedas (las primeras 2 pistas son gratuitas por partida)
+    // Verificar si cuesta monedas (las primeras 3 pistas son gratuitas por partida)
     final profileNotifier = _ref.read(profileProvider.notifier);
-    if (state.hintsUsed >= 2) {
+    if (state.hintsUsed >= 3) {
       final success = profileNotifier.deductCoins(35); // Cuesta 35 S-Coins
-      if (!success) return false; // No hay suficientes monedas
+      if (!success) return 'noCoins'; // No hay suficientes monedas
     }
 
     _pushToUndoStack();
@@ -311,7 +458,7 @@ class GameNotifier extends StateNotifier<GameState> {
 
     _checkVictory();
     _saveGameToStorage();
-    return true;
+    return 'success';
   }
 
   /// Otorga una "Segunda Oportunidad" reviviendo al usuario tras cometer 3 errores.
@@ -319,7 +466,8 @@ class GameNotifier extends StateNotifier<GameState> {
     if (!state.isGameOver) return false;
 
     final profileNotifier = _ref.read(profileProvider.notifier);
-    final success = profileNotifier.deductCoins(50); // Cuesta 50 S-Coins para revivir
+    final success =
+        profileNotifier.deductCoins(50); // Cuesta 50 S-Coins para revivir
     if (!success) return false;
 
     // Restauramos el juego con 2 errores y quitamos el GameOver
@@ -351,7 +499,8 @@ class GameNotifier extends StateNotifier<GameState> {
 
   void _pushToUndoStack() {
     // Generar copia profunda de la grilla de celdas
-    List<List<SudokuCell>> gridClone = List.generate(9, (r) => List.from(state.grid[r]));
+    List<List<SudokuCell>> gridClone =
+        List.generate(9, (r) => List.from(state.grid[r]));
     _undoStack.add(gridClone);
     if (_undoStack.length > 50) {
       _undoStack.removeAt(0); // Límite de historial de 50 pasos
@@ -393,36 +542,97 @@ class GameNotifier extends StateNotifier<GameState> {
 
       // Procesar recompensas de negocio en profileProvider
       final profileNotifier = _ref.read(profileProvider.notifier);
-      
-      // 1. Monedas base por dificultad
+
+      // 1. Monedas base por dificultad (partida normal)
       int rewardCoins = 25;
       int xpGained = 200;
-      
-      switch (state.difficulty.toLowerCase()) {
-        case 'fácil':
-        case 'easy':
-          rewardCoins = 20;
-          xpGained = 150;
-          break;
-        case 'medio':
-        case 'medium':
-          rewardCoins = 40;
-          xpGained = 300;
-          break;
-        case 'difícil':
-        case 'hard':
-          rewardCoins = 75;
-          xpGained = 500;
-          break;
-        case 'experto':
-        case 'expert':
-          rewardCoins = 150;
-          xpGained = 800;
-          break;
+
+      if (state.isDailyChallenge) {
+        final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+        profileNotifier.completeDailyChallenge(todayStr);
+        rewardCoins = 0;
+        xpGained = 0;
+      } else if (!state.isTournament) {
+        switch (state.difficulty.toLowerCase()) {
+          case 'fácil':
+          case 'easy':
+            rewardCoins = 20;
+            xpGained = 150;
+            break;
+          case 'medio':
+          case 'medium':
+            rewardCoins = 40;
+            xpGained = 300;
+            break;
+          case 'difícil':
+          case 'hard':
+            rewardCoins = 75;
+            xpGained = 500;
+            break;
+          case 'experto':
+          case 'expert':
+            rewardCoins = 150;
+            xpGained = 800;
+            break;
+        }
       }
 
-      // 2. Bono de Perfección (sin errores)
-      if (state.errorsCount == 0) {
+      // Calcular posición en el torneo si corresponde
+      int placement = 1;
+      if (state.isTournament && state.tournamentOpponentTimes.isNotEmpty) {
+        for (var botTime in state.tournamentOpponentTimes) {
+          if (botTime < state.elapsedSeconds) {
+            placement++;
+          }
+        }
+        state = state.copyWith(tournamentPlacement: placement);
+
+        // Recompensas específicas de torneo
+        rewardCoins = 0;
+        xpGained = 0;
+
+        if (placement == 1) {
+          profileNotifier.unlockAchievement('campeon_torneo');
+          if (state.tournamentDivision == 'Oro') {
+            rewardCoins = 250;
+            xpGained = 600;
+          } else if (state.tournamentDivision == 'Plata') {
+            rewardCoins = 150;
+            xpGained = 400;
+          } else {
+            // Bronce
+            rewardCoins = 80;
+            xpGained = 250;
+          }
+        } else if (placement == 2) {
+          if (state.tournamentDivision == 'Oro') {
+            rewardCoins = 120;
+            xpGained = 400;
+          } else if (state.tournamentDivision == 'Plata') {
+            rewardCoins = 80;
+            xpGained = 250;
+          } else {
+            // Bronce
+            rewardCoins = 40;
+            xpGained = 150;
+          }
+        } else if (placement == 3) {
+          if (state.tournamentDivision == 'Oro') {
+            rewardCoins = 60;
+            xpGained = 200;
+          } else if (state.tournamentDivision == 'Plata') {
+            rewardCoins = 40;
+            xpGained = 150;
+          } else {
+            // Bronce
+            rewardCoins = 20;
+            xpGained = 100;
+          }
+        }
+      }
+
+      // 2. Bono de Perfección (sin errores) - Solo partidas normales
+      if (!state.isTournament && state.errorsCount == 0) {
         rewardCoins += 25;
         xpGained += 100;
         profileNotifier.unlockAchievement('mente_acero');
@@ -438,9 +648,31 @@ class GameNotifier extends StateNotifier<GameState> {
         profileNotifier.unlockAchievement('velocista');
       }
 
+      // 5. Logro: Sabio Relámpago (menos de 2.5 min = 150 segundos)
+      if (state.elapsedSeconds < 150) {
+        profileNotifier.unlockAchievement('sabio_relampago');
+      }
+
+      // 6. Logro: El Intocable (sin pistas y sin errores)
+      if (state.hintsUsed == 0 && state.errorsCount == 0) {
+        profileNotifier.unlockAchievement('el_intocable');
+      }
+
+      // 7. Logro: Maestría Absoluta (completar dificultad Experto)
+      if (state.difficulty.toLowerCase() == 'experto' ||
+          state.difficulty.toLowerCase() == 'expert') {
+        profileNotifier.unlockAchievement('gran_maestro');
+      }
+
       profileNotifier.unlockAchievement('primera_victoria');
-      profileNotifier.addCoins(rewardCoins);
-      profileNotifier.addXp(xpGained);
+
+      if (rewardCoins > 0) {
+        profileNotifier.addCoins(rewardCoins);
+      }
+      if (xpGained > 0) {
+        profileNotifier.addXp(xpGained);
+      }
+
       profileNotifier.checkDailyStreak();
 
       // Guardar victoria en estadísticas locales
@@ -452,6 +684,9 @@ class GameNotifier extends StateNotifier<GameState> {
       if (bestTime == 0 || state.elapsedSeconds < bestTime) {
         _storageService.saveBestTime(state.difficulty, state.elapsedSeconds);
       }
+
+      // Sincronizar victoria y progreso nuevo con la nube
+      profileNotifier.syncWithServer();
     }
   }
 

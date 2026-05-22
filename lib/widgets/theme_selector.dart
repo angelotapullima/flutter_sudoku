@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
+import '../providers/profile_provider.dart';
+import 'registration_dialog.dart';
 
 class ThemeSelector extends ConsumerWidget {
   const ThemeSelector({super.key});
@@ -10,6 +12,7 @@ class ThemeSelector extends ConsumerWidget {
     final themeState = ref.watch(themeProvider);
     final themeNotifier = ref.read(themeProvider.notifier);
     final currentTheme = themeNotifier.currentSudokuTheme;
+    final profile = ref.watch(profileProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -37,6 +40,10 @@ class ThemeSelector extends ConsumerWidget {
 
                   return GestureDetector(
                     onTap: () {
+                      if (!profile.isRegistered) {
+                        RegistrationDialog.show(context);
+                        return;
+                      }
                       if (isPurchased) {
                         themeNotifier.changeActiveTheme(theme.id);
                       } else {

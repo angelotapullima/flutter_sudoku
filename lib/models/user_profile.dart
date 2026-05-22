@@ -5,6 +5,10 @@ class UserProfile {
   final List<String> unlockedAchievements;
   final int dailyStreak;
   final String lastDailyPlayedDate;
+  final List<String> completedDailyDates;
+  final bool isRegistered;
+  final String username;
+  final String email;
 
   const UserProfile({
     this.coins = 100,
@@ -13,6 +17,10 @@ class UserProfile {
     this.unlockedAchievements = const [],
     this.dailyStreak = 0,
     this.lastDailyPlayedDate = '',
+    this.completedDailyDates = const [],
+    this.isRegistered = false,
+    this.username = 'Invitado',
+    this.email = '',
   });
 
   /// Calcula la XP necesaria para subir al siguiente nivel.
@@ -32,6 +40,10 @@ class UserProfile {
     List<String>? unlockedAchievements,
     int? dailyStreak,
     String? lastDailyPlayedDate,
+    List<String>? completedDailyDates,
+    bool? isRegistered,
+    String? username,
+    String? email,
   }) {
     return UserProfile(
       coins: coins ?? this.coins,
@@ -40,6 +52,10 @@ class UserProfile {
       unlockedAchievements: unlockedAchievements ?? this.unlockedAchievements,
       dailyStreak: dailyStreak ?? this.dailyStreak,
       lastDailyPlayedDate: lastDailyPlayedDate ?? this.lastDailyPlayedDate,
+      completedDailyDates: completedDailyDates ?? this.completedDailyDates,
+      isRegistered: isRegistered ?? this.isRegistered,
+      username: username ?? this.username,
+      email: email ?? this.email,
     );
   }
 
@@ -51,6 +67,10 @@ class UserProfile {
       'unlockedAchievements': unlockedAchievements,
       'dailyStreak': dailyStreak,
       'lastDailyPlayedDate': lastDailyPlayedDate,
+      'completedDailyDates': completedDailyDates,
+      'isRegistered': isRegistered,
+      'username': username,
+      'email': email,
     };
   }
 
@@ -62,6 +82,10 @@ class UserProfile {
       unlockedAchievements: List<String>.from(json['unlockedAchievements'] as List<dynamic>? ?? []),
       dailyStreak: json['dailyStreak'] as int? ?? 0,
       lastDailyPlayedDate: json['lastDailyPlayedDate'] as String? ?? '',
+      completedDailyDates: List<String>.from(json['completedDailyDates'] as List<dynamic>? ?? []),
+      isRegistered: json['isRegistered'] as bool? ?? false,
+      username: json['username'] as String? ?? 'Invitado',
+      email: json['email'] as String? ?? '',
     );
   }
 }
@@ -124,6 +148,46 @@ class Achievement {
       rewardCoins: 75,
       rewardXp: 400,
       icon: '🔥',
+    ),
+    Achievement(
+      id: 'sabio_relampago',
+      title: 'Sabio Relámpago',
+      description: 'Resuelve un Sudoku en menos de 2.5 minutos.',
+      rewardCoins: 75,
+      rewardXp: 250,
+      icon: '⚡',
+    ),
+    Achievement(
+      id: 'el_intocable',
+      title: 'El Intocable',
+      description: 'Resuelve un Sudoku sin usar pistas ni cometer errores.',
+      rewardCoins: 100,
+      rewardXp: 350,
+      icon: '🛡️',
+    ),
+    Achievement(
+      id: 'gran_maestro',
+      title: 'Maestría Absoluta',
+      description: 'Completa un Sudoku en la dificultad Experto.',
+      rewardCoins: 150,
+      rewardXp: 500,
+      icon: '👑',
+    ),
+    Achievement(
+      id: 'coleccionista_temas',
+      title: 'Esteta de la Lógica',
+      description: 'Compra al menos 3 temas premium en la tienda.',
+      rewardCoins: 50,
+      rewardXp: 150,
+      icon: '🎨',
+    ),
+    Achievement(
+      id: 'campeon_torneo',
+      title: 'Campeón de la Arena',
+      description: 'Gana el primer lugar en cualquier torneo de la liga.',
+      rewardCoins: 200,
+      rewardXp: 600,
+      icon: '🏆',
     ),
   ];
 }

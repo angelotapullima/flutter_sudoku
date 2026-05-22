@@ -6,9 +6,10 @@ import '../providers/profile_provider.dart';
 import '../providers/game_provider.dart';
 import '../widgets/theme_selector.dart';
 import '../widgets/reward_unlock_modal.dart';
+import '../widgets/settings_dialog.dart';
 import '../models/user_profile.dart';
+import '../providers/storage_provider.dart';
 import 'game_screen.dart';
-import 'stats_screen.dart';
 import 'store_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -77,9 +78,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final storage = ref.watch(storageServiceProvider);
 
     final fontHeadline = GoogleFonts.outfit(
-      fontSize: 42,
+      fontSize: 32,
       fontWeight: FontWeight.w900,
-      letterSpacing: 2,
+      letterSpacing: 2.5,
       color: isDark ? Colors.white : const Color(0xFF2B2B36),
     );
 
@@ -89,115 +90,81 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Barra superior: Perfil, Nivel y Monedas
+              const SizedBox(height: 12),
+
+              // 1. Selector rápido de temas en pastilla Glassmorphic sutil
               Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Nivel y barra de progreso
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundColor: sudokuTheme.primaryColor,
-                          child: Text(
-                            '${userProfile.level}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Nivel ${userProfile.level}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.grey[300] : Colors.grey[800],
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            // Barra de progreso de XP
-                            SizedBox(
-                              width: 100,
-                              height: 6,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(3),
-                                child: LinearProgressIndicator(
-                                  value: userProfile.progressPercentage,
-                                  backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
-                                  valueColor: AlwaysStoppedAnimation<Color>(sudokuTheme.primaryColor),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.02),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
                     ),
-                    // Monedas (S-Coins)
+                  ),
+                  child: const ThemeSelector(),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // 2. Logotipo e Isotipo Premium del Juego
+              Center(
+                child: Column(
+                  children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isDark ? Colors.white10 : Colors.grey[200]!,
+                        gradient: LinearGradient(
+                          colors: [sudokuTheme.primaryColor, sudokuTheme.accentColor],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
-                            blurRadius: 4,
-                          ),
+                            color: sudokuTheme.primaryColor.withOpacity(0.25),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          )
                         ],
                       ),
-                      child: Row(
-                        children: [
-                          const Text('🪙 ', style: TextStyle(fontSize: 16)),
-                          Text(
-                            '${userProfile.coins}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                      child: const Icon(
+                        Icons.grid_3x3_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text('SUDOKU', style: fontHeadline),
+                    Text(
+                      'PIENSA • RESUELVE • MEJORA',
+                      style: GoogleFonts.outfit(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 4.5,
+                        color: sudokuTheme.primaryColor.withOpacity(0.85),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // Selector de tema
-              const ThemeSelector(),
+              const SizedBox(height: 24),
 
-              const SizedBox(height: 16),
-
-              // 2. Título de la App
-              Text('SUDOKU', style: fontHeadline),
-              Text(
-                'PIENSA • RESUELVE • MEJORA',
-                style: GoogleFonts.outfit(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 4.0,
-                  color: sudokuTheme.primaryColor.withOpacity(0.8),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Partida en progreso flotante si existe
+              // 3. Partida en curso flotante
               if (ref.watch(gameProvider).hasStarted)
                 _buildActiveGameCard(context, ref, sudokuTheme, isDark),
 
-              // 3. Selección de dificultades
+              // 4. Banner Destacado del Reto Diario (Llama de Racha 🔥)
+              _buildDailyChallengeFeatureBanner(context, userProfile, sudokuTheme, isDark),
+
+              const SizedBox(height: 20),
+
+              // 5. Grid 2x2 de Dificultades Modernas
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
@@ -208,87 +175,143 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Text(
                         'Selecciona Dificultad',
                         style: GoogleFonts.outfit(
-                          fontSize: 18,
+                          fontSize: 17,
                           fontWeight: FontWeight.bold,
                           color: isDark ? Colors.white70 : Colors.black87,
                         ),
                       ),
                     ),
-                    _buildDifficultyCard(
-                      context,
-                      ref,
-                      title: 'Fácil',
-                      description: 'Ideal para relajarse e iniciar en el juego.',
-                      bestTime: storage.getBestTime('Fácil'),
-                      gradientColors: [Colors.green[400]!, Colors.teal[500]!],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildDifficultyCard(
-                      context,
-                      ref,
-                      title: 'Medio',
-                      description: 'Desafío equilibrado para entrenar la mente.',
-                      bestTime: storage.getBestTime('Medio'),
-                      gradientColors: [Colors.blue[400]!, Colors.indigo[500]!],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildDifficultyCard(
-                      context,
-                      ref,
-                      title: 'Difícil',
-                      description: 'Requiere técnicas avanzadas de lógica.',
-                      bestTime: storage.getBestTime('Difícil'),
-                      gradientColors: [Colors.purple[400]!, Colors.deepPurple[500]!],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildDifficultyCard(
-                      context,
-                      ref,
-                      title: 'Experto',
-                      description: 'Récord solo para los verdaderos maestros.',
-                      bestTime: storage.getBestTime('Experto'),
-                      gradientColors: [Colors.red[400]!, Colors.pink[600]!],
+                    
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      childAspectRatio: 1.18,
+                      children: [
+                        _buildModernDifficultyCard(
+                          context,
+                          ref,
+                          title: 'Fácil',
+                          icon: '🌱',
+                          bestTime: storage.getBestTime('Fácil'),
+                          accentColor: Colors.teal,
+                          isDark: isDark,
+                        ),
+                        _buildModernDifficultyCard(
+                          context,
+                          ref,
+                          title: 'Medio',
+                          icon: '⚡',
+                          bestTime: storage.getBestTime('Medio'),
+                          accentColor: Colors.blueAccent,
+                          isDark: isDark,
+                        ),
+                        _buildModernDifficultyCard(
+                          context,
+                          ref,
+                          title: 'Difícil',
+                          icon: '🔮',
+                          bestTime: storage.getBestTime('Difícil'),
+                          accentColor: Colors.purpleAccent,
+                          isDark: isDark,
+                        ),
+                        _buildModernDifficultyCard(
+                          context,
+                          ref,
+                          title: 'Experto',
+                          icon: '👑',
+                          bestTime: storage.getBestTime('Experto'),
+                          accentColor: Colors.redAccent,
+                          isDark: isDark,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
 
-              // 4. Botones inferiores: Tienda y Estadísticas
+              // 6. Acceso Refinado al Pie a la Tienda de Temas
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildMenuButton(
-                        context,
-                        icon: Icons.store_rounded,
-                        label: 'Tienda de Temas',
-                        color: Colors.amber[700]!,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const StoreScreen()),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[200]!,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.01),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const StoreScreen()),
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.store_rounded,
+                                color: Colors.amber,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Tienda de Temas',
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13.5,
+                                      color: isDark ? Colors.white : const Color(0xFF2B2B36),
+                                    ),
+                                  ),
+                                  Text(
+                                    'Desbloquea estilos estéticos con tus S-Coins.',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 13,
+                              color: sudokuTheme.primaryColor,
+                            ),
+                          ],
                         ),
-                        isDark: isDark,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildMenuButton(
-                        context,
-                        icon: Icons.bar_chart_rounded,
-                        label: 'Estadísticas',
-                        color: sudokuTheme.primaryColor,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const StatsScreen()),
-                        ),
-                        isDark: isDark,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 48),
+
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -307,7 +330,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final sec = (game.elapsedSeconds % 60).toString().padLeft(2, '0');
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -375,30 +398,183 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildDifficultyCard(
+  Widget _buildDailyChallengeFeatureBanner(
     BuildContext context,
-    WidgetRef ref, {
-    required String title,
-    required String description,
-    required int bestTime,
-    required List<Color> gradientColors,
-  }) {
-    final String recordText = bestTime == 0
-        ? 'Sin Récord'
-        : 'Récord: ${(bestTime ~/ 60).toString().padLeft(2, '0')}:${(bestTime % 60).toString().padLeft(2, '0')}';
-
+    UserProfile userProfile,
+    SudokuTheme theme,
+    bool isDark,
+  ) {
+    final streak = userProfile.dailyStreak;
+    final hasStreak = streak > 0;
+    
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: gradientColors,
+          colors: isDark
+              ? [
+                  const Color(0xFF6B11FF), // Violeta Neón
+                  const Color(0xFFFF1393), // Fucsia Neón
+                ]
+              : [
+                  const Color(0xFF8E2DE2),
+                  const Color(0xFF4A00E0),
+                ],
         ),
         boxShadow: [
           BoxShadow(
-            color: gradientColors[1].withOpacity(0.3),
-            blurRadius: 8,
+            color: const Color(0xFF6B11FF).withOpacity(0.25),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _startDailyChallengeDirectly(context),
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('🔥 ', style: TextStyle(fontSize: 13)),
+                            Text(
+                              hasStreak ? 'Racha: $streak ${streak == 1 ? 'día' : 'días'}' : 'Reto del Día',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'RETO DIARIO',
+                        style: GoogleFonts.outfit(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        hasStreak
+                            ? '¡Mantén encendida la llama de tu racha hoy!'
+                            : 'Resuelve el tablero sembrado único de hoy.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.85),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white30),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _startDailyChallengeDirectly(BuildContext context) {
+    final today = DateTime.now();
+    final dateStr = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+    final seed = today.year * 10000 + today.month * 100 + today.day;
+    
+    // Determinar dificultad por día
+    String difficulty = 'Medio';
+    final weekday = today.weekday;
+    if (weekday == DateTime.monday || weekday == DateTime.tuesday) {
+      difficulty = 'Fácil';
+    } else if (weekday == DateTime.wednesday || weekday == DateTime.thursday) {
+      difficulty = 'Medio';
+    } else if (weekday == DateTime.friday || weekday == DateTime.saturday) {
+      difficulty = 'Difícil';
+    } else if (weekday == DateTime.sunday) {
+      difficulty = 'Experto';
+    }
+
+    // Verificar si ya se completó el reto hoy
+    final completedDates = ref.read(profileProvider).completedDailyDates;
+    if (completedDates.contains(dateStr)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('¡Ya has completado el Reto Diario de hoy! Vuelve mañana para continuar tu racha. 🎉'),
+          backgroundColor: Colors.purple[700],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
+    // Iniciar partida
+    ref.read(gameProvider.notifier).startDailyChallengeGame(seed, difficulty);
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const GameScreen()),
+    );
+  }
+
+  Widget _buildModernDifficultyCard(
+    BuildContext context,
+    WidgetRef ref, {
+    required String title,
+    required String icon,
+    required int bestTime,
+    required Color accentColor,
+    required bool isDark,
+  }) {
+    final String recordText = bestTime == 0
+        ? 'Sin Récord'
+        : '${(bestTime ~/ 60).toString().padLeft(2, '0')}:${(bestTime % 60).toString().padLeft(2, '0')}';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[200]!,
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.015),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
@@ -412,98 +588,74 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               MaterialPageRoute(builder: (context) => const GameScreen()),
             );
           },
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.whiteEF,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    recordText,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-    required bool isDark,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.grey[200]!,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 18.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(icon, size: 28, color: color),
-                const SizedBox(height: 8),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
+                // Fila Superior: Icono de dificultad y punto indicador
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      icon,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: accentColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: accentColor.withOpacity(0.4),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Fila Inferior: Título y Récord
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title.toUpperCase(),
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: isDark ? Colors.white : const Color(0xFF2B2B36),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.timer_outlined,
+                          size: 11,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          recordText,
+                          style: GoogleFonts.shareTechMono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: bestTime > 0
+                                ? accentColor
+                                : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -512,8 +664,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-}
-
-extension ColorEF on Colors {
-  static const Color whiteEF = Colors.white70;
 }

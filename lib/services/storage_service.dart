@@ -62,6 +62,12 @@ abstract class StorageService {
   Future<void> saveLastDailyPlayedDate(String date);
   String getLastDailyPlayedDate();
 
+  /// Guarda la lista de fechas de retos diarios completados.
+  Future<void> saveCompletedDailyDates(List<String> dates);
+  
+  /// Obtiene la lista de fechas de retos diarios completados.
+  List<String> getCompletedDailyDates();
+
   /// Guarda un Sudoku en progreso para reanudar más tarde.
   Future<void> saveActiveGame(String jsonGameData);
   
@@ -70,4 +76,44 @@ abstract class StorageService {
 
   /// Limpia la partida en progreso (cuando se completa o abandona).
   Future<void> clearActiveGame();
+
+  /// Guarda las configuraciones personalizadas del juego
+  Future<void> saveSettings({
+    required bool showRemainingNumbers,
+    required bool enableErrorLimit,
+    required bool enableHighlighting,
+    required bool enableVibration,
+    required bool showTimer,
+  });
+
+  /// Obtiene si debe mostrar la cantidad restante en el pad de números
+  bool getSettingShowRemainingNumbers();
+
+  /// Obtiene si debe aplicar el límite estricto de 3 errores
+  bool getSettingEnableErrorLimit();
+
+  /// Obtiene si debe resaltar la cuadrícula de celda seleccionada (fila, columna, bloque y números iguales)
+  bool getSettingEnableHighlighting();
+
+  /// Obtiene si la vibración en errores está activa
+  bool getSettingEnableVibration();
+
+  /// Obtiene si debe mostrarse el temporizador de partida
+  bool getSettingShowTimer();
+
+  /// Guarda los detalles de registro del usuario
+  Future<void> saveRegistrationDetails({
+    required bool isRegistered,
+    required String username,
+    required String email,
+  });
+
+  /// Obtiene si el usuario está registrado
+  bool getIsRegistered();
+
+  /// Obtiene el nombre de usuario
+  String getUsername();
+
+  /// Obtiene el correo de registro
+  String getEmail();
 }

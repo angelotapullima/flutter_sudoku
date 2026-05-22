@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/game_provider.dart';
 import '../providers/theme_provider.dart';
-import '../providers/profile_provider.dart';
 
 class ControlButtons extends ConsumerWidget {
   const ControlButtons({super.key});
@@ -13,7 +12,6 @@ class ControlButtons extends ConsumerWidget {
     final themeState = ref.watch(themeProvider);
     final themeNotifier = ref.read(themeProvider.notifier);
     final sudokuTheme = themeNotifier.currentSudokuTheme;
-    final userProfile = ref.watch(profileProvider);
 
     final isDark = themeState.isDarkMode;
     final colorScheme = isDark ? Colors.white70 : Colors.black87;
@@ -44,9 +42,11 @@ class ControlButtons extends ConsumerWidget {
             icon: Icons.edit_rounded,
             label: 'Notas',
             onTap: () => ref.read(gameProvider.notifier).toggleNotesMode(),
-            color: gameState.isNotesMode ? sudokuTheme.primaryColor : colorScheme,
+            color: gameState.isNotesMode
+                ? (isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight)
+                : colorScheme,
             badge: gameState.isNotesMode ? 'ON' : null,
-            badgeColor: sudokuTheme.primaryColor,
+            badgeColor: isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight,
           ),
           
           // Botón PISTA
@@ -54,21 +54,55 @@ class ControlButtons extends ConsumerWidget {
             icon: Icons.lightbulb_rounded,
             label: 'Pista',
             onTap: () {
-              final success = ref.read(gameProvider.notifier).useHint();
-              if (!success && gameState.hintsUsed >= 2) {
-                // Fondos insuficientes
+              final result = ref.read(gameProvider.notifier).useHint();
+              if (result == 'noSelection') {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('🪙 Monedas insuficientes. ¡Juega para ganar S-Coins!'),
+                    content: const Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Selecciona una casilla vacía primero'),
+                      ],
+                    ),
+                    backgroundColor: Colors.blueGrey,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              } else if (result == 'alreadyCorrect') {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Selecciona una casilla vacía para usar la pista'),
+                      ],
+                    ),
+                    backgroundColor: Colors.blueAccent,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              } else if (result == 'noCoins') {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.monetization_on_outlined, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('🪙 Monedas insuficientes. ¡Juega para ganar S-Coins!'),
+                      ],
+                    ),
                     backgroundColor: Colors.redAccent,
+                    duration: const Duration(seconds: 2),
                   ),
                 );
               }
             },
             color: colorScheme,
-            // Primeras 2 pistas gratis, luego cuesta 35 monedas
-            badge: gameState.hintsUsed < 2 ? 'Gratis' : '🪙35',
-            badgeColor: gameState.hintsUsed < 2 ? Colors.green : Colors.amber[700]!,
+            // Primeras 3 pistas gratis (se muestra la cantidad de pistas restantes con un número), luego cuesta 35 monedas
+            badge: gameState.hintsUsed < 3 ? '${3 - gameState.hintsUsed}' : '🪙35',
+            badgeColor: gameState.hintsUsed < 3 ? Colors.green : Colors.amber[700]!,
           ),
         ],
       ),

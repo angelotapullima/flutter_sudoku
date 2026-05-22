@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/sudoku_cell.dart';
 import '../providers/game_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/settings_provider.dart';
 
 class SudokuCellWidget extends ConsumerWidget {
   final int row;
@@ -21,7 +22,7 @@ class SudokuCellWidget extends ConsumerWidget {
     final themeNotifier = ref.read(themeProvider.notifier);
     final sudokuTheme = themeNotifier.currentSudokuTheme;
 
-    final cell = gameState.grid[row][col];
+    final SudokuCell cell = gameState.grid[row][col];
     final isSelected = gameState.selectedRow == row && gameState.selectedCol == col;
 
     // Resaltado inteligente
@@ -44,16 +45,22 @@ class SudokuCellWidget extends ConsumerWidget {
       }
     }
 
-    // Colores según el modo claro/oscuro
+    final settings = ref.watch(settingsProvider);
+
+    // Colores según el modo claro/oscuro con alto contraste premium
     final isDark = themeState.isDarkMode;
     Color cellBgColor;
     
     if (isSelected) {
-      cellBgColor = sudokuTheme.primaryColor.withOpacity(0.35);
-    } else if (isSameNumber) {
-      cellBgColor = sudokuTheme.primaryColor.withOpacity(0.22);
-    } else if (isHighlighted) {
-      cellBgColor = sudokuTheme.highlightColor;
+      cellBgColor = isDark
+          ? sudokuTheme.textColorDark.withOpacity(0.25)
+          : sudokuTheme.textColorLight.withOpacity(0.18);
+    } else if (settings.enableHighlighting && isSameNumber) {
+      cellBgColor = isDark
+          ? sudokuTheme.textColorDark.withOpacity(0.15)
+          : sudokuTheme.textColorLight.withOpacity(0.10);
+    } else if (settings.enableHighlighting && isHighlighted) {
+      cellBgColor = isDark ? sudokuTheme.highlightColorDark : sudokuTheme.highlightColorLight;
     } else {
       cellBgColor = isDark ? const Color(0xFF1E1E2E) : Colors.white;
     }
@@ -69,7 +76,7 @@ class SudokuCellWidget extends ConsumerWidget {
       textColor = Colors.redAccent;
       fontWeight = FontWeight.bold;
     } else {
-      textColor = sudokuTheme.primaryColor;
+      textColor = isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight;
       fontWeight = FontWeight.w600;
     }
 
@@ -107,7 +114,11 @@ class SudokuCellWidget extends ConsumerWidget {
                   color: textColor,
                 ),
               )
-            : _buildNotesGrid(cell.notes, sudokuTheme.primaryColor, isDark),
+            : _buildNotesGrid(
+                cell.notes,
+                isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight,
+                isDark,
+              ),
       ),
     );
   }

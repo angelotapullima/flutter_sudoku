@@ -14,7 +14,18 @@ class LocalStorageService implements StorageService {
   static const String _keyDarkMode = 'sudoku_dark_mode';
   static const String _keyStreak = 'sudoku_streak';
   static const String _keyLastDailyDate = 'sudoku_last_daily_date';
+  static const String _keyCompletedDailyDates = 'sudoku_completed_daily_dates';
   static const String _keyActiveGame = 'sudoku_active_game_data';
+  static const String _keyIsRegistered = 'sudoku_is_registered';
+  static const String _keyUsername = 'sudoku_username';
+  static const String _keyEmail = 'sudoku_email';
+
+  // Claves para configuraciones personalizadas del juego
+  static const String _keyShowRemaining = 'settings_show_remaining';
+  static const String _keyErrorLimit = 'settings_error_limit';
+  static const String _keyHighlighting = 'settings_highlighting';
+  static const String _keyVibration = 'settings_vibration';
+  static const String _keyShowTimer = 'settings_show_timer';
 
   @override
   Future<void> init() async {
@@ -28,7 +39,7 @@ class LocalStorageService implements StorageService {
 
   @override
   int getCoins() {
-    return _prefs.getInt(_keyCoins) ?? 100; // 100 monedas de regalo iniciales
+    return _prefs.getInt(_keyCoins) ?? 100;
   }
 
   @override
@@ -68,11 +79,13 @@ class LocalStorageService implements StorageService {
 
   @override
   List<String> getPurchasedThemes() {
-    return _prefs.getStringList(_keyThemes) ?? ['azul']; // El tema azul es el inicial gratuito
+    return _prefs.getStringList(_keyThemes) ??
+        ['azul']; // El tema azul es el inicial gratuito
   }
 
   @override
-  Future<void> saveThemeSettings({required String colorTheme, required bool isDarkMode}) async {
+  Future<void> saveThemeSettings(
+      {required String colorTheme, required bool isDarkMode}) async {
     await _prefs.setString(_keyActiveTheme, colorTheme);
     await _prefs.setBool(_keyDarkMode, isDarkMode);
   }
@@ -94,7 +107,8 @@ class LocalStorageService implements StorageService {
 
   @override
   int getBestTime(String difficulty) {
-    return _prefs.getInt('sudoku_best_time_$difficulty') ?? 0; // 0 significa sin récord
+    return _prefs.getInt('sudoku_best_time_$difficulty') ??
+        0; // 0 significa sin récord
   }
 
   @override
@@ -138,6 +152,16 @@ class LocalStorageService implements StorageService {
   }
 
   @override
+  Future<void> saveCompletedDailyDates(List<String> dates) async {
+    await _prefs.setStringList(_keyCompletedDailyDates, dates);
+  }
+
+  @override
+  List<String> getCompletedDailyDates() {
+    return _prefs.getStringList(_keyCompletedDailyDates) ?? [];
+  }
+
+  @override
   Future<void> saveActiveGame(String jsonGameData) async {
     await _prefs.setString(_keyActiveGame, jsonGameData);
   }
@@ -150,5 +174,63 @@ class LocalStorageService implements StorageService {
   @override
   Future<void> clearActiveGame() async {
     await _prefs.remove(_keyActiveGame);
+  }
+
+  @override
+  Future<void> saveSettings({
+    required bool showRemainingNumbers,
+    required bool enableErrorLimit,
+    required bool enableHighlighting,
+    required bool enableVibration,
+    required bool showTimer,
+  }) async {
+    await _prefs.setBool(_keyShowRemaining, showRemainingNumbers);
+    await _prefs.setBool(_keyErrorLimit, enableErrorLimit);
+    await _prefs.setBool(_keyHighlighting, enableHighlighting);
+    await _prefs.setBool(_keyVibration, enableVibration);
+    await _prefs.setBool(_keyShowTimer, showTimer);
+  }
+
+  @override
+  bool getSettingShowRemainingNumbers() =>
+      _prefs.getBool(_keyShowRemaining) ?? true;
+
+  @override
+  bool getSettingEnableErrorLimit() => _prefs.getBool(_keyErrorLimit) ?? true;
+
+  @override
+  bool getSettingEnableHighlighting() =>
+      _prefs.getBool(_keyHighlighting) ?? true;
+
+  @override
+  bool getSettingEnableVibration() => _prefs.getBool(_keyVibration) ?? true;
+
+  @override
+  bool getSettingShowTimer() => _prefs.getBool(_keyShowTimer) ?? true;
+
+  @override
+  Future<void> saveRegistrationDetails({
+    required bool isRegistered,
+    required String username,
+    required String email,
+  }) async {
+    await _prefs.setBool(_keyIsRegistered, isRegistered);
+    await _prefs.setString(_keyUsername, username);
+    await _prefs.setString(_keyEmail, email);
+  }
+
+  @override
+  bool getIsRegistered() {
+    return _prefs.getBool(_keyIsRegistered) ?? false;
+  }
+
+  @override
+  String getUsername() {
+    return _prefs.getString(_keyUsername) ?? 'Invitado';
+  }
+
+  @override
+  String getEmail() {
+    return _prefs.getString(_keyEmail) ?? '';
   }
 }
