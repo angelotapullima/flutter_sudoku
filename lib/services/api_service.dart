@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/env_config.dart';
 
 class ApiService {
-  // CONFIGURACIÓN DE URL DE BACKEND
-  // - Usando la IP local de tu PC (192.168.1.56) para conectar tu celular físico en la misma red Wi-Fi
-  static const String baseUrl = 'http://192.168.1.56:3000/api';
+  // CONFIGURACIÓN DINÁMICA DE ENTORNO
+  static const String baseUrl = EnvConfig.baseUrl;
 
   static const String _keyToken = 'sudoku_jwt_token';
 

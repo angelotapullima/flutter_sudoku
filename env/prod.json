@@ -1,0 +1,5 @@
+{
+  "BASE_URL": "https://api.sudokupremium.com/api",
+  "APP_NAME": "Sudoku Premium",
+  "ENV": "prod"
+}
