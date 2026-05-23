@@ -42,7 +42,8 @@ class TournamentScreen extends ConsumerWidget {
       tournament.difficulty,
     );
 
-    Navigator.of(context).pushReplacement(
+    // USAR push en lugar de pushReplacement para poder volver atrás sin pantalla negra
+    Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const GameScreen()),
     );
   }
