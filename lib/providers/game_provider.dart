@@ -7,6 +7,7 @@ import '../utils/sudoku_generator.dart';
 import '../services/storage_service.dart';
 import 'storage_provider.dart';
 import 'profile_provider.dart';
+import 'gamification_provider.dart';
 import 'settings_provider.dart';
 
 class GameState {
@@ -30,6 +31,7 @@ class GameState {
   final List<int> tournamentOpponentTimes;
   final int tournamentPlacement;
   final bool isDailyChallenge;
+  final int? tournamentId;
 
   const GameState({
     this.grid = const [],
@@ -50,6 +52,7 @@ class GameState {
     this.tournamentOpponentTimes = const [],
     this.tournamentPlacement = 0,
     this.isDailyChallenge = false,
+    this.tournamentId,
   });
 
   GameState copyWith({
@@ -71,6 +74,7 @@ class GameState {
     List<int>? tournamentOpponentTimes,
     int? tournamentPlacement,
     bool? isDailyChallenge,
+    int? tournamentId,
   }) {
     return GameState(
       grid: grid ?? this.grid,
@@ -92,6 +96,7 @@ class GameState {
           tournamentOpponentTimes ?? this.tournamentOpponentTimes,
       tournamentPlacement: tournamentPlacement ?? this.tournamentPlacement,
       isDailyChallenge: isDailyChallenge ?? this.isDailyChallenge,
+      tournamentId: tournamentId ?? this.tournamentId,
     );
   }
 
@@ -116,6 +121,7 @@ class GameState {
       'tournamentOpponentTimes': tournamentOpponentTimes,
       'tournamentPlacement': tournamentPlacement,
       'isDailyChallenge': isDailyChallenge,
+      'tournamentId': tournamentId,
     };
   }
 
@@ -148,6 +154,7 @@ class GameState {
           json['tournamentOpponentTimes'] as List<dynamic>? ?? []),
       tournamentPlacement: json['tournamentPlacement'] as int? ?? 0,
       isDailyChallenge: json['isDailyChallenge'] as bool? ?? false,
+      tournamentId: json['tournamentId'] as int?,
     );
   }
 }
@@ -256,28 +263,21 @@ class GameNotifier extends StateNotifier<GameState> {
     _saveGameToStorage();
   }
 
-  /// Genera una nueva partida de torneo (Liga).
-  void startTournamentGame(
-      String division, List<String> opponents, List<int> opponentTimes) {
+  /// Genera una nueva partida de torneo real con tablero de la nube.
+  void startRealTournamentGame(
+      int tournamentId, String puzzle, String solution, String difficulty) {
     _timer?.cancel();
     _undoStack.clear();
 
-    String difficulty = 'Medio';
-    if (division == 'Bronce') difficulty = 'Fácil';
-    if (division == 'Oro') difficulty = 'Difícil';
-
-    final sudokuData = SudokuGenerator.generate(difficulty: difficulty);
-    final board = sudokuData['board']!;
-    final solution = sudokuData['solution']!;
-
     List<List<SudokuCell>> newGrid = List.generate(9, (r) {
       return List.generate(9, (c) {
-        final val = board[r][c];
+        final val = int.parse(puzzle[r * 9 + c]);
+        final sol = int.parse(solution[r * 9 + c]);
         return SudokuCell(
           row: r,
           col: c,
           value: val,
-          solutionValue: solution[r][c],
+          solutionValue: sol,
           isOriginal: val != 0,
         );
       });
@@ -288,10 +288,7 @@ class GameNotifier extends StateNotifier<GameState> {
       difficulty: difficulty,
       hasStarted: true,
       isTournament: true,
-      tournamentDivision: division,
-      tournamentOpponents: opponents,
-      tournamentOpponentTimes: opponentTimes,
-      tournamentPlacement: 0,
+      tournamentId: tournamentId,
     );
 
     _startTimer();
@@ -578,57 +575,12 @@ class GameNotifier extends StateNotifier<GameState> {
       }
 
       // Calcular posición en el torneo si corresponde
-      int placement = 1;
-      if (state.isTournament && state.tournamentOpponentTimes.isNotEmpty) {
-        for (var botTime in state.tournamentOpponentTimes) {
-          if (botTime < state.elapsedSeconds) {
-            placement++;
-          }
-        }
-        state = state.copyWith(tournamentPlacement: placement);
-
-        // Recompensas específicas de torneo
-        rewardCoins = 0;
-        xpGained = 0;
-
-        if (placement == 1) {
-          profileNotifier.unlockAchievement('campeon_torneo');
-          if (state.tournamentDivision == 'Oro') {
-            rewardCoins = 250;
-            xpGained = 600;
-          } else if (state.tournamentDivision == 'Plata') {
-            rewardCoins = 150;
-            xpGained = 400;
-          } else {
-            // Bronce
-            rewardCoins = 80;
-            xpGained = 250;
-          }
-        } else if (placement == 2) {
-          if (state.tournamentDivision == 'Oro') {
-            rewardCoins = 120;
-            xpGained = 400;
-          } else if (state.tournamentDivision == 'Plata') {
-            rewardCoins = 80;
-            xpGained = 250;
-          } else {
-            // Bronce
-            rewardCoins = 40;
-            xpGained = 150;
-          }
-        } else if (placement == 3) {
-          if (state.tournamentDivision == 'Oro') {
-            rewardCoins = 60;
-            xpGained = 200;
-          } else if (state.tournamentDivision == 'Plata') {
-            rewardCoins = 40;
-            xpGained = 150;
-          } else {
-            // Bronce
-            rewardCoins = 20;
-            xpGained = 100;
-          }
-        }
+      if (state.isTournament && state.tournamentId != null) {
+        // Enviar resultado real al servidor
+        final gamification = _ref.read(gamificationProvider.notifier);
+        gamification.submitTournamentResult(state.elapsedSeconds, state.errorsCount);
+        
+        // El ranking se actualizará automáticamente al volver a la pantalla de torneo
       }
 
       // 2. Bono de Perfección (sin errores) - Solo partidas normales
@@ -636,6 +588,20 @@ class GameNotifier extends StateNotifier<GameState> {
         rewardCoins += 25;
         xpGained += 100;
         profileNotifier.unlockAchievement('mente_acero');
+      }
+
+      // --- ACTUALIZAR MISIONES DIARIAS ---
+      final gamification = _ref.read(gamificationProvider.notifier);
+      
+      // Misión: Ganar partidas
+      if (!state.isDailyChallenge) {
+        // Buscar si hay misión de "win_games"
+        final missions = _ref.read(gamificationProvider).missions;
+        for (var m in missions) {
+          if (!m.isCompleted) {
+             gamification.updateMissionProgress(m.id);
+          }
+        }
       }
 
       // 3. Bono de Resiliencia (2 errores y ganar)

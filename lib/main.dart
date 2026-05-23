@@ -5,6 +5,7 @@ import 'services/local_storage_service.dart';
 import 'providers/storage_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/main_navigation_screen.dart';
+import 'screens/animated_splash_screen.dart';
 
 void main() async {
   // Asegurar que los canales nativos de Flutter están listos antes de SharedPreferences
@@ -40,7 +41,7 @@ class MyApp extends ConsumerWidget {
     final baseTheme = isDark ? ThemeData.dark() : ThemeData.light();
 
     return MaterialApp(
-      title: 'Sudoku Premium',
+      title: 'Sudoku Master',
       debugShowCheckedModeBanner: false,
       theme: baseTheme.copyWith(
         colorScheme: ColorScheme.fromSeed(
@@ -60,7 +61,7 @@ class MyApp extends ConsumerWidget {
           ),
         ),
       ),
-      home: const MainNavigationScreen(),
+      home: const AnimatedSplashScreen(),
     );
   }
 }

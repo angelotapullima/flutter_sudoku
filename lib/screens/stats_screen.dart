@@ -6,9 +6,8 @@ import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
 import '../models/user_profile.dart';
 import '../providers/storage_provider.dart';
-import '../widgets/registration_dialog.dart';
-import '../widgets/login_dialog.dart';
 import '../services/api_service.dart';
+import 'login_screen.dart';
 
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
@@ -518,47 +517,32 @@ class StatsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           if (!userProfile.isRegistered)
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => LoginDialog.show(context),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: primaryColor, width: 1.5),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: Text(
-                      'Iniciar Sesión',
-                      style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
+            SizedBox(
+              width: double.infinity,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    colors: [primaryColor, primaryColor.withOpacity(0.8)],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: LinearGradient(
-                        colors: [primaryColor, primaryColor.withOpacity(0.8)],
-                      ),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () => RegistrationDialog.show(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text(
-                        'Registrarse',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ),
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  ),
+                  icon: const Icon(Icons.login_rounded, color: Colors.white, size: 18),
+                  label: const Text(
+                    'INICIAR SESIÓN / REGISTRARSE',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
-              ],
+              ),
             )
           else
             Row(
