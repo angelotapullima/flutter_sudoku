@@ -1,16 +1,74 @@
-# flutter_application_1
+# Sudoku Master 🧩
 
-A new Flutter project.
+Una experiencia premium de Sudoku desarrollada con Flutter, diseñada para ofrecer una jugabilidad fluida, estética moderna y personalización avanzada.
 
-## Getting Started
+## 🚀 Guía de Compilación
 
-This project is a starting point for a Flutter application.
+Para compilar y ejecutar este proyecto correctamente, sigue los pasos a continuación dependiendo de tu plataforma.
 
-A few resources to get you started if this is your first Flutter project:
+### 📋 Requisitos Previos
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Asegúrate de tener instalado:
+- Flutter SDK (v3.6.1 o superior recomendado)
+- Android Studio / Xcode (para emuladores y herramientas de build)
+- Java 17 (para Android)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 🛠️ Preparación del Proyecto
+
+Antes de compilar por primera vez o después de cambios en los assets:
+
+```bash
+# Limpiar caché y archivos temporales
+flutter clean
+
+# Obtener dependencias
+flutter pub get
+
+# Generar iconos de la aplicación
+dart run flutter_launcher_icons
+
+# Generar Splash Screen nativo
+dart run flutter_native_splash:create
+```
+
+### 📱 Ejecución en Desarrollo
+
+Para correr la app en un emulador o dispositivo físico conectado:
+
+```bash
+flutter run
+```
+
+### 📦 Compilación para Producción (Release)
+
+#### Android
+Genera un APK o un App Bundle (para Google Play):
+
+```bash
+# Generar APK
+flutter build apk --release
+
+# Generar App Bundle (AAB)
+flutter build appbundle --release
+```
+*El resultado se encontrará en: `build/app/outputs/flutter-apk/app-release.apk`*
+
+#### iOS
+Requiere macOS y Xcode:
+
+```bash
+# Preparar la compilación de iOS
+flutter build ios --release
+```
+*Luego abre `ios/Runner.xcworkspace` en Xcode para archivar y subir a la App Store.*
+
+---
+
+## 🆔 Información del Proyecto
+
+- **Nombre:** Sudoku Master
+- **Package ID (Android/iOS):** `com.anked.sudoku_master`
+- **Tema Principal:** Azul Océano (#0F62FE)
+
+---
+Desarrollado con ❤️ para los amantes de los acertijos.

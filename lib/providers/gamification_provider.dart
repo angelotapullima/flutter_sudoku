@@ -40,11 +40,8 @@ class GamificationNotifier extends StateNotifier<GamificationState> {
   final Ref _ref;
 
   GamificationNotifier(this._ref) : super(GamificationState()) {
-    // Cargar datos iniciales si el usuario está registrado
-    final profile = _ref.read(profileProvider);
-    if (profile.isRegistered) {
-      refreshAll();
-    }
+    // Cargar datos iniciales siempre para dar visibilidad de misiones/torneos incluso a invitados
+    refreshAll();
   }
 
   Future<void> refreshAll() async {

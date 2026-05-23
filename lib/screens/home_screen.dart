@@ -6,11 +6,11 @@ import '../providers/profile_provider.dart';
 import '../providers/game_provider.dart';
 import '../widgets/theme_selector.dart';
 import '../widgets/reward_unlock_modal.dart';
-import '../widgets/settings_dialog.dart';
 import '../models/user_profile.dart';
 import '../providers/storage_provider.dart';
 import 'game_screen.dart';
 import 'store_screen.dart';
+import 'login_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -158,6 +158,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // 3. Partida en curso flotante
               if (ref.watch(gameProvider).hasStarted)
                 _buildActiveGameCard(context, ref, sudokuTheme, isDark),
+
+              // 3.5 Banner de Invitado (UX Improvement)
+              if (!userProfile.isRegistered)
+                _buildGuestSyncBanner(context, sudokuTheme, isDark),
 
               // 4. Banner Destacado del Reto Diario (Llama de Racha 🔥)
               _buildDailyChallengeFeatureBanner(context, userProfile, sudokuTheme, isDark),
@@ -547,6 +551,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.read(gameProvider.notifier).startDailyChallengeGame(seed, difficulty);
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const GameScreen()),
+    );
+  }
+
+  Widget _buildGuestSyncBanner(BuildContext context, SudokuTheme theme, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [theme.primaryColor.withOpacity(0.1), theme.accentColor.withOpacity(0.05)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: theme.primaryColor.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            const Text('☁️', style: TextStyle(fontSize: 24)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '¡Sincroniza tu progreso!',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  Text(
+                    'Regístrate para guardar tus monedas y nivel en la nube.',
+                    style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+              ),
+              child: Text(
+                'IR',
+                style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

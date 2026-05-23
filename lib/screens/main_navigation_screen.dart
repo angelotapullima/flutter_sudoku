@@ -5,11 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/gamification_provider.dart';
-import '../widgets/settings_dialog.dart';
 import 'home_screen.dart';
 import 'tournament_screen.dart';
 import 'daily_challenge_screen.dart';
 import 'stats_screen.dart';
+import 'level_progress_screen.dart';
+import 'login_screen.dart';
+import 'settings_screen.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
@@ -100,44 +102,53 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Nivel y Rango
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: sudokuTheme.primaryColor,
-                child: Text(
-                  '${userProfile.level}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          // Nivel y Rango (Clicable para ver progreso gamificado)
+          InkWell(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const LevelProgressScreen()),
+            ),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Row(
                 children: [
-                  Text(
-                    'Nivel ${userProfile.level}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF2B2B36),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: sudokuTheme.primaryColor,
+                    child: Text(
+                      '${userProfile.level}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
-                  Text(
-                    rango,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: sudokuTheme.primaryColor.withOpacity(0.9),
-                    ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Nivel ${userProfile.level}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF2B2B36),
+                        ),
+                      ),
+                      Text(
+                        rango,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: sudokuTheme.primaryColor.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
           
           // S-Coins (Monedas) y Ajustes
@@ -223,7 +234,9 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               ),
               const SizedBox(width: 8),
               GestureDetector(
-                onTap: () => SettingsDialog.show(context),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -334,6 +347,8 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   }
 
   void _showMissionsModal(BuildContext context) {
+    final bool isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -341,10 +356,11 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       builder: (context) => Consumer(
         builder: (context, ref, child) {
           final gamification = ref.watch(gamificationProvider);
+          final userProfile = ref.watch(profileProvider);
           final isDark = Theme.of(context).brightness == Brightness.dark;
 
           return Container(
-            height: MediaQuery.of(context).size.height * 0.7,
+            height: MediaQuery.of(context).size.height * (isLandscape ? 0.9 : 0.7),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -364,20 +380,50 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text(
-                  'MISIONES DIARIAS',
-                  style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'MISIONES DIARIAS',
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (!userProfile.isRegistered)
+                      Text(
+                        'Modo Invitado',
+                        style: TextStyle(color: Colors.amber[700], fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Expanded(
                   child: gamification.isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ListView.builder(
-                          itemCount: gamification.missions.length,
-                          itemBuilder: (context, index) {
+                      ? const Center(
+                          child: SizedBox(
+                            height: 60,
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        )
+                      : gamification.missions.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.assignment_late_outlined, size: 48, color: Colors.grey[400]),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No hay misiones disponibles.\nIntenta de nuevo más tarde.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Colors.grey[500]),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: gamification.missions.length,
+                              itemBuilder: (context, index) {
                             final mission = gamification.missions[index];
                             return Container(
                               margin: const EdgeInsets.only(bottom: 16),

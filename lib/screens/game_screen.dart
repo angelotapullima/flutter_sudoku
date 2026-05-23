@@ -1,7 +1,12 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../providers/game_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
@@ -9,7 +14,8 @@ import '../providers/settings_provider.dart';
 import '../widgets/sudoku_grid.dart';
 import '../widgets/control_buttons.dart';
 import '../widgets/number_pad.dart';
-import '../widgets/settings_dialog.dart';
+import 'settings_screen.dart';
+import '../widgets/share_victory_card.dart';
 
 class GameScreen extends ConsumerWidget {
   const GameScreen({super.key});
@@ -107,6 +113,18 @@ class GameScreen extends ConsumerWidget {
                             const SizedBox(width: 6),
                           ],
                           IconButton(
+                            onPressed: () => _shareVictory(
+                              context, 
+                              ref, 
+                              gameState.difficulty, 
+                              '$min:$sec', 
+                              sudokuTheme, 
+                              isDark
+                            ),
+                            icon: const Icon(Icons.share_rounded, size: 22),
+                            tooltip: 'Compartir progreso',
+                          ),
+                          IconButton(
                             onPressed: () => ref.read(gameProvider.notifier).togglePause(),
                             icon: Icon(
                               gameState.isPaused
@@ -116,7 +134,9 @@ class GameScreen extends ConsumerWidget {
                             ),
                           ),
                           IconButton(
-                            onPressed: () => SettingsDialog.show(context),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                            ),
                             icon: const Icon(
                               Icons.settings_outlined,
                               size: 24,
@@ -156,72 +176,111 @@ class GameScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPauseOverlay(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic theme,
-    bool isDark,
-  ) {
+  Widget _buildPauseOverlay(BuildContext context, WidgetRef ref, SudokuTheme theme, bool isDark) {
     return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+      filter: ui.ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
       child: Container(
-        color: isDark ? Colors.black54 : Colors.white54,
-        alignment: Alignment.center,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-          margin: const EdgeInsets.symmetric(horizontal: 40),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 20,
-              ),
-            ],
-            border: Border.all(
-              color: isDark ? Colors.white10 : Colors.grey[200]!,
-            ),
-          ),
+        color: isDark ? Colors.black.withOpacity(0.7) : Colors.white.withOpacity(0.7),
+        child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.pause_rounded,
-                size: 64,
-                color: theme.primaryColor,
+              Icon(Icons.pause_circle_filled_rounded, size: 80, color: theme.primaryColor),
+              const SizedBox(height: 20),
+              Text(
+                'JUEGO EN PAUSA',
+                style: GoogleFonts.outfit(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
               ),
-              const SizedBox(height: 16),
-              const Text(
-                'Juego en Pausa',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'El tablero está oculto para asegurar la honestidad intelectual.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 40),
               SizedBox(
-                width: double.infinity,
-                height: 48,
+                width: 200,
+                height: 55,
                 child: ElevatedButton(
                   onPressed: () => ref.read(gameProvider.notifier).togglePause(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.primaryColor,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    elevation: 10,
                   ),
-                  child: const Text(
-                    'Reanudar Partida',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
+                  child: const Text('REANUDAR', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPauseDialog(BuildContext context, WidgetRef ref, SudokuTheme theme, bool isDark) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+        child: Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.grey[200]!,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.pause_rounded,
+                  size: 64,
+                  color: theme.primaryColor,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Juego en Pausa',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'El tablero está oculto para asegurar la honestidad intelectual.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () => ref.read(gameProvider.notifier).togglePause(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'Reanudar Partida',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -255,7 +314,7 @@ class GameScreen extends ConsumerWidget {
         final totalCoins = baseCoins + (isPerfect ? 25 : 0);
 
         return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+          filter: ui.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
           child: AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             backgroundColor: dark ? const Color(0xFF1E1E2E) : Colors.white,
@@ -295,27 +354,47 @@ class GameScreen extends ConsumerWidget {
                     ),
                   ),
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      ref.read(gameProvider.notifier).quitGame();
-                      Navigator.of(context).pop(); // Cierra diálogo
-                      Navigator.of(context).pop(); // Vuelve al Home
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                // Botones de Acción
+                Row(
+                  children: [
+                    // Botón Compartir
+                    Expanded(
+                      flex: 1,
+                      child: OutlinedButton(
+                        onPressed: () => _shareVictory(context, ref, difficulty, '$min:$sec', theme, dark),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          side: BorderSide(color: theme.primaryColor),
+                        ),
+                        child: Icon(Icons.share_rounded, color: theme.primaryColor),
                       ),
                     ),
-                    child: const Text(
-                      'Volver al Menú',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    const SizedBox(width: 12),
+                    // Botón Salir
+                    Expanded(
+                      flex: 3,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          ref.read(gameProvider.notifier).quitGame();
+                          Navigator.of(context).pop(); // Cierra diálogo
+                          Navigator.of(context).pop(); // Vuelve al Home
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text(
+                          'Volver al Menú',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -323,6 +402,58 @@ class GameScreen extends ConsumerWidget {
         );
       },
     );
+  }
+
+  Future<void> _shareVictory(
+    BuildContext context, 
+    WidgetRef ref, 
+    String difficulty, 
+    String timeStr, 
+    SudokuTheme theme, 
+    bool isDark
+  ) async {
+    try {
+      final screenshotController = ScreenshotController();
+      final userProfile = ref.read(profileProvider);
+      
+      // Mostrar feedback visual de que se está generando la imagen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Generando tarjeta de victoria... 🎨'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      // Generamos la imagen en memoria usando el widget oculto
+      final imageBytes = await screenshotController.captureFromWidget(
+        Material(
+          child: ShareVictoryCard(
+            time: timeStr,
+            difficulty: difficulty,
+            level: userProfile.level,
+            theme: theme,
+            isDark: isDark,
+          ),
+        ),
+        delay: const Duration(milliseconds: 100),
+      );
+
+      // Guardar temporalmente y compartir
+      final directory = await getTemporaryDirectory();
+      final imagePath = await File('${directory.path}/victoria_sudoku.png').create();
+      await imagePath.writeAsBytes(imageBytes);
+
+      await Share.shareXFiles(
+        [XFile(imagePath.path)],
+        text: '¡Mira mi progreso en Sudoku Master! 🧩🏆 #SudokuMaster',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al compartir: $e')),
+        );
+      }
+    }
   }
 
   void _showTournamentPodiumDialog(
@@ -350,269 +481,178 @@ class GameScreen extends ConsumerWidget {
       });
     }
 
-    // Ordenar de menor a mayor tiempo
-    leaderboard.sort((a, b) => (a['time'] as int).compareTo(b['time'] as int));
+    leaderboard.sort((a, b) => a['time'].compareTo(b['time']));
 
-    // Determinar índice y clasificación del jugador
-    final playerIndex = leaderboard.indexWhere((item) => item['isPlayer'] == true);
-    final placement = playerIndex + 1;
-
-    // Calcular copa y recompensas
-    String cupEmoji = '🏆';
-    String cupName = 'Sin Podio';
-    Color cupColor = Colors.grey;
-    int coinsReward = 0;
-    int xpReward = 0;
-
-    if (placement == 1) {
-      cupEmoji = '🥇';
-      cupName = 'Copa de Oro';
-      cupColor = const Color(0xFFFFD700);
-      if (gameState.tournamentDivision == 'Oro') {
-        coinsReward = 250;
-        xpReward = 600;
-      } else if (gameState.tournamentDivision == 'Plata') {
-        coinsReward = 150;
-        xpReward = 400;
-      } else {
-        coinsReward = 80;
-        xpReward = 250;
-      }
-    } else if (placement == 2) {
-      cupEmoji = '🥈';
-      cupName = 'Copa de Plata';
-      cupColor = const Color(0xFFC0C0C0);
-      if (gameState.tournamentDivision == 'Oro') {
-        coinsReward = 120;
-        xpReward = 400;
-      } else if (gameState.tournamentDivision == 'Plata') {
-        coinsReward = 80;
-        xpReward = 250;
-      } else {
-        coinsReward = 40;
-        xpReward = 150;
-      }
-    } else if (placement == 3) {
-      cupEmoji = '🥉';
-      cupName = 'Copa de Bronce';
-      cupColor = const Color(0xFFCD7F32);
-      if (gameState.tournamentDivision == 'Oro') {
-        coinsReward = 60;
-        xpReward = 200;
-      } else if (gameState.tournamentDivision == 'Plata') {
-        coinsReward = 40;
-        xpReward = 150;
-      } else {
-        coinsReward = 20;
-        xpReward = 100;
-      }
-    }
+    final int placement = leaderboard.indexWhere((e) => e['isPlayer']) + 1;
+    final int coinsReward = placement == 1 ? 250 : (placement == 2 ? 100 : (placement == 3 ? 50 : 0));
+    final int xpReward = placement == 1 ? 500 : (placement == 2 ? 250 : (placement == 3 ? 100 : 50));
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-          child: AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          filter: ui.ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+          child: Dialog(
             backgroundColor: dark ? const Color(0xFF1E1E2E) : Colors.white,
-            contentPadding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Icono e indicación de trofeo
-                Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        cupEmoji,
-                        style: const TextStyle(fontSize: 64),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        placement <= 3 ? '¡PODIO CONSEGUIDO!' : '¡TORNEO COMPLETADO!',
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: cupColor,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      Text(
-                        placement <= 3 ? cupName.toUpperCase() : 'PUESTO #$placement',
-                        style: GoogleFonts.outfit(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: dark ? Colors.white : const Color(0xFF2B2B36),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Liga ${gameState.tournamentDivision}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: dark ? Colors.grey[400] : Colors.grey[600],
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    placement <= 3 ? '¡PODIO LOGRADO! 🏆' : 'TORNEO FINALIZADO',
+                    style: GoogleFonts.outfit(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: theme.primaryColor,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                const Divider(height: 1, color: Colors.white24),
-                const SizedBox(height: 16),
-
-                // Lista de Clasificación
-                Text(
-                  'Clasificación Final',
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: dark ? Colors.grey[350] : Colors.black87,
+                  const SizedBox(height: 4),
+                  Text(
+                    'Has quedado en la posición #$placement',
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
                   ),
-                ),
-                const SizedBox(height: 10),
+                  const SizedBox(height: 20),
 
-                // Contenedor de la lista
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 180),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: leaderboard.length,
-                    itemBuilder: (context, index) {
-                      final item = leaderboard[index];
-                      final isCurrentPlayer = item['isPlayer'] as bool;
-                      final rawSecs = item['time'] as int;
-                      final minStr = (rawSecs ~/ 60).toString().padLeft(2, '0');
-                      final secStr = (rawSecs % 60).toString().padLeft(2, '0');
+                  // Lista del Mini-Ranking del torneo
+                  Container(
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: dark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.02),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: leaderboard.length,
+                      itemBuilder: (context, index) {
+                        final item = leaderboard[index];
+                        final isCurrentPlayer = item['isPlayer'];
+                        final minStr = (item['time'] ~/ 60).toString().padLeft(2, '0');
+                        final secStr = (item['time'] % 60).toString().padLeft(2, '0');
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isCurrentPlayer
-                              ? theme.primaryColor.withOpacity(0.12)
-                              : (dark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.01)),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
                             color: isCurrentPlayer
                                 ? theme.primaryColor.withOpacity(0.4)
                                 : Colors.transparent,
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              '${index + 1}º',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: index == 0
-                                    ? const Color(0xFFFFD700)
-                                    : (index == 1
-                                        ? const Color(0xFFC0C0C0)
-                                        : (index == 2 ? const Color(0xFFCD7F32) : Colors.grey)),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                item['name'],
+                          child: Row(
+                            children: [
+                              Text(
+                                '${index + 1}º',
                                 style: TextStyle(
-                                  fontWeight: isCurrentPlayer ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: FontWeight.bold,
                                   fontSize: 13,
-                                  color: isCurrentPlayer
-                                      ? (dark ? Colors.white : Colors.black)
-                                      : (dark ? Colors.grey[300] : Colors.grey[800]),
+                                  color: index == 0
+                                      ? const Color(0xFFFFD700)
+                                      : (index == 1
+                                          ? const Color(0xFFC0C0C0)
+                                          : (index == 2 ? const Color(0xFFCD7F32) : Colors.grey)),
                                 ),
                               ),
-                            ),
-                            Text(
-                              '$minStr:$secStr',
-                              style: GoogleFonts.shareTechMono(
-                                fontWeight: isCurrentPlayer ? FontWeight.bold : FontWeight.normal,
-                                fontSize: 13,
-                                color: isCurrentPlayer ? theme.primaryColor : Colors.grey,
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  item['name'],
+                                  style: TextStyle(
+                                    fontWeight: isCurrentPlayer ? FontWeight.bold : FontWeight.normal,
+                                    fontSize: 13,
+                                    color: isCurrentPlayer
+                                        ? (dark ? Colors.white : Colors.black)
+                                        : (dark ? Colors.grey[300] : Colors.grey[800]),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                              Text(
+                                '$minStr:$secStr',
+                                style: GoogleFonts.shareTechMono(
+                                  fontWeight: isCurrentPlayer ? FontWeight.bold : FontWeight.normal,
+                                  fontSize: 13,
+                                  color: isCurrentPlayer ? theme.primaryColor : Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 16),
-                const Divider(height: 1, color: Colors.white24),
-                const SizedBox(height: 14),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1, color: Colors.white24),
+                  const SizedBox(height: 14),
 
-                // Recompensas Obtenidas
-                if (coinsReward > 0 || xpReward > 0) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      if (coinsReward > 0)
-                        Row(
-                          children: [
-                            const Text('🪙 ', style: TextStyle(fontSize: 18)),
-                            Text(
-                              '+$coinsReward S-Coins',
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: Colors.amber[700],
+                  // Recompensas Obtenidas
+                  if (coinsReward > 0 || xpReward > 0) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (coinsReward > 0)
+                          Row(
+                            children: [
+                              const Text('🪙 ', style: TextStyle(fontSize: 18)),
+                              Text(
+                                '+$coinsReward S-Coins',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Colors.amber[700],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      if (xpReward > 0)
-                        Row(
-                          children: [
-                            const Text('👑 ', style: TextStyle(fontSize: 18)),
-                            Text(
-                              '+$xpReward XP',
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: theme.primaryColor,
+                            ],
+                          ),
+                        if (xpReward > 0)
+                          Row(
+                            children: [
+                              const Text('👑 ', style: TextStyle(fontSize: 18)),
+                              Text(
+                                '+$xpReward XP',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: theme.primaryColor,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Botón
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        ref.read(gameProvider.notifier).quitGame();
+                        Navigator.of(context).pop(); // Cierra diálogo
+                        Navigator.of(context).pop(); // Vuelve al Home
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                    ],
+                      ),
+                      child: Text(
+                        placement <= 3 ? 'Reclamar Premios' : 'Volver al Menú',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 20),
                 ],
-
-                // Botón
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      ref.read(gameProvider.notifier).quitGame();
-                      Navigator.of(context).pop(); // Cierra diálogo
-                      Navigator.of(context).pop(); // Vuelve al Home
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Text(
-                      placement <= 3 ? 'Reclamar Premios' : 'Volver al Menú',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         );
@@ -630,7 +670,7 @@ class GameScreen extends ConsumerWidget {
         final canRevive = userProfile.coins >= 50;
 
         return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+          filter: ui.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
           child: AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             backgroundColor: dark ? const Color(0xFF1E1E2E) : Colors.white,
