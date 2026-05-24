@@ -1,599 +1,115 @@
-
-# Documento Funcional — App de Sudoku Gamificada
+# 🌌 Numbra: Chronicles of Logic — Documento Funcional
 
 # 1. Visión General
+Numbra no es solo una aplicación de Sudoku; es una **Aventura RPG de Lógica** diseñada para 2026. Combina la pureza del Sudoku clásico con mecánicas de progresión profunda, habilidades tácticas y una capa social competitiva asíncrona.
 
-La aplicación será un juego de Sudoku moderno, simple y altamente adictivo, enfocado en:
-
-- Experiencia rápida y limpia.
-- Progresión por niveles.
-- Sistema de gamificación.
-- Retención de usuarios.
-- Competencia y recompensas.
-- Diseño minimalista.
-- Fácil expansión futura.
+- **Identidad:** Neo-Cyber / Dark Zen.
+- **Núcleo:** Sudoku generado por Backtracking en tiempo real.
+- **Diferenciación:** Mapa estelar, habilidades roguelike y guerra de logias.
+- **Estética:** Fondos OLED, neones vibrantes (Cian/Púrpura) y feedback ASMR.
 
 ---
 
 # 2. Objetivos del Producto
-
-## Objetivo Principal
-
-Crear una aplicación de Sudoku intuitiva y gamificada donde el usuario:
-
-- Resuelva sudokus por dificultad.
-- Obtenga puntajes.
-- Desbloquee rangos.
-- Consiga recompensas.
-- Administre recursos limitados (pistas).
-- Mantenga rachas diarias.
-- Compita consigo mismo.
+- **Conquista Galáctica:** Progresar a través de un mapa de 100 niveles únicos.
+- **Estrategia Táctica:** Gestionar un inventario de poderes para superar retos extremos.
+- **Comunidad Activa:** Colaborar en Logias para derrotar al "Titán del Grid".
+- **Retención Emocional:** Sistema de rangos y títulos de prestigio.
+- **Economía Viva:** Un mercado de suministros que va más allá de simples temas visuales.
 
 ---
 
-# 3. Público Objetivo
-
-## Perfil Principal
-
-- Usuarios casuales.
-- Personas que quieren ejercitar lógica.
-- Usuarios móviles.
-- Personas que juegan 5–20 minutos diarios.
-
-## Edad objetivo
-
-- 13 a 45 años.
+# 3. Identidad de Marca y Visual (Branding)
+- **Nombre:** Numbra
+- **Paleta de Colores:** 
+  - Fondo: `#0B0B12` (Espacio Profundo / Dark Zen).
+  - Acento Primario: `#00E5FF` (Cian Eléctrico).
+  - Acento Secundario: `#B000FF` (Púrpura Neón).
+  - Éxito/Oro: `#FFD700`.
+- **Tipografía:** *Outfit* (Moderna y geométrica) y *Share Tech Mono* (Para cronómetros y datos técnicos).
+- **Logo:** Un núcleo de energía neón rodeado por una cuadrícula lógica de alto impacto.
 
 ---
 
-# 4. Filosofía del Juego
+# 4. Modos de Juego
 
-## Debe sentirse:
+## A. El Viaje (Modo Campaña)
+- **Mapa Estelar:** Scroll vertical infinito con planetas (nodos).
+- **Niveles:** 100 niveles con dificultad progresiva.
+- **Boss Battles:** Cada 10 niveles aparece un **Guardián del Sector**.
+  - Condiciones especiales: Niebla, tiempo límite estricto o prohibición de ciertas habilidades.
 
-- Simple.
-- Fluido.
-- Relajante.
-- Inteligente.
-- Adictivo.
-- Elegante.
+## B. Inicio (Modo Clásico)
+- Selector rápido de dificultad: Fácil, Medio, Difícil, Experto.
+- Generación instantánea de tableros únicos.
 
-## Debe evitar:
-
-- Pantallas saturadas.
-- Animaciones excesivas.
-- Publicidad invasiva.
-- Configuración complicada.
+## C. Reto Diario
+- Un tablero único por día para toda la comunidad.
+- Sistema de rachas (Streaks) con recompensas exponenciales.
 
 ---
 
-# 5. Flujo Principal
+# 5. Sistema de Habilidades (Roguelike)
+Debajo del tablero, el jugador dispone de una **Barra de Habilidades** que consumen "Cargas" del inventario.
 
-## Pantalla Inicial
-
-Opciones:
-
-- Continuar partida.
-- Nueva partida.
-- Torneo.
-- Estadísticas.
-- Tienda.
-- Configuración.
-
----
-
-# 6. Dificultades
-
-| Nivel | Nombre | Complejidad |
+| Habilidad | Efecto | Costo Sugerido |
 |---|---|---|
-| 1 | Principiante | Muy fácil |
-| 2 | Fácil | Fácil |
-| 3 | Medio | Normal |
-| 4 | Difícil | Complejo |
-| 5 | Experto | Muy complejo |
-| 6 | Maestro | Extremo |
+| **Visión Verdadera** | Resalta errores en rojo por 15s sin penalización de vida. | 1 Carga |
+| **Reloj Estelar** | Congela el cronómetro por 45 segundos. | 1 Carga |
+| **Toque Divino** | Limpia todos los errores y revela 3 casillas correctas al azar. | 1 Carga |
+
+- **Feedback:** Efecto visual de flash (Divine Flash) en toda la pantalla al activar un poder.
 
 ---
 
-# 7. Sistema de Rangos
-
-## Objetivo
-
-Dar sensación de progreso constante.
-
-| Nivel | Nombre |
-|---|---|
-| 1 | Novato |
-| 2 | Aprendiz |
-| 3 | Estratega |
-| 4 | Maestro Sudoku |
-| 5 | Gran Maestro |
-| 6 | Leyenda |
+# 6. La Capa Social: Logias (Clanes)
+- **Fundación:** Los usuarios pueden crear o unirse a Logias (máx. 20 miembros).
+- **Sala de Logia:** Chat en tiempo real mediante WebSockets (mensajes propios a la derecha, otros a la izquierda).
+- **Guerra de Monstruos:** El "Titán Semanal" tiene 100,000 HP.
+  - Cada Sudoku ganado por un miembro aporta Daño (DMG).
+  - **MVP Semanal:** Se resalta al miembro con más daño con una corona dorada 👑.
+- **Botín de Guerra:** Si el Titán cae, todos los miembros reciben S-Coins y Gemas Neón.
 
 ---
 
-# 8. Gamificación
+# 7. Sistema de Rangos y XP
+Basado en la experiencia acumulada (XP).
 
-## Elementos principales
+| Nivel | Título | Icono |
+|---|---|---|
+| 1–5 | Iniciado | 🌱 |
+| 6–15 | Aprendiz | ⚙️ |
+| 16–30 | Analista | 🔬 |
+| 31–50 | Arquitecto | 📐 |
+| 51–99 | Gran Maestro | 👑 |
+| 100+ | Oráculo | 👁️ |
 
-### Puntos
-
-Se obtienen por:
-
-- Completar partidas.
-- Velocidad.
-- No cometer errores.
-- No usar pistas.
-- Mantener rachas.
-
----
-
-### Rachas Diarias
-
-Si el usuario juega diariamente:
-
-- Día 1 → recompensa pequeña.
-- Día 7 → recompensa grande.
-- Día 30 → premio especial.
+- **XP Boost:** Item "Pergamino de Sabiduría" que otorga 2x XP por 24 horas.
 
 ---
 
-### Monedas
-
-Moneda virtual interna para:
-
-- Comprar pistas.
-- Temas.
-- Avatares.
-- Efectos visuales.
+# 8. Centro de Suministros (Tienda RPG)
+Dividido en tres categorías:
+1. **Consumibles:** Packs de cargas para Visión, Reloj y Toque Divino.
+2. **Identidad:** Marcos de avatar animados y Títulos de Prestigio.
+3. **Estética:** Temas dinámicos (Cyberpunk, Zen, Dorado Lujo).
 
 ---
 
-### Logros
-
-Ejemplos:
-
-| Logro | Requisito |
-|---|---|
-| Velocista | Terminar rápido |
-| Perfecto | Sin errores |
-| Cerebro Supremo | Completar expertos seguidos |
-| Imparable | Racha larga |
+# 9. Funcionalidades de Retención (Growth)
+- **Sincronización en la Nube:** Progreso persistente entre dispositivos.
+- **Compartir Victoria:** Generación de una imagen (tarjeta de victoria) estilizada para WhatsApp/Instagram con estadísticas y logo.
+- **Notificaciones:** Aviso de misiones nuevas y estado del Titán de la Logia.
 
 ---
 
-# 9. Pantalla Principal del Juego
-
-## Parte Superior
-
-Debe mostrar:
-
-- Racha actual.
-- Tiempo.
-- Puntaje.
-- Errores.
-- Pausa.
-
-Ejemplo:
-
-- Racha 13
-- Puntaje: 1500
-- Errores: 1/3
-- Tiempo: 04:23
+# 10. Especificaciones Técnicas (Stack)
+- **Frontend:** Flutter (Dart).
+- **Backend:** Node.js + Express + Socket.io.
+- **Base de Datos:** PostgreSQL.
+- **Infraestructura:** Soporte para Proxy (Nginx/Cloudflare) con Rate Limit por capas.
 
 ---
 
-# 10. Tablero Sudoku
-
-## Características
-
-- Tablero 9x9.
-- Líneas gruesas cada 3x3.
-- Diseño limpio.
-- Animaciones suaves.
-- Colores minimalistas.
-
----
-
-## Comportamientos
-
-### Selección de celda
-
-Cuando el usuario selecciona una celda:
-
-- Se resalta fila.
-- Se resalta columna.
-- Se resalta subcuadro.
-
----
-
-### Selección de número
-
-Si selecciona un número:
-
-- Todas las celdas con ese número se iluminan.
-
----
-
-### Errores
-
-Si pone un número incorrecto:
-
-- La celda se pinta roja.
-- Incrementa contador de errores.
-
-Si llega a 3 errores:
-
-- Pierde la partida.
-
----
-
-# 11. Botones Principales
-
-Debajo del tablero.
-
-| Botón | Acción |
-|---|---|
-| Deshacer | Revierte movimiento |
-| Borrar | Limpia celda |
-| Reiniciar | Reinicia partida |
-| Pista | Revela respuesta |
-
----
-
-# 12. Sistema de Pistas
-
-## Reglas
-
-- Usuario inicia con 3 pistas.
-- Las pistas son limitadas.
-- Se ganan por:
-  - Rachas.
-  - Logros.
-  - Completar niveles.
-  - Recompensas.
-
----
-
-## Uso de pista
-
-Cuando usa una pista:
-
-- Se revela el número correcto.
-- Reduce bonus final.
-- Reduce puntaje perfecto.
-
----
-
-# 13. Panel de Números
-
-Debajo de los botones.
-
-## Números del 1 al 9
-
-Cada número debe mostrar:
-
-- Número.
-- Cantidad restante.
-
-Ejemplo:
-
-- 1 (5)
-- 2 (3)
-- 3 (0)
-
----
-
-## Regla importante
-
-Si un número ya fue usado completamente:
-
-- Debe desaparecer.
-o
-- Deshabilitarse.
-
-Esto genera sensación de progreso visual.
-
----
-
-# 14. Sistema de Puntaje
-
-## Basado en:
-
-- Tiempo.
-- Errores.
-- Dificultad.
-- Uso de pistas.
-
----
-
-## Bonus
-
-- Completar rápido.
-- Sin errores.
-- Sin pistas.
-- Rachas altas.
-
----
-
-# 15. Sistema de Tiempo
-
-## Timer
-
-Debe:
-
-- Iniciar automáticamente.
-- Pausar correctamente.
-- Guardarse automáticamente.
-
----
-
-# 16. Configuración
-
-Opciones sugeridas:
-
-| Configuración | Descripción |
-|---|---|
-| Contador | Mostrar tiempo |
-| Límite de errores | Activar modo 3 errores |
-| Zona resaltada | Resaltar fila/columna |
-| Resaltar mismos números | Highlight de iguales |
-| Borrado automático | Eliminar notas |
-| Autocompletado | Completar últimas celdas |
-| Puntaje | Mostrar score |
-| Animaciones | Activar efectos |
-| Número restante | Mostrar contador |
-| Sonidos | Activar audio |
-| Vibración | Feedback táctil |
-| Tema oscuro | Dark mode |
-
----
-
-# 17. Sistema de Notas
-
-## Modo lápiz
-
-El usuario puede escribir pequeños números candidatos dentro de una celda.
-
-Características:
-
-- Múltiples candidatos.
-- Auto eliminación opcional.
-- Diferente color.
-
----
-
-# 18. Guardado Automático
-
-La aplicación debe guardar automáticamente:
-
-- Estado del tablero.
-- Tiempo.
-- Errores.
-- Pistas restantes.
-- Puntaje.
-
----
-
-# 19. Estadísticas
-
-## Métricas
-
-| Métrica | Descripción |
-|---|---|
-| Juegos completados | Total |
-| Tiempo promedio | Por dificultad |
-| Mejor tiempo | Récord |
-| Precisión | % |
-| Errores promedio | Estadística |
-| Racha máxima | Histórico |
-
----
-
-# 20. Torneos
-
-## Futuro
-
-Competencias semanales.
-
-Características:
-
-- Ranking global.
-- Premios.
-- Monedas.
-- Títulos especiales.
-
----
-
-# 21. Tienda
-
-## Ítems
-
-- Temas.
-- Colores.
-- Avatares.
-- Efectos.
-- Packs de pistas.
-
----
-
-# 22. Monetización
-
-## Opciones
-
-### Anuncios
-
-- Recompensas por ver anuncios.
-- Obtener pistas.
-- Monedas extra.
-
----
-
-## Premium
-
-Beneficios:
-
-- Sin anuncios.
-- Temas exclusivos.
-- Más estadísticas.
-- Más pistas.
-
----
-
-# 23. Experiencia Visual
-
-## Estilo
-
-Minimalista moderno.
-
-Colores:
-
-- Blanco.
-- Azul suave.
-- Gris claro.
-- Negro suave.
-
----
-
-# 24. Animaciones
-
-## Deben ser suaves
-
-Ejemplos:
-
-- Pop al colocar número.
-- Glow al ganar.
-- Shake al error.
-
----
-
-# 25. Sonidos
-
-Opcionales:
-
-- Click suave.
-- Error.
-- Victoria.
-- Uso de pista.
-
----
-
-# 26. Roadmap
-
-## MVP
-
-Debe incluir:
-
-- Sudoku funcional.
-- Dificultades.
-- Timer.
-- Errores.
-- Pistas.
-- Puntaje.
-- Guardado automático.
-
----
-
-## Segunda fase
-
-- Rangos.
-- Logros.
-- Monedas.
-- Estadísticas.
-- Temas.
-
----
-
-## Tercera fase
-
-- Torneos.
-- Ranking global.
-- Eventos.
-- Competencias.
-
----
-
-# 27. Futuras Expansiones
-
-## IA de ayuda
-
-El sistema analiza:
-
-- Errores frecuentes.
-- Tiempo promedio.
-- Dónde se atasca el jugador.
-
-Y da recomendaciones.
-
----
-
-## Modo historia
-
-Mapa progresivo con mundos.
-
-Ejemplos:
-
-- Ciudad.
-- Bosque.
-- Espacio.
-- Laboratorio.
-
----
-
-## Eventos diarios
-
-- Puzzle diario.
-- Recompensas.
-- Multiplicadores.
-
----
-
-## Clanes
-
-Usuarios pueden:
-
-- Formar equipos.
-- Competir.
-- Compartir récords.
-
----
-
-# 28. Objetivos del Producto
-
-La aplicación debe transmitir:
-
-- Sensación premium.
-- Progreso constante.
-- Competencia sana.
-- Retención diaria.
-- Juego relajante pero desafiante.
-
----
-
-# 29. KPIs del Producto
-
-| KPI | Objetivo |
-|---|---|
-| Retención día 1 | Alta |
-| Retención día 7 | Alta |
-| Tiempo promedio por sesión | 10+ min |
-| Partidas por día | 3+ |
-
----
-
-# 30. Conclusión
-
-La app debe sentirse:
-
-- Premium.
-- Fluida.
-- Minimalista.
-- Inteligente.
-- Adictiva.
-
-El enfoque principal debe estar en:
-
-1. UX limpia.
-2. Gamificación inteligente.
-3. Sensación de progreso.
-4. Retención.
-5. Escalabilidad futura.
+# 11. Conclusión para Diseño
+El diseño debe alejarse de lo "amigable y redondeado" para ir hacia lo **"tecnológico, misterioso y premium"**. Cada interacción debe sentirse como si el usuario estuviera operando una interfaz de inteligencia superior.

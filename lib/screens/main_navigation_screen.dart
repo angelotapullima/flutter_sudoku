@@ -361,7 +361,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'MISIONES DIARIAS',
+                      'TABLÓN DE MISIONES',
                       style: GoogleFonts.outfit(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

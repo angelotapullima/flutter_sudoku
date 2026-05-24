@@ -252,17 +252,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Tienda de Temas',
+                                    'CENTRO DE SUMINISTROS',
                                     style: GoogleFonts.outfit(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 13.5,
+                                      fontSize: 14,
+                                      letterSpacing: 1,
                                       color: isDark
                                           ? Colors.white
                                           : const Color(0xFF2B2B36),
                                     ),
                                   ),
                                   Text(
-                                    'Desbloquea estilos estéticos con tus S-Coins.',
+                                    'Adquiere pociones, avatares y boosters para tu viaje.',
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: isDark
