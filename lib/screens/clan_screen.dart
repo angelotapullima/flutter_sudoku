@@ -5,6 +5,7 @@ import '../providers/clan_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import 'login_screen.dart';
+import '../widgets/responsive_content_wrapper.dart';
 
 class ClanScreen extends ConsumerStatefulWidget {
   const ClanScreen({super.key});
@@ -39,7 +40,9 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
-      body: clanState.inClan ? _buildMyClanView(clanState, isDark, sudokuTheme) : _buildClanSelectionView(clanState, isDark, sudokuTheme),
+      body: ResponsiveContentWrapper(
+        child: clanState.inClan ? _buildMyClanView(clanState, isDark, sudokuTheme) : _buildClanSelectionView(clanState, isDark, sudokuTheme),
+      ),
     );
   }
 

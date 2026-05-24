@@ -1,12 +1,9 @@
 import 'dart:ui' as ui;
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
 import '../providers/game_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
@@ -18,6 +15,7 @@ import '../widgets/ability_bar.dart';
 import '../widgets/divine_flash_effect.dart';
 import 'settings_screen.dart';
 import '../widgets/share_victory_card.dart';
+import '../utils/platform_file_saver.dart';
 
 // Proveedor local para el efecto visual de flash
 final showFlashProvider = StateProvider.autoDispose<bool>((ref) => false);
@@ -61,131 +59,241 @@ class GameScreen extends ConsumerWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  // 1. Barra de encabezado
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final double width = constraints.maxWidth;
+                final bool isDesktop = width > 800;
+
+                if (isDesktop) {
+                  // --- DISEÑO WEB DE ESCRITORIO PANORÁMICO REAL (A PANTALLA COMPLETA) ---
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Botón Salir
-                        IconButton(
-                          onPressed: () {
-                            // Si el juego no ha terminado, se guarda automáticamente
-                            Navigator.of(context).pop();
-                          },
-                          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-                        ),
-                        // Dificultad del juego
-                        Column(
-                          children: [
-                            Text(
-                              gameState.isTournament
-                                  ? 'LIGA ${gameState.tournamentDivision.toUpperCase()}'
-                                  : gameState.difficulty.toUpperCase(),
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                letterSpacing: 1.0,
-                                color: sudokuTheme.primaryColor,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            // Errores
-                            Text(
-                              settings.enableErrorLimit
-                                  ? 'Errores: ${gameState.errorsCount}/3'
-                                  : 'Errores: ${gameState.errorsCount}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                        // Temporizador y Pausa/Ajustes
-                        Row(
-                          children: [
-                            if (settings.showTimer) ...[
-                              Text(
-                                '$min:$sec',
-                                style: GoogleFonts.shareTechMono(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: gameState.isTimerFrozen ? Colors.amber : (isDark ? Colors.white : Colors.black),
+                        // Columna Izquierda: Tablero de Sudoku Centrado + Header de Partida
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                               // Header del juego en escritorio
+                              _buildDesktopHeader(context, ref, gameState, settings, sudokuTheme, isDark, min, sec),
+                              const SizedBox(height: 16),
+                              // Grid del Sudoku limitado a un tamaño ergonómico máximo
+                              const Center(
+                                child: SizedBox(
+                                  width: 460,
+                                  child: SudokuGrid(),
                                 ),
                               ),
-                              const SizedBox(width: 6),
                             ],
-                            IconButton(
-                              onPressed: () => _shareVictory(
-                                context, 
-                                ref, 
-                                gameState.difficulty, 
-                                '$min:$sec', 
-                                sudokuTheme, 
-                                isDark
-                              ),
-                              icon: const Icon(Icons.share_rounded, size: 22),
-                              tooltip: 'Compartir progreso',
+                          ),
+                        ),
+                        
+                        const SizedBox(width: 32),
+                        
+                        // Columna Derecha: Panel de Control Táctico Flotante
+                        Container(
+                          width: 380,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E1E2E).withOpacity(0.6) : Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
+                              color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.05),
+                              width: 1.5,
                             ),
-                            IconButton(
-                              onPressed: () => ref.read(gameProvider.notifier).togglePause(),
-                              icon: Icon(
-                                gameState.isPaused
-                                    ? Icons.play_circle_outline_rounded
-                                    : Icons.pause_circle_outline_rounded,
-                                size: 26,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
                               ),
-                            ),
-                            IconButton(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Título del Panel de Operaciones
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'PANEL TÁCTICO',
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: sudokuTheme.primaryColor,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                  // Errores
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: gameState.errorsCount > 0 
+                                          ? Colors.redAccent.withOpacity(0.12)
+                                          : (isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.04)),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      settings.enableErrorLimit
+                                          ? 'Errores: ${gameState.errorsCount}/3'
+                                          : 'Errores: ${gameState.errorsCount}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              icon: const Icon(
-                                Icons.settings_outlined,
-                                size: 24,
+                              const SizedBox(height: 20),
+                              const Divider(height: 1),
+                              const SizedBox(height: 20),
+                              
+                              // Botones de control (Deshacer, Borrar, Notas, Pista)
+                              const ControlButtons(),
+                              const SizedBox(height: 24),
+                              
+                              // Habilidades RPG
+                              Text(
+                                'HABILIDADES TÁCTICAS',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11.5,
+                                  color: Colors.grey[500],
+                                  letterSpacing: 1.0,
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 10),
+                              AbilityBar(
+                                onAbilityUsed: () {
+                                  ref.read(showFlashProvider.notifier).state = true;
+                                },
+                              ),
+                              const SizedBox(height: 28),
+                              
+                              // Teclado Numérico
+                              const NumberPad(),
+                            ],
+                          ),
                         ),
                       ],
                     ),
+                  );
+                }
+
+                // --- DISEÑO MÓVIL ORIGINAL (COLUMNA VERTICAL CON SCROLL) ---
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Barra de encabezado
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
+                            ),
+                            Column(
+                              children: [
+                                Text(
+                                  gameState.isTournament
+                                      ? 'LIGA ${gameState.tournamentDivision.toUpperCase()}'
+                                      : gameState.difficulty.toUpperCase(),
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    letterSpacing: 1.0,
+                                    color: sudokuTheme.primaryColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  settings.enableErrorLimit
+                                      ? 'Errores: ${gameState.errorsCount}/3'
+                                      : 'Errores: ${gameState.errorsCount}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                if (settings.showTimer) ...[
+                                  Text(
+                                    '$min:$sec',
+                                    style: GoogleFonts.shareTechMono(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: gameState.isTimerFrozen ? Colors.amber : (isDark ? Colors.white : Colors.black),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                ],
+                                IconButton(
+                                  onPressed: () => _shareVictory(
+                                    context, 
+                                    ref, 
+                                    gameState.difficulty, 
+                                    '$min:$sec', 
+                                    sudokuTheme, 
+                                    isDark
+                                  ),
+                                  icon: const Icon(Icons.share_rounded, size: 22),
+                                ),
+                                IconButton(
+                                  onPressed: () => ref.read(gameProvider.notifier).togglePause(),
+                                  icon: Icon(
+                                    gameState.isPaused
+                                        ? Icons.play_circle_outline_rounded
+                                        : Icons.pause_circle_outline_rounded,
+                                    size: 26,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                                  ),
+                                  icon: const Icon(Icons.settings_outlined, size: 24),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      const SizedBox(height: 12),
+                      const SudokuGrid(),
+                      const SizedBox(height: 12),
+                      const ControlButtons(),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: AbilityBar(
+                          onAbilityUsed: () {
+                            ref.read(showFlashProvider.notifier).state = true;
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const NumberPad(),
+                      const SizedBox(height: 16),
+                    ],
                   ),
-
-                  const Divider(height: 1),
-                  const SizedBox(height: 12),
-
-                  // 2. Tablero de Sudoku
-                  const SudokuGrid(),
-
-                  const SizedBox(height: 12),
-
-                  // 3. Controles (Deshacer, Borrar, Notas, Pista)
-                  const ControlButtons(),
-
-                  const SizedBox(height: 12),
-
-                  // 3.5 HABILIDADES TÁCTICAS (Fase 1)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: AbilityBar(
-                      onAbilityUsed: () {
-                        ref.read(showFlashProvider.notifier).state = true;
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // 4. Teclado Numérico
-                  const NumberPad(),
-                  const SizedBox(height: 16),
-                ],
-              ),
+                );
+              },
             ),
 
             // CAPA DE PAUSA (ANTI-TRAMPAS)
@@ -468,18 +576,19 @@ class GameScreen extends ConsumerWidget {
         delay: const Duration(milliseconds: 100),
       );
 
-      // Guardar temporalmente y compartir
-      final directory = await getTemporaryDirectory();
-      final imagePath = await File('${directory.path}/victoria_sudoku.png').create();
-      await imagePath.writeAsBytes(imageBytes);
-
-      await Share.shareXFiles(
-        [XFile(imagePath.path)],
-        text: '¡Mira mi progreso en Numbra! 🧩🏆 #NumbraRPG',
-      );    } catch (e) {
+      // Delegar en el platform_file_saver la acción correcta según la plataforma
+      if (context.mounted) {
+        await saveAndShareVictory(
+          context: context,
+          imageBytes: imageBytes,
+          filename: 'victoria_numbra_sudoku.png',
+          shareText: '¡Mira mi progreso en Numbra! 🧩🏆 #NumbraRPG',
+        );
+      }
+    } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al compartir: $e')),
+          SnackBar(content: Text('Error al procesar la tarjeta: $e')),
         );
       }
     }
@@ -786,6 +895,122 @@ class GameScreen extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDesktopHeader(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic gameState,
+    dynamic settings,
+    dynamic sudokuTheme,
+    bool isDark,
+    String min,
+    String sec,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  gameState.isTournament
+                      ? 'LIGA ${gameState.tournamentDivision.toUpperCase()}'
+                      : 'MODO ${gameState.difficulty.toUpperCase()}',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    letterSpacing: 1.0,
+                    color: sudokuTheme.primaryColor,
+                  ),
+                ),
+                Text(
+                  'Partida de Campaña Estelar',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        
+        Row(
+          children: [
+            if (settings.showTimer) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E1E2E) : Colors.black.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.timer_outlined, 
+                      size: 18, 
+                      color: gameState.isTimerFrozen ? Colors.amber : sudokuTheme.primaryColor
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$min:$sec',
+                      style: GoogleFonts.shareTechMono(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: gameState.isTimerFrozen ? Colors.amber : (isDark ? Colors.white : Colors.black87),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+            ],
+            
+            IconButton(
+              onPressed: () => _shareVictory(
+                context, 
+                ref, 
+                gameState.difficulty, 
+                '$min:$sec', 
+                sudokuTheme, 
+                isDark
+              ),
+              icon: const Icon(Icons.share_rounded, size: 22),
+              tooltip: 'Compartir progreso',
+            ),
+            
+            IconButton(
+              onPressed: () => ref.read(gameProvider.notifier).togglePause(),
+              icon: Icon(
+                gameState.isPaused
+                    ? Icons.play_circle_outline_rounded
+                    : Icons.pause_circle_outline_rounded,
+                size: 26,
+              ),
+              tooltip: gameState.isPaused ? 'Reanudar' : 'Pausar',
+            ),
+            
+            IconButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              ),
+              icon: const Icon(Icons.settings_outlined, size: 24),
+              tooltip: 'Ajustes',
+            ),
+          ],
+        ),
+      ],
     );
   }
 

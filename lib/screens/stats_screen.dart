@@ -8,6 +8,7 @@ import '../models/user_profile.dart';
 import '../providers/storage_provider.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
+import '../widgets/responsive_content_wrapper.dart';
 
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
@@ -70,376 +71,247 @@ class StatsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        body: TabBarView(
-          physics: const BouncingScrollPhysics(),
-          children: [
-            // PESTAÑA 1: PERFIL & VITRINA
-            SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    // Tarjeta de perfil Premium
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(28),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark
-                              ? [const Color(0xFF1E1E2E), const Color(0xFF161622)]
-                              : [Colors.white, const Color(0xFFF2F4F7)],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                        border: Border.all(
-                          color: isDark ? Colors.white10 : Colors.grey[200]!,
+        body: ResponsiveContentWrapper(
+          maxWidth: 1000,
+          child: TabBarView(
+            physics: const BouncingScrollPhysics(),
+            children: [
+              // PESTAÑA 1: PERFIL & VITRINA (RESPONSIVO)
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final bool isDesktop = constraints.maxWidth > 800;
+                  final String userRank = getUserRank(userProfile.level);
+                  final String avatarEmoji = getAvatarEmoji(userProfile.level);
+
+                  if (isDesktop) {
+                    return SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 10.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Columna Izquierda: Perfil y Sincronización
+                            Expanded(
+                              flex: 4,
+                              child: Column(
+                                children: [
+                                  _buildProfileCard(userProfile, currentTheme, isDark, userRank, avatarEmoji),
+                                  const SizedBox(height: 20),
+                                  _buildCloudSyncCard(context, ref, userProfile, currentTheme.primaryColor, isDark),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 28),
+                            // Columna Derecha: Vitrina de Medallas
+                            Expanded(
+                              flex: 5,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Vitrina de Medallas',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? Colors.white : Colors.black87,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Toca para ver requisitos',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: currentTheme.primaryColor,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  GridView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: Achievement.allAchievements.length,
+                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 3,
+                                      crossAxisSpacing: 12,
+                                      mainAxisSpacing: 12,
+                                      childAspectRatio: 1.05,
+                                    ),
+                                    itemBuilder: (context, index) {
+                                      final achievement = Achievement.allAchievements[index];
+                                      final isUnlocked = userProfile.unlockedAchievements.contains(achievement.id);
+
+                                      return _buildAchievementTile(context, achievement, isUnlocked, isDark, currentTheme);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    );
+                  }
+
+                  // MÓVIL ORIGINAL
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
                       child: Column(
                         children: [
+                          _buildProfileCard(userProfile, currentTheme, isDark, userRank, avatarEmoji),
+                          const SizedBox(height: 20),
+                          _buildCloudSyncCard(context, ref, userProfile, currentTheme.primaryColor, isDark),
+                          const SizedBox(height: 24),
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Avatar Premium
-                              CircleAvatar(
-                                radius: 36,
-                                backgroundColor: currentTheme.primaryColor.withOpacity(0.15),
-                                child: Text(
-                                  getAvatarEmoji(userProfile.level),
-                                  style: const TextStyle(fontSize: 36),
+                              Text(
+                                'Vitrina de Medallas',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black87,
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              // Rango, nivel e información
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      getUserRank(userProfile.level),
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800,
-                                        color: currentTheme.primaryColor,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      userProfile.isRegistered 
-                                          ? userProfile.username 
-                                          : 'Jugador Invitado',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.white : Colors.black87,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Nivel ${userProfile.level} • Racha: ${userProfile.dailyStreak} días 🔥',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
+                              Text(
+                                'Toca para ver requisitos',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: currentTheme.primaryColor,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
-                          // Barra de progreso de XP
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          const SizedBox(height: 12),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: Achievement.allAchievements.length,
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 14,
+                              mainAxisSpacing: 14,
+                              childAspectRatio: 1.05,
+                            ),
+                            itemBuilder: (context, index) {
+                              final achievement = Achievement.allAchievements[index];
+                              final isUnlocked = userProfile.unlockedAchievements.contains(achievement.id);
+
+                              return _buildAchievementTile(context, achievement, isUnlocked, isDark, currentTheme);
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // PESTAÑA 2: RÉCORDS DE JUEGO (LOCALES - RESPONSIVO)
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final bool isDesktop = constraints.maxWidth > 800;
+
+                  if (isDesktop) {
+                    return SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 10.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Columna Izquierda: Tabla de Récords
+                            Expanded(
+                              flex: 5,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Progreso de Inteligencia',
-                                    style: TextStyle(
-                                      fontSize: 11,
+                                    'Tiempos Récord',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 18,
                                       fontWeight: FontWeight.bold,
+                                      color: isDark ? Colors.white : Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Tu desempeño lógico registrado en partidas ganadas completas.',
+                                    style: TextStyle(
+                                      fontSize: 12,
                                       color: isDark ? Colors.grey[400] : Colors.grey[600],
                                     ),
                                   ),
-                                  Text(
-                                    '${userProfile.xp} / ${userProfile.xpNeededForNextLevel} XP',
-                                    style: GoogleFonts.shareTechMono(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: currentTheme.primaryColor,
-                                    ),
-                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildStatsTable(storage, isDark, currentTheme.primaryColor),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              SizedBox(
-                                height: 10,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(5),
-                                  child: LinearProgressIndicator(
-                                    value: userProfile.progressPercentage,
-                                    backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
-                                    valueColor: AlwaysStoppedAnimation<Color>(currentTheme.primaryColor),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          const Divider(height: 1),
-                          const SizedBox(height: 16),
-                          // Monedas y Logros totales
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Column(
-                                children: [
-                                  const Text('🪙', style: TextStyle(fontSize: 22)),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${userProfile.coins}',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const Text(
-                                    'Monedas',
-                                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                              Container(height: 30, width: 1, color: isDark ? Colors.white10 : Colors.grey[300]),
-                              Column(
-                                children: [
-                                  const Text('🏆', style: TextStyle(fontSize: 22)),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${userProfile.unlockedAchievements.length} / ${Achievement.allAchievements.length}',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const Text(
-                                    'Medallas',
-                                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // 1.1 Sección de Autenticación en la Nube
-                    _buildCloudSyncCard(context, ref, userProfile, currentTheme.primaryColor, isDark),
-                    
-                    const SizedBox(height: 24),
-                    // Vitrina de Medallas
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Vitrina de Medallas',
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Toca para ver requisitos',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: currentTheme.primaryColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: Achievement.allAchievements.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 14,
-                        mainAxisSpacing: 14,
-                        childAspectRatio: 1.05,
-                      ),
-                      itemBuilder: (context, index) {
-                        final achievement = Achievement.allAchievements[index];
-                        final isUnlocked = userProfile.unlockedAchievements.contains(achievement.id);
-
-                        return GestureDetector(
-                          onTap: () => _showAchievementDetail(context, achievement, isUnlocked, isDark),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: isUnlocked
-                                    ? currentTheme.primaryColor.withOpacity(0.35)
-                                    : (isDark ? Colors.white10 : Colors.grey[200]!),
-                                width: isUnlocked ? 1.8 : 1.0,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.01),
-                                  blurRadius: 4,
-                                ),
-                              ],
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: isUnlocked
-                                      ? currentTheme.primaryColor.withOpacity(0.12)
-                                      : (isDark ? Colors.white10 : Colors.grey[100]),
-                                  child: Text(
-                                    achievement.icon,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      color: isUnlocked ? null : Colors.grey.withOpacity(0.4),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  achievement.title,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: isUnlocked
-                                        ? (isDark ? Colors.white : Colors.black87)
-                                        : Colors.grey,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      isUnlocked ? 'Desbloqueada' : 'Bloqueada',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: isUnlocked ? Colors.green : Colors.grey,
-                                      ),
-                                    ),
-                                    if (isUnlocked) ...[
-                                      const SizedBox(width: 3),
-                                      const Icon(Icons.check_circle_rounded, color: Colors.green, size: 10),
-                                    ]
-                                  ],
-                                ),
-                              ],
+                            const SizedBox(width: 28),
+                            // Columna Derecha: Tarjeta de Motivación
+                            Expanded(
+                              flex: 4,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 38), // Alinear visualmente con la tabla
+                                  _buildRecordsMotivationCard(currentTheme, isDark),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ),
-
-            // PESTAÑA 2: RÉCORDS DE JUEGO (LOCALES)
-            SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tiempos Récord',
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Tu desempeño lógico registrado en partidas ganadas completas.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildStatsTable(storage, isDark, currentTheme.primaryColor),
-                    const SizedBox(height: 28),
-                    // Mensaje motivacional
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: currentTheme.primaryColor.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: currentTheme.primaryColor.withOpacity(0.15),
+                          ],
                         ),
                       ),
-                      child: Row(
+                    );
+                  }
+
+                  // MÓVIL ORIGINAL
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('💡', style: TextStyle(fontSize: 32)),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '¡Desafía tu Lógica!',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : Colors.black87,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Tu racha e inteligencia se sincronizan automáticamente con el ranking global. ¡Sigue jugando para escalar puestos!',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: isDark ? Colors.grey[300] : Colors.grey[700],
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
+                          Text(
+                            'Tiempos Récord',
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
                             ),
                           ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Tu desempeño lógico registrado en partidas ganadas completas.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildStatsTable(storage, isDark, currentTheme.primaryColor),
+                          const SizedBox(height: 28),
+                          _buildRecordsMotivationCard(currentTheme, isDark),
+                          const SizedBox(height: 24),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
+                  );
+                },
               ),
-            ),
 
-            // PESTAÑA 3: CLASIFICACIÓN GLOBAL (LEADERBOARD BACKEND)
-            const LeaderboardView(),
-          ],
+              const LeaderboardView(),
+            ],
+          ),
         ),
       ),
     );
@@ -783,6 +655,300 @@ class StatsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildProfileCard(
+    UserProfile userProfile,
+    dynamic currentTheme,
+    bool isDark,
+    String userRank,
+    String avatarEmoji,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [const Color(0xFF1E1E2E), const Color(0xFF161622)]
+              : [Colors.white, const Color(0xFFF2F4F7)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.grey[200]!,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Avatar Premium
+              CircleAvatar(
+                radius: 36,
+                backgroundColor: currentTheme.primaryColor.withOpacity(0.15),
+                child: Text(
+                  avatarEmoji,
+                  style: const TextStyle(fontSize: 36),
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Rango, nivel e información
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      userRank,
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: currentTheme.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      userProfile.isRegistered 
+                          ? userProfile.username 
+                          : 'Jugador Invitado',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Nivel ${userProfile.level} • Racha: ${userProfile.dailyStreak} días 🔥',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Barra de progreso de XP
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Progreso de Inteligencia',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                  Text(
+                    '${userProfile.xp} / ${userProfile.xpNeededForNextLevel} XP',
+                    style: GoogleFonts.shareTechMono(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: currentTheme.primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 10,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: LinearProgressIndicator(
+                    value: userProfile.progressPercentage,
+                    backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
+                    valueColor: AlwaysStoppedAnimation<Color>(currentTheme.primaryColor),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          // Monedas y Logros totales
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Column(
+                children: [
+                  const Text('🪙', style: TextStyle(fontSize: 22)),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${userProfile.coins}',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    'Monedas',
+                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                  ),
+                ],
+              ),
+              Container(height: 30, width: 1, color: isDark ? Colors.white10 : Colors.grey[300]),
+              Column(
+                children: [
+                  const Text('🏆', style: TextStyle(fontSize: 22)),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${userProfile.unlockedAchievements.length} / ${Achievement.allAchievements.length}',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    'Medallas',
+                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAchievementTile(
+    BuildContext context,
+    dynamic achievement,
+    bool isUnlocked,
+    bool isDark,
+    dynamic currentTheme,
+  ) {
+    return GestureDetector(
+      onTap: () => _showAchievementDetail(context, achievement, isUnlocked, isDark),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isUnlocked
+                ? currentTheme.primaryColor.withOpacity(0.35)
+                : (isDark ? Colors.white10 : Colors.grey[200]!),
+            width: isUnlocked ? 1.8 : 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.01),
+              blurRadius: 4,
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: isUnlocked
+                  ? currentTheme.primaryColor.withOpacity(0.12)
+                  : (isDark ? Colors.white10 : Colors.grey[100]),
+              child: Text(
+                achievement.icon,
+                style: TextStyle(
+                  fontSize: 24,
+                  color: isUnlocked ? null : Colors.grey.withOpacity(0.4),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              achievement.title,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isUnlocked
+                    ? (isDark ? Colors.white : Colors.black87)
+                    : Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  isUnlocked ? 'Desbloqueada' : 'Bloqueada',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: isUnlocked ? Colors.green : Colors.grey,
+                  ),
+                ),
+                if (isUnlocked) ...[
+                  const SizedBox(width: 3),
+                  const Icon(Icons.check_circle_rounded, color: Colors.green, size: 10),
+                ]
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecordsMotivationCard(dynamic currentTheme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: currentTheme.primaryColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: currentTheme.primaryColor.withOpacity(0.15),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Text('💡', style: TextStyle(fontSize: 32)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '¡Desafía tu Lógica!',
+                  style: GoogleFonts.outfit(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tu racha e inteligencia se sincronizan automáticamente con el ranking global. ¡Sigue jugando para escalar puestos!',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// =========================================================================
@@ -838,102 +1004,219 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
     final isDark = themeState.isDarkMode;
     final sudokuTheme = ref.read(themeProvider.notifier).currentSudokuTheme;
 
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Selector de tipo de clasificación
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isDesktop = constraints.maxWidth > 800;
+
+        if (isDesktop) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 10.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Columna Izquierda: Filtros y Opciones de Liga
+                Container(
+                  width: 320,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isDark ? Colors.white10 : Colors.grey[200]!,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'OPCIONES DE LIGA',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: sudokuTheme.primaryColor,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _fetchLeaderboard,
+                            icon: Icon(Icons.refresh_rounded, color: sudokuTheme.primaryColor),
+                            tooltip: 'Actualizar Tabla',
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Tipo de Clasificación:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.grey[300] : Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildDesktopTypeSelector(isDark, sudokuTheme.primaryColor),
+                      if (_activeTab == 'speed') ...[
+                        const SizedBox(height: 24),
+                        Text(
+                          'Dificultad de Velocidad:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildDesktopDifficultySelector(isDark),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 28),
+                // Columna Derecha: Tabla de Clasificación Global
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text('🏆 ', style: TextStyle(fontSize: 20)),
+                          Text(
+                            _activeTab == 'level' 
+                                ? 'Ranking de Maestros (Nivel)' 
+                                : 'Ranking de Velocistas ($_activeDifficulty)',
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: _isLoading
+                            ? Center(
+                                child: CircularProgressIndicator(color: sudokuTheme.primaryColor),
+                              )
+                            : _errorMessage != null
+                                ? _buildErrorPlaceholder()
+                                : _leaderboardList.isEmpty
+                                    ? _buildEmptyPlaceholder()
+                                    : _buildLeaderboardList(isDark, sudokuTheme.primaryColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // MÓVIL ORIGINAL
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTypeSelectorButton(
-                label: 'General (Nivel)',
-                isActive: _activeTab == 'level',
-                color: sudokuTheme.primaryColor,
-                isDark: isDark,
-                onTap: () {
-                  setState(() {
-                    _activeTab = 'level';
-                  });
-                  _fetchLeaderboard();
-                },
+              // Selector de tipo de clasificación
+              Row(
+                children: [
+                  _buildTypeSelectorButton(
+                    label: 'General (Nivel)',
+                    isActive: _activeTab == 'level',
+                    color: sudokuTheme.primaryColor,
+                    isDark: isDark,
+                    onTap: () {
+                      setState(() {
+                        _activeTab = 'level';
+                      });
+                      _fetchLeaderboard();
+                    },
+                  ),
+                  const SizedBox(width: 10),
+                  _buildTypeSelectorButton(
+                    label: 'Velocidad ⏱️',
+                    isActive: _activeTab == 'speed',
+                    color: sudokuTheme.primaryColor,
+                    isDark: isDark,
+                    onTap: () {
+                      setState(() {
+                        _activeTab = 'speed';
+                      });
+                      _fetchLeaderboard();
+                    },
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: _fetchLeaderboard,
+                    icon: Icon(Icons.refresh_rounded, color: sudokuTheme.primaryColor),
+                    tooltip: 'Actualizar Tabla',
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              _buildTypeSelectorButton(
-                label: 'Velocidad ⏱️',
-                isActive: _activeTab == 'speed',
-                color: sudokuTheme.primaryColor,
-                isDark: isDark,
-                onTap: () {
-                  setState(() {
-                    _activeTab = 'speed';
-                  });
-                  _fetchLeaderboard();
-                },
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: _fetchLeaderboard,
-                icon: Icon(Icons.refresh_rounded, color: sudokuTheme.primaryColor),
-                tooltip: 'Actualizar Tabla',
+              const SizedBox(height: 14),
+
+              // Selector de dificultad
+              if (_activeTab == 'speed') ...[
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: ['Fácil', 'Medio', 'Difícil', 'Experto'].map((diff) {
+                      final isSel = _activeDifficulty == diff;
+                      Color diffColor = Colors.teal;
+                      if (diff == 'Medio') diffColor = Colors.blueAccent;
+                      if (diff == 'Difícil') diffColor = Colors.purpleAccent;
+                      if (diff == 'Experto') diffColor = Colors.redAccent;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: ChoiceChip(
+                          label: Text(diff, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                          selected: isSel,
+                          selectedColor: diffColor.withOpacity(0.2),
+                          checkmarkColor: diffColor,
+                          labelStyle: TextStyle(color: isSel ? diffColor : (isDark ? Colors.grey[400] : Colors.grey[700])),
+                          backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.grey[200],
+                          side: BorderSide(color: isSel ? diffColor : Colors.transparent, width: 1.2),
+                          onSelected: (val) {
+                            if (val) {
+                              setState(() {
+                                _activeDifficulty = diff;
+                              });
+                              _fetchLeaderboard();
+                            }
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+
+              // Contenedor de la Tabla/Lista
+              Expanded(
+                child: _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(color: sudokuTheme.primaryColor),
+                      )
+                    : _errorMessage != null
+                        ? _buildErrorPlaceholder()
+                        : _leaderboardList.isEmpty
+                            ? _buildEmptyPlaceholder()
+                            : _buildLeaderboardList(isDark, sudokuTheme.primaryColor),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-
-          // 2. Selector de dificultad en pastillas de color si el tab es 'speed'
-          if (_activeTab == 'speed') ...[
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: ['Fácil', 'Medio', 'Difícil', 'Experto'].map((diff) {
-                  final isSel = _activeDifficulty == diff;
-                  Color diffColor = Colors.teal;
-                  if (diff == 'Medio') diffColor = Colors.blueAccent;
-                  if (diff == 'Difícil') diffColor = Colors.purpleAccent;
-                  if (diff == 'Experto') diffColor = Colors.redAccent;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: ChoiceChip(
-                      label: Text(diff, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                      selected: isSel,
-                      selectedColor: diffColor.withOpacity(0.2),
-                      checkmarkColor: diffColor,
-                      labelStyle: TextStyle(color: isSel ? diffColor : (isDark ? Colors.grey[400] : Colors.grey[700])),
-                      backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.grey[200],
-                      side: BorderSide(color: isSel ? diffColor : Colors.transparent, width: 1.2),
-                      onSelected: (val) {
-                        if (val) {
-                          setState(() {
-                            _activeDifficulty = diff;
-                          });
-                          _fetchLeaderboard();
-                        }
-                      },
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 14),
-          ],
-
-          // 3. Contenedor de la Tabla/Lista
-          Expanded(
-            child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(color: sudokuTheme.primaryColor),
-                  )
-                : _errorMessage != null
-                    ? _buildErrorPlaceholder()
-                    : _leaderboardList.isEmpty
-                        ? _buildEmptyPlaceholder()
-                        : _buildLeaderboardList(isDark, sudokuTheme.primaryColor),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1156,6 +1439,163 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDesktopTypeSelector(bool isDark, Color accentColor) {
+    return Column(
+      children: [
+        _buildDesktopTypeOption(
+          label: 'General (Nivel)',
+          subtitle: 'Ordenado por nivel y XP',
+          icon: '👑',
+          isActive: _activeTab == 'level',
+          accentColor: accentColor,
+          isDark: isDark,
+          onTap: () {
+            setState(() {
+              _activeTab = 'level';
+            });
+            _fetchLeaderboard();
+          },
+        ),
+        const SizedBox(height: 12),
+        _buildDesktopTypeOption(
+          label: 'Velocidad ⏱️',
+          subtitle: 'Ordenado por mejor tiempo',
+          icon: '⚡',
+          isActive: _activeTab == 'speed',
+          accentColor: accentColor,
+          isDark: isDark,
+          onTap: () {
+            setState(() {
+              _activeTab = 'speed';
+            });
+            _fetchLeaderboard();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopTypeOption({
+    required String label,
+    required String subtitle,
+    required String icon,
+    required bool isActive,
+    required Color accentColor,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isActive 
+              ? accentColor.withOpacity(0.12) 
+              : (isDark ? const Color(0xFF14141F) : Colors.grey[50]),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isActive ? accentColor : (isDark ? Colors.white10 : Colors.grey[200]!),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 22)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: isActive ? accentColor : (isDark ? Colors.white : Colors.black87),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopDifficultySelector(bool isDark) {
+    return Column(
+      children: ['Fácil', 'Medio', 'Difícil', 'Experto'].map((diff) {
+        final isSel = _activeDifficulty == diff;
+        Color diffColor = Colors.teal;
+        if (diff == 'Medio') diffColor = Colors.blueAccent;
+        if (diff == 'Difícil') diffColor = Colors.purpleAccent;
+        if (diff == 'Experto') diffColor = Colors.redAccent;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _activeDifficulty = diff;
+              });
+              _fetchLeaderboard();
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isSel 
+                    ? diffColor.withOpacity(0.12) 
+                    : (isDark ? const Color(0xFF14141F) : Colors.grey[50]),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSel ? diffColor : (isDark ? Colors.white10 : Colors.grey[200]!),
+                  width: 1.2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: diffColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    diff,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: isSel ? diffColor : (isDark ? Colors.grey[350] : Colors.grey[700]),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (isSel)
+                    Icon(Icons.check_circle_outline_rounded, color: diffColor, size: 16),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

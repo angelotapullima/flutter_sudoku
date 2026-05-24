@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import '../models/user_profile.dart';
+import '../widgets/responsive_content_wrapper.dart';
 
 class LevelProgressScreen extends ConsumerWidget {
   const LevelProgressScreen({super.key});
@@ -26,74 +27,170 @@ class LevelProgressScreen extends ConsumerWidget {
         elevation: 0,
         foregroundColor: isDark ? Colors.white : Colors.black87,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            // 1. Gran Círculo de Nivel Animado
-            _buildLevelHexagon(userProfile, sudokuTheme),
-            const SizedBox(height: 24),
+      body: ResponsiveContentWrapper(
+        maxWidth: 950,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final bool isDesktop = constraints.maxWidth > 800;
 
-            // 2. Barra de Progreso Detallada
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                  )
-                ],
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            if (isDesktop) {
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Experiencia Actual',
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+                      // Columna Izquierda: Nivel y Progreso
+                      Expanded(
+                        flex: 4,
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 12),
+                            _buildLevelHexagon(userProfile, sudokuTheme),
+                            const SizedBox(height: 32),
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 10,
+                                  )
+                                ],
+                                border: Border.all(
+                                  color: isDark ? Colors.white10 : Colors.grey[200]!,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Experiencia Actual',
+                                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+                                      ),
+                                      Text(
+                                        '${userProfile.xp} / $nextLevelXp XP',
+                                        style: TextStyle(
+                                          color: sudokuTheme.primaryColor,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: LinearProgressIndicator(
+                                      value: progress,
+                                      minHeight: 12,
+                                      backgroundColor: sudokuTheme.primaryColor.withOpacity(0.1),
+                                      valueColor: AlwaysStoppedAnimation<Color>(sudokuTheme.primaryColor),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Te faltan ${nextLevelXp - userProfile.xp} XP para el Nivel ${userProfile.level + 1}',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      Text(
-                        '${userProfile.xp} / $nextLevelXp XP',
-                        style: TextStyle(
-                          color: sudokuTheme.primaryColor,
-                          fontWeight: FontWeight.w900,
+                      const SizedBox(width: 32),
+                      // Columna Derecha: Cómo funciona y Recompensas
+                      Expanded(
+                        flex: 5,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildGamificationExplainer(isDark, sudokuTheme),
+                            const SizedBox(height: 32),
+                            _buildRewardsPreview(isDark, sudokuTheme),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 12,
-                      backgroundColor: sudokuTheme.primaryColor.withOpacity(0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(sudokuTheme.primaryColor),
+                ),
+              );
+            }
+
+            // MÓVIL ORIGINAL
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    _buildLevelHexagon(userProfile, sudokuTheme),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                          )
+                        ],
+                        border: Border.all(
+                          color: isDark ? Colors.white10 : Colors.grey[200]!,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Experiencia Actual',
+                                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              Text(
+                                '${userProfile.xp} / $nextLevelXp XP',
+                                style: TextStyle(
+                                  color: sudokuTheme.primaryColor,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 12,
+                              backgroundColor: sudokuTheme.primaryColor.withOpacity(0.1),
+                              valueColor: AlwaysStoppedAnimation<Color>(sudokuTheme.primaryColor),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Te faltan ${nextLevelXp - userProfile.xp} XP para el Nivel ${userProfile.level + 1}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Te faltan ${nextLevelXp - userProfile.xp} XP para el Nivel ${userProfile.level + 1}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
+                    const SizedBox(height: 32),
+                    _buildGamificationExplainer(isDark, sudokuTheme),
+                    const SizedBox(height: 32),
+                    _buildRewardsPreview(isDark, sudokuTheme),
+                  ],
+                ),
               ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // 3. Explicación del Sistema Gamificado
-            _buildGamificationExplainer(isDark, sudokuTheme),
-
-            const SizedBox(height: 32),
-
-            // 4. Lista de Próximas Recompensas (Concepto)
-            _buildRewardsPreview(isDark, sudokuTheme),
-          ],
+            );
+          },
         ),
       ),
     );

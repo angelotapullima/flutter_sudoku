@@ -6,6 +6,7 @@ import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/game_provider.dart';
 import 'game_screen.dart';
+import '../widgets/responsive_content_wrapper.dart';
 
 class DailyChallengeScreen extends ConsumerStatefulWidget {
   const DailyChallengeScreen({super.key});
@@ -93,35 +94,119 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Llama de Racha Activa (Streak Card)
-              _buildStreakCard(userProfile.dailyStreak, isDark),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final double width = constraints.maxWidth;
+          final bool isDesktop = width > 800;
 
-              const SizedBox(height: 24),
+          if (isDesktop) {
+            // --- DISEÑO WEB PANORÁMICO DE ESCRITORIO ---
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: ResponsiveContentWrapper(
+                maxWidth: 1000, // Permitimos un poco más de ancho para las 2 columnas
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 28.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Columna Izquierda: Calendario Semanal y Tarjeta del Reto
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'CALENDARIO SEMANAL',
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: sudokuTheme.primaryColor,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildWeeklyCalendar(weekDates, weekDaysNames, todayStr, userProfile.completedDailyDates, sudokuTheme, isDark),
+                            const SizedBox(height: 32),
+                            Text(
+                              'RETO ESTELAR DEL DÍA',
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: sudokuTheme.primaryColor,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildChallengeCard(hasCompletedToday, todayDifficulty, today, sudokuTheme, isDark),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(width: 32),
+                      
+                      // Columna Derecha: Racha de fuego y Reglas
+                      Container(
+                        width: 350,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'TU RACHA ACTUAL',
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: sudokuTheme.primaryColor,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildStreakCard(userProfile.dailyStreak, isDark),
+                            const SizedBox(height: 32),
+                            Text(
+                              'REGLAS Y RECOMPENSAS',
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: sudokuTheme.primaryColor,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildInfoSection(isDark),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
 
-              // 2. Calendario Semanal
-              _buildWeeklyCalendar(weekDates, weekDaysNames, todayStr, userProfile.completedDailyDates, sudokuTheme, isDark),
-
-              const SizedBox(height: 24),
-
-              // 3. Tarjeta del Reto del Día
-              _buildChallengeCard(hasCompletedToday, todayDifficulty, today, sudokuTheme, isDark),
-
-              const SizedBox(height: 24),
-
-              // 4. Información de Reglas / Recompensas
-              _buildInfoSection(isDark),
-
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
+          // --- DISEÑO MÓVIL VERTICAL ORIGINAL ---
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: ResponsiveContentWrapper(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildStreakCard(userProfile.dailyStreak, isDark),
+                    const SizedBox(height: 24),
+                    _buildWeeklyCalendar(weekDates, weekDaysNames, todayStr, userProfile.completedDailyDates, sudokuTheme, isDark),
+                    const SizedBox(height: 24),
+                    _buildChallengeCard(hasCompletedToday, todayDifficulty, today, sudokuTheme, isDark),
+                    const SizedBox(height: 24),
+                    _buildInfoSection(isDark),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

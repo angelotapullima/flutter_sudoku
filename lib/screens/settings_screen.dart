@@ -6,6 +6,7 @@ import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
 import '../models/user_profile.dart';
 import 'login_screen.dart';
+import '../widgets/responsive_content_wrapper.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -26,86 +27,89 @@ class SettingsScreen extends ConsumerWidget {
         elevation: 0,
         foregroundColor: isDark ? Colors.white : Colors.black87,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // SECCIÓN DE CUENTA
-            _buildSectionTitle('Cuenta'),
-            _buildAccountCard(context, ref, userProfile, sudokuTheme, isDark),
-            const SizedBox(height: 32),
+      body: ResponsiveContentWrapper(
+        maxWidth: 750,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // SECCIÓN DE CUENTA
+              _buildSectionTitle('Cuenta'),
+              _buildAccountCard(context, ref, userProfile, sudokuTheme, isDark),
+              const SizedBox(height: 32),
 
-            // SECCIÓN DE JUEGO
-            _buildSectionTitle('Preferencias de Juego'),
-            _buildSettingsGroup([
-              _buildSettingSwitch(
-                icon: Icons.timer_outlined,
-                title: 'Mostrar Cronómetro',
-                subtitle: 'Visualiza el tiempo transcurrido.',
-                value: settings.showTimer,
-                onChanged: (val) => ref.read(settingsProvider.notifier).toggleShowTimer(),
-                theme: sudokuTheme,
-              ),
-              _buildSettingSwitch(
-                icon: Icons.numbers_rounded,
-                title: 'Números Restantes',
-                subtitle: 'Muestra cuántos números faltan colocar.',
-                value: settings.showRemainingNumbers,
-                onChanged: (val) => ref.read(settingsProvider.notifier).toggleShowRemainingNumbers(),
-                theme: sudokuTheme,
-              ),
-              _buildSettingSwitch(
-                icon: Icons.lightbulb_outline_rounded,
-                title: 'Resaltado Inteligente',
-                subtitle: 'Resaltar números iguales y errores.',
-                value: settings.enableHighlighting,
-                onChanged: (val) => ref.read(settingsProvider.notifier).toggleEnableHighlighting(),
-                theme: sudokuTheme,
-              ),
-              _buildSettingSwitch(
-                icon: Icons.dangerous_outlined,
-                title: 'Límite de Errores',
-                subtitle: 'Perder tras cometer 3 errores.',
-                value: settings.enableErrorLimit,
-                onChanged: (val) => ref.read(settingsProvider.notifier).toggleEnableErrorLimit(),
-                theme: sudokuTheme,
-              ),
-              _buildSettingSwitch(
-                icon: Icons.vibration_rounded,
-                title: 'Vibración Háptica',
-                subtitle: 'Respuesta táctil al jugar.',
-                value: settings.enableVibration,
-                onChanged: (val) => ref.read(settingsProvider.notifier).toggleEnableVibration(),
-                theme: sudokuTheme,
-              ),
-            ], isDark),
+              // SECCIÓN DE JUEGO
+              _buildSectionTitle('Preferencias de Juego'),
+              _buildSettingsGroup([
+                _buildSettingSwitch(
+                  icon: Icons.timer_outlined,
+                  title: 'Mostrar Cronómetro',
+                  subtitle: 'Visualiza el tiempo transcurrido.',
+                  value: settings.showTimer,
+                  onChanged: (val) => ref.read(settingsProvider.notifier).toggleShowTimer(),
+                  theme: sudokuTheme,
+                ),
+                _buildSettingSwitch(
+                  icon: Icons.numbers_rounded,
+                  title: 'Números Restantes',
+                  subtitle: 'Muestra cuántos números faltan colocar.',
+                  value: settings.showRemainingNumbers,
+                  onChanged: (val) => ref.read(settingsProvider.notifier).toggleShowRemainingNumbers(),
+                  theme: sudokuTheme,
+                ),
+                _buildSettingSwitch(
+                  icon: Icons.lightbulb_outline_rounded,
+                  title: 'Resaltado Inteligente',
+                  subtitle: 'Resaltar números iguales y errores.',
+                  value: settings.enableHighlighting,
+                  onChanged: (val) => ref.read(settingsProvider.notifier).toggleEnableHighlighting(),
+                  theme: sudokuTheme,
+                ),
+                _buildSettingSwitch(
+                  icon: Icons.dangerous_outlined,
+                  title: 'Límite de Errores',
+                  subtitle: 'Perder tras cometer 3 errores.',
+                  value: settings.enableErrorLimit,
+                  onChanged: (val) => ref.read(settingsProvider.notifier).toggleEnableErrorLimit(),
+                  theme: sudokuTheme,
+                ),
+                _buildSettingSwitch(
+                  icon: Icons.vibration_rounded,
+                  title: 'Vibración Háptica',
+                  subtitle: 'Respuesta táctil al jugar.',
+                  value: settings.enableVibration,
+                  onChanged: (val) => ref.read(settingsProvider.notifier).toggleEnableVibration(),
+                  theme: sudokuTheme,
+                ),
+              ], isDark),
 
-            const SizedBox(height: 32),
+              const SizedBox(height: 32),
 
-            // SECCIÓN DE APARIENCIA
-            _buildSectionTitle('Personalización'),
-            _buildSettingsGroup([
-              _buildSettingSwitch(
-                icon: isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-                title: 'Modo Oscuro',
-                subtitle: 'Cambia el brillo de la interfaz.',
-                value: isDark,
-                onChanged: (val) => ref.read(themeProvider.notifier).toggleDarkMode(),
-                theme: sudokuTheme,
-              ),
-            ], isDark),
+              // SECCIÓN DE APARIENCIA
+              _buildSectionTitle('Personalización'),
+              _buildSettingsGroup([
+                _buildSettingSwitch(
+                  icon: isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  title: 'Modo Oscuro',
+                  subtitle: 'Cambia el brillo de la interfaz.',
+                  value: isDark,
+                  onChanged: (val) => ref.read(themeProvider.notifier).toggleDarkMode(),
+                  theme: sudokuTheme,
+                ),
+              ], isDark),
 
-            const SizedBox(height: 40),
-            // Footer
-            Center(
-              child: Text(
-                'Numbra v1.0.0',
-                style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              const SizedBox(height: 40),
+              // Footer
+              Center(
+                child: Text(
+                  'Numbra v1.0.0',
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

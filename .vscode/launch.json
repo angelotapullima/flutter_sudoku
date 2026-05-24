@@ -27,6 +27,31 @@
       "args": [
         "--dart-define-from-file=env/prod.json"
       ]
+    },
+    {
+      "name": "Sudoku Web (Chrome - Dev Nube)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "chrome",
+        "--web-port",
+        "8080"
+      ]
+    },
+    {
+      "name": "Sudoku Web (Chrome - Local API)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "chrome",
+        "--web-port",
+        "8080",
+        "--dart-define=BASE_URL=http://localhost:3000/api"
+      ]
     }
   ]
 }

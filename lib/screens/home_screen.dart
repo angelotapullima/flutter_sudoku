@@ -11,6 +11,7 @@ import '../providers/storage_provider.dart';
 import 'game_screen.dart';
 import 'store_screen.dart';
 import 'login_screen.dart';
+import '../widgets/responsive_content_wrapper.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -92,10 +93,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
+          child: ResponsiveContentWrapper(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
 
               // 1. Selector rápido de temas en pastilla Glassmorphic sutil
               Padding(
@@ -152,10 +154,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
+                      crossAxisCount: MediaQuery.of(context).size.width > 800 ? 4 : 2,
                       crossAxisSpacing: 14,
                       mainAxisSpacing: 14,
-                      childAspectRatio: 1.18,
+                      childAspectRatio: MediaQuery.of(context).size.width > 800 ? 1.35 : 1.18,
                       children: [
                         _buildModernDifficultyCard(
                           context,
@@ -292,6 +294,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 

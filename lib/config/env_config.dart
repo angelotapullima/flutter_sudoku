@@ -1,7 +1,7 @@
 class EnvConfig {
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'http://localhost:3000/api',
+    defaultValue: 'https://apisudokudev.anked.dev/api',
   );
   
   static const String appName = String.fromEnvironment(

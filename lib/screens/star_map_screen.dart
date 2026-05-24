@@ -7,6 +7,7 @@ import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/game_provider.dart';
 import 'game_screen.dart';
+import '../widgets/responsive_content_wrapper.dart';
 
 class StarMapScreen extends ConsumerStatefulWidget {
   const StarMapScreen({super.key});
@@ -37,7 +38,10 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
           else if (campaign.error != null)
             Center(child: Text('Error: ${campaign.error}', style: const TextStyle(color: Colors.white)))
           else
-            _buildMapPath(campaign.levels, userProfile.campaignLevel, sudokuTheme),
+            ResponsiveContentWrapper(
+              maxWidth: 550,
+              child: _buildMapPath(campaign.levels, userProfile.campaignLevel, sudokuTheme),
+            ),
 
           // 3. Barra Superior Overlay
           Positioned(

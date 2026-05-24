@@ -5,6 +5,7 @@ import 'services/local_storage_service.dart';
 import 'providers/storage_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/animated_splash_screen.dart';
+import 'widgets/responsive_app_shell.dart';
 
 void main() async {
   // Asegurar que los canales nativos de Flutter están listos antes de SharedPreferences
@@ -61,6 +62,9 @@ class MyApp extends ConsumerWidget {
           ),
         ),
       ),
+      builder: (context, child) {
+        return ResponsiveAppShell(child: child!);
+      },
       home: const AnimatedSplashScreen(),
     );
   }
