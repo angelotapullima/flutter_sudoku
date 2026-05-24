@@ -2,53 +2,38 @@ import 'dart:io';
 import 'package:image/image.dart' as img;
 
 void main() {
-  print('🌌 Rediseñando Logo Vibrante para Numbra...');
+  print('🌌 Generando el LOGO DEFINITIVO para Numbra (Neo-Cyber)...');
   
-  // 1. Crear una imagen 1024x1024 (Alta resolución)
   final image = img.Image(width: 1024, height: 1024);
   
-  // 2. Fondo Negro Puro para que el neón resalte al máximo
-  img.fill(image, color: img.ColorRgb8(5, 5, 10));
+  // 1. Fondo Gradiente Púrpura/Azul (Llenado rápido)
+  img.fill(image, color: img.ColorRgb8(10, 10, 25));
 
-  // 3. Efecto de Resplandor Exterior (Glow)
-  // Dibujamos varios círculos con opacidad degradada para simular luz neón
-  final neonBlue = img.ColorRgb8(15, 98, 254);
+  // 2. Aura Neón CIAN (Doble capa de brillo)
   final brightCyan = img.ColorRgb8(0, 255, 255);
-  
-  for (int i = 0; i < 20; i++) {
-    img.drawCircle(
-      image, 
-      x: 512, y: 512, radius: 450 - i, 
-      color: img.ColorRgb8(15, 98, 254),
-    );
+  for (int i = 0; i < 40; i++) {
+    img.drawCircle(image, x: 512, y: 512, radius: 460 - i, color: brightCyan);
   }
 
-  // 4. Cuadrícula Central más GRUESA y Brillante
-  final gridColor = img.ColorRgb8(255, 255, 255);
+  // 3. El Símbolo Lógico: Una grilla blanca pura, GRUESA y RADIANTE
+  final white = img.ColorRgb8(255, 255, 255);
   for (int i = 0; i < 4; i++) {
     int pos = 362 + (i * 100);
-    // Dibujamos líneas de 10px de grosor (repitiendo líneas adyacentes)
-    for (int offset = -4; offset <= 4; offset++) {
-      // Vertical
-      img.drawLine(image, x1: pos + offset, y1: 362, x2: pos + offset, y2: 662, color: gridColor);
-      // Horizontal
-      img.drawLine(image, x1: 362, y1: pos + offset, x2: 662, y2: pos + offset, color: gridColor);
+    // Grosor de 15px para que se vea a kilómetros
+    for (int t = -7; t <= 7; t++) {
+      img.drawLine(image, x1: pos + t, y1: 300, x2: pos + t, y2: 724, color: white);
+      img.drawLine(image, x1: 300, y1: pos + t, x2: 724, y2: pos + t, color: white);
     }
   }
 
-  // 5. El Corazón de Numbra (Círculo de Energía Cian)
-  // Un círculo central muy brillante con borde grueso
-  for (int r = 0; r < 15; r++) {
-    img.drawCircle(
-      image, 
-      x: 512, y: 512, radius: 140 + r, 
-      color: brightCyan,
-    );
+  // 4. Núcleo Púrpura Neón (El "Ojo de la Lógica")
+  final purple = img.ColorRgb8(180, 0, 255);
+  for (int r = 0; r < 25; r++) {
+    img.drawCircle(image, x: 512, y: 512, radius: 100 + r, color: purple);
   }
 
-  // 6. Guardar el archivo
   final png = img.encodePng(image);
   File('assets/images/logo.png').writeAsBytesSync(png);
   
-  print('✅ Nuevo Logo Vibrante generado en assets/images/logo.png');
+  print('✅ LOGO VIBRANTE generado con éxito.');
 }

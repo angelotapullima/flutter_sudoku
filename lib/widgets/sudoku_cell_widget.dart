@@ -22,6 +22,11 @@ class SudokuCellWidget extends ConsumerWidget {
     final themeNotifier = ref.read(themeProvider.notifier);
     final sudokuTheme = themeNotifier.currentSudokuTheme;
 
+    // VALIDACIÓN DE SEGURIDAD (Hotfix para RangeError al cerrar partida)
+    if (gameState.grid.isEmpty || gameState.grid.length <= row || gameState.grid[row].length <= col) {
+      return const SizedBox();
+    }
+
     final SudokuCell cell = gameState.grid[row][col];
     final isSelected = gameState.selectedRow == row && gameState.selectedCol == col;
 
