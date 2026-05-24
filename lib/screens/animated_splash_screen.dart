@@ -101,12 +101,12 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
                     ),
                     const SizedBox(height: 40),
                     const Text(
-                      'SUDOKU MASTER',
+                      'NUMBRA',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 4,
+                        letterSpacing: 6,
                       ),
                     ),
                     const SizedBox(height: 10),

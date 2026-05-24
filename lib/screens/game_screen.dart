@@ -14,8 +14,13 @@ import '../providers/settings_provider.dart';
 import '../widgets/sudoku_grid.dart';
 import '../widgets/control_buttons.dart';
 import '../widgets/number_pad.dart';
+import '../widgets/ability_bar.dart';
+import '../widgets/divine_flash_effect.dart';
 import 'settings_screen.dart';
 import '../widgets/share_victory_card.dart';
+
+// Proveedor local para el efecto visual de flash
+final showFlashProvider = StateProvider.autoDispose<bool>((ref) => false);
 
 class GameScreen extends ConsumerWidget {
   const GameScreen({super.key});
@@ -28,6 +33,7 @@ class GameScreen extends ConsumerWidget {
     final sudokuTheme = themeNotifier.currentSudokuTheme;
     final isDark = themeState.isDarkMode;
     final settings = ref.watch(settingsProvider);
+    final showFlash = ref.watch(showFlashProvider);
 
     final min = (gameState.elapsedSeconds ~/ 60).toString().padLeft(2, '0');
     final sec = (gameState.elapsedSeconds % 60).toString().padLeft(2, '0');
@@ -55,121 +61,145 @@ class GameScreen extends ConsumerWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            Column(
-              children: [
-                // 1. Barra de encabezado
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Botón Salir
-                      IconButton(
-                        onPressed: () {
-                          // Si el juego no ha terminado, se guarda automáticamente
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-                      ),
-                      // Dificultad del juego
-                      Column(
-                        children: [
-                          Text(
-                            gameState.isTournament
-                                ? 'LIGA ${gameState.tournamentDivision.toUpperCase()}'
-                                : gameState.difficulty.toUpperCase(),
-                            style: GoogleFonts.outfit(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              letterSpacing: 1.0,
-                              color: sudokuTheme.primaryColor,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          // Errores
-                          Text(
-                            settings.enableErrorLimit
-                                ? 'Errores: ${gameState.errorsCount}/3'
-                                : 'Errores: ${gameState.errorsCount}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Temporizador y Pausa/Ajustes
-                      Row(
-                        children: [
-                          if (settings.showTimer) ...[
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  // 1. Barra de encabezado
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Botón Salir
+                        IconButton(
+                          onPressed: () {
+                            // Si el juego no ha terminado, se guarda automáticamente
+                            Navigator.of(context).pop();
+                          },
+                          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
+                        ),
+                        // Dificultad del juego
+                        Column(
+                          children: [
                             Text(
-                              '$min:$sec',
-                              style: GoogleFonts.shareTechMono(
-                                fontSize: 22,
+                              gameState.isTournament
+                                  ? 'LIGA ${gameState.tournamentDivision.toUpperCase()}'
+                                  : gameState.difficulty.toUpperCase(),
+                              style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                letterSpacing: 1.0,
+                                color: sudokuTheme.primaryColor,
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(height: 2),
+                            // Errores
+                            Text(
+                              settings.enableErrorLimit
+                                  ? 'Errores: ${gameState.errorsCount}/3'
+                                  : 'Errores: ${gameState.errorsCount}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey,
+                              ),
+                            ),
                           ],
-                          IconButton(
-                            onPressed: () => _shareVictory(
-                              context, 
-                              ref, 
-                              gameState.difficulty, 
-                              '$min:$sec', 
-                              sudokuTheme, 
-                              isDark
+                        ),
+                        // Temporizador y Pausa/Ajustes
+                        Row(
+                          children: [
+                            if (settings.showTimer) ...[
+                              Text(
+                                '$min:$sec',
+                                style: GoogleFonts.shareTechMono(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: gameState.isTimerFrozen ? Colors.amber : (isDark ? Colors.white : Colors.black),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            IconButton(
+                              onPressed: () => _shareVictory(
+                                context, 
+                                ref, 
+                                gameState.difficulty, 
+                                '$min:$sec', 
+                                sudokuTheme, 
+                                isDark
+                              ),
+                              icon: const Icon(Icons.share_rounded, size: 22),
+                              tooltip: 'Compartir progreso',
                             ),
-                            icon: const Icon(Icons.share_rounded, size: 22),
-                            tooltip: 'Compartir progreso',
-                          ),
-                          IconButton(
-                            onPressed: () => ref.read(gameProvider.notifier).togglePause(),
-                            icon: Icon(
-                              gameState.isPaused
-                                  ? Icons.play_circle_outline_rounded
-                                  : Icons.pause_circle_outline_rounded,
-                              size: 26,
+                            IconButton(
+                              onPressed: () => ref.read(gameProvider.notifier).togglePause(),
+                              icon: Icon(
+                                gameState.isPaused
+                                    ? Icons.play_circle_outline_rounded
+                                    : Icons.pause_circle_outline_rounded,
+                                size: 26,
+                              ),
                             ),
-                          ),
-                          IconButton(
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                            IconButton(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                              ),
+                              icon: const Icon(
+                                Icons.settings_outlined,
+                                size: 24,
+                              ),
                             ),
-                            icon: const Icon(
-                              Icons.settings_outlined,
-                              size: 24,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                const Divider(height: 1),
-                const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
 
-                // 2. Tablero de Sudoku
-                const SudokuGrid(),
+                  // 2. Tablero de Sudoku
+                  const SudokuGrid(),
 
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                // 3. Controles (Deshacer, Borrar, Notas, Pista)
-                const ControlButtons(),
+                  // 3. Controles (Deshacer, Borrar, Notas, Pista)
+                  const ControlButtons(),
 
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                // 4. Teclado Numérico
-                const NumberPad(),
-                const SizedBox(height: 16),
-              ],
+                  // 3.5 HABILIDADES TÁCTICAS (Fase 1)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: AbilityBar(
+                      onAbilityUsed: () {
+                        ref.read(showFlashProvider.notifier).state = true;
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // 4. Teclado Numérico
+                  const NumberPad(),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
 
             // CAPA DE PAUSA (ANTI-TRAMPAS)
             if (gameState.isPaused)
               _buildPauseOverlay(context, ref, sudokuTheme, isDark),
+
+            // EFECTO VISUAL DIVINO
+            if (showFlash)
+              DivineFlashEffect(
+                color: Colors.white,
+                onComplete: () {
+                  ref.read(showFlashProvider.notifier).state = false;
+                },
+              ),
           ],
         ),
       ),
@@ -445,9 +475,8 @@ class GameScreen extends ConsumerWidget {
 
       await Share.shareXFiles(
         [XFile(imagePath.path)],
-        text: '¡Mira mi progreso en Sudoku Master! 🧩🏆 #SudokuMaster',
-      );
-    } catch (e) {
+        text: '¡Mira mi progreso en Numbra! 🧩🏆 #NumbraRPG',
+      );    } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al compartir: $e')),

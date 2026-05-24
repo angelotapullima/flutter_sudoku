@@ -2,6 +2,7 @@ class UserProfile {
   final int coins;
   final int xp;
   final int level;
+  final int campaignLevel;
   final List<String> unlockedAchievements;
   final int dailyStreak;
   final String lastDailyPlayedDate;
@@ -14,6 +15,7 @@ class UserProfile {
     this.coins = 100,
     this.xp = 0,
     this.level = 1,
+    this.campaignLevel = 1,
     this.unlockedAchievements = const [],
     this.dailyStreak = 0,
     this.lastDailyPlayedDate = '',
@@ -33,10 +35,31 @@ class UserProfile {
     return (xp / xpNeededForNextLevel).clamp(0.0, 1.0);
   }
 
+  /// Título de Rango (Fase 2 GDD)
+  String get rankTitle {
+    if (level >= 100) return 'Oráculo';
+    if (level >= 51) return 'Gran Maestro';
+    if (level >= 31) return 'Arquitecto';
+    if (level >= 16) return 'Analista';
+    if (level >= 6) return 'Aprendiz';
+    return 'Iniciado';
+  }
+
+  /// Emoji de Rango
+  String get rankEmoji {
+    if (level >= 100) return '👁️';
+    if (level >= 51) return '👑';
+    if (level >= 31) return '📐';
+    if (level >= 16) return '🔬';
+    if (level >= 6) return '⚙️';
+    return '🌱';
+  }
+
   UserProfile copyWith({
     int? coins,
     int? xp,
     int? level,
+    int? campaignLevel,
     List<String>? unlockedAchievements,
     int? dailyStreak,
     String? lastDailyPlayedDate,
@@ -49,6 +72,7 @@ class UserProfile {
       coins: coins ?? this.coins,
       xp: xp ?? this.xp,
       level: level ?? this.level,
+      campaignLevel: campaignLevel ?? this.campaignLevel,
       unlockedAchievements: unlockedAchievements ?? this.unlockedAchievements,
       dailyStreak: dailyStreak ?? this.dailyStreak,
       lastDailyPlayedDate: lastDailyPlayedDate ?? this.lastDailyPlayedDate,
@@ -64,6 +88,7 @@ class UserProfile {
       'coins': coins,
       'xp': xp,
       'level': level,
+      'campaignLevel': campaignLevel,
       'unlockedAchievements': unlockedAchievements,
       'dailyStreak': dailyStreak,
       'lastDailyPlayedDate': lastDailyPlayedDate,
@@ -79,6 +104,7 @@ class UserProfile {
       coins: json['coins'] as int? ?? 100,
       xp: json['xp'] as int? ?? 0,
       level: json['level'] as int? ?? 1,
+      campaignLevel: json['campaignLevel'] as int? ?? 1,
       unlockedAchievements: List<String>.from(json['unlockedAchievements'] as List<dynamic>? ?? []),
       dailyStreak: json['dailyStreak'] as int? ?? 0,
       lastDailyPlayedDate: json['lastDailyPlayedDate'] as String? ?? '',

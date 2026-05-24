@@ -31,7 +31,7 @@ class LevelProgressScreen extends ConsumerWidget {
         child: Column(
           children: [
             // 1. Gran Círculo de Nivel Animado
-            _buildLevelHexagon(userProfile.level, sudokuTheme),
+            _buildLevelHexagon(userProfile, sudokuTheme),
             const SizedBox(height: 24),
 
             // 2. Barra de Progreso Detallada
@@ -99,7 +99,7 @@ class LevelProgressScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLevelHexagon(int level, SudokuTheme theme) {
+  Widget _buildLevelHexagon(UserProfile userProfile, SudokuTheme theme) {
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -125,15 +125,20 @@ class LevelProgressScreen extends ConsumerWidget {
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'NIVEL',
-              style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+            Text(
+              userProfile.rankEmoji,
+              style: const TextStyle(fontSize: 32),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              userProfile.rankTitle.toUpperCase(),
+              style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5),
             ),
             Text(
-              '$level',
+              '${userProfile.level}',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 54,
+                fontSize: 48,
                 fontWeight: FontWeight.w900,
               ),
             ),

@@ -9,6 +9,7 @@ import 'storage_provider.dart';
 import 'profile_provider.dart';
 import 'gamification_provider.dart';
 import 'settings_provider.dart';
+import 'campaign_provider.dart';
 
 class GameState {
   final List<List<SudokuCell>> grid;
@@ -23,6 +24,14 @@ class GameState {
   final bool isPaused;
   final int hintsUsed;
   final bool hasStarted;
+
+  // Habilidades Tácticas (Fase 1 GDD)
+  final bool isTimerFrozen;
+  final bool isShowingErrors;
+
+  // Campos de campaña (Fase 3 GDD)
+  final bool isCampaign;
+  final int? campaignLevelNumber;
 
   // Campos de torneo y retos
   final bool isTournament;
@@ -46,6 +55,10 @@ class GameState {
     this.isPaused = false,
     this.hintsUsed = 0,
     this.hasStarted = false,
+    this.isTimerFrozen = false,
+    this.isShowingErrors = false,
+    this.isCampaign = false,
+    this.campaignLevelNumber,
     this.isTournament = false,
     this.tournamentDivision = '',
     this.tournamentOpponents = const [],
@@ -68,6 +81,10 @@ class GameState {
     bool? isPaused,
     int? hintsUsed,
     bool? hasStarted,
+    bool? isTimerFrozen,
+    bool? isShowingErrors,
+    bool? isCampaign,
+    int? campaignLevelNumber,
     bool? isTournament,
     String? tournamentDivision,
     List<String>? tournamentOpponents,
@@ -89,6 +106,10 @@ class GameState {
       isPaused: isPaused ?? this.isPaused,
       hintsUsed: hintsUsed ?? this.hintsUsed,
       hasStarted: hasStarted ?? this.hasStarted,
+      isTimerFrozen: isTimerFrozen ?? this.isTimerFrozen,
+      isShowingErrors: isShowingErrors ?? this.isShowingErrors,
+      isCampaign: isCampaign ?? this.isCampaign,
+      campaignLevelNumber: campaignLevelNumber ?? this.campaignLevelNumber,
       isTournament: isTournament ?? this.isTournament,
       tournamentDivision: tournamentDivision ?? this.tournamentDivision,
       tournamentOpponents: tournamentOpponents ?? this.tournamentOpponents,
@@ -115,6 +136,10 @@ class GameState {
       'isPaused': isPaused,
       'hintsUsed': hintsUsed,
       'hasStarted': hasStarted,
+      'isTimerFrozen': isTimerFrozen,
+      'isShowingErrors': isShowingErrors,
+      'isCampaign': isCampaign,
+      'campaignLevelNumber': campaignLevelNumber,
       'isTournament': isTournament,
       'tournamentDivision': tournamentDivision,
       'tournamentOpponents': tournamentOpponents,
@@ -146,6 +171,10 @@ class GameState {
       isPaused: json['isPaused'] as bool? ?? false,
       hintsUsed: json['hintsUsed'] as int? ?? 0,
       hasStarted: json['hasStarted'] as bool? ?? false,
+      isTimerFrozen: json['isTimerFrozen'] as bool? ?? false,
+      isShowingErrors: json['isShowingErrors'] as bool? ?? false,
+      isCampaign: json['isCampaign'] as bool? ?? false,
+      campaignLevelNumber: json['campaignLevelNumber'] as int?,
       isTournament: json['isTournament'] as bool? ?? false,
       tournamentDivision: json['tournamentDivision'] as String? ?? '',
       tournamentOpponents: List<String>.from(
@@ -269,10 +298,17 @@ class GameNotifier extends StateNotifier<GameState> {
     _timer?.cancel();
     _undoStack.clear();
 
+    // Validación de seguridad para evitar RangeError (Fase 3 Fix)
+    // El puzzle y la solución deben tener exactamente 81 caracteres.
+    final String cleanPuzzle = puzzle.padRight(81, '0').substring(0, 81);
+    final String cleanSolution = solution.padRight(81, '1').substring(0, 81);
+
     List<List<SudokuCell>> newGrid = List.generate(9, (r) {
       return List.generate(9, (c) {
-        final val = int.parse(puzzle[r * 9 + c]);
-        final sol = int.parse(solution[r * 9 + c]);
+        final index = r * 9 + c;
+        final val = int.tryParse(cleanPuzzle[index]) ?? 0;
+        final sol = int.tryParse(cleanSolution[index]) ?? 1;
+        
         return SudokuCell(
           row: r,
           col: c,
@@ -484,13 +520,142 @@ class GameNotifier extends StateNotifier<GameState> {
     state = const GameState();
   }
 
+  /// HABILIDAD: TOQUE DIVINO (Limpia errores y revela 3 números al azar)
+  bool useDivineTouch() {
+    if (!state.hasStarted || state.isGameOver || state.isGameWon) return false;
+
+    final profileNotifier = _ref.read(profileProvider.notifier);
+    final success = profileNotifier.deductCoins(100); // Coste elevado por poder masivo
+    if (!success) return false;
+
+    _pushToUndoStack();
+
+    // 1. Limpiar todos los errores existentes en el grid
+    List<List<SudokuCell>> newGrid = List.generate(9, (r) {
+      return List.generate(9, (c) {
+        final cell = state.grid[r][c];
+        if (cell.isError) {
+          return cell.copyWith(value: 0, isError: false, notes: {});
+        }
+        return cell;
+      });
+    });
+
+    // 2. Encontrar casillas vacías para rellenar 3
+    List<SudokuCell> emptyCells = [];
+    for (int r = 0; r < 9; r++) {
+      for (int c = 0; c < 9; c++) {
+        if (newGrid[r][c].value == 0) {
+          emptyCells.add(newGrid[r][c]);
+        }
+      }
+    }
+
+    emptyCells.shuffle();
+    final cellsToFill = emptyCells.take(3).toList();
+
+    for (var targetCell in cellsToFill) {
+      newGrid[targetCell.row][targetCell.col] = targetCell.copyWith(
+        value: targetCell.solutionValue,
+        notes: {},
+        isError: false,
+      );
+    }
+
+    state = state.copyWith(grid: newGrid);
+    
+    _checkVictory();
+    _saveGameToStorage();
+    return true;
+  }
+
   // --- MÉTODOS DE APOYO INTERNOS ---
+
+  /// HABILIDAD: RELOJ ESTELAR (Congela el cronómetro por 45 segundos)
+  bool useFreezeTimer() {
+    if (state.isTimerFrozen || !state.hasStarted || state.isGameOver || state.isGameWon) return false;
+
+    final profileNotifier = _ref.read(profileProvider.notifier);
+    final success = profileNotifier.deductCoins(30); // Cuesta 30 S-Coins
+    if (!success) return false;
+
+    state = state.copyWith(isTimerFrozen: true);
+    
+    // El cronómetro volverá a correr en 45 segundos
+    Timer(const Duration(seconds: 45), () {
+      if (mounted) {
+        state = state.copyWith(isTimerFrozen: false);
+      }
+    });
+
+    _saveGameToStorage();
+    return true;
+  }
+
+  /// HABILIDAD: VISIÓN VERDADERA (Resalta errores actuales por 15 segundos)
+  bool useTrueVision() {
+    if (state.isShowingErrors || !state.hasStarted || state.isGameOver || state.isGameWon) return false;
+
+    final profileNotifier = _ref.read(profileProvider.notifier);
+    final success = profileNotifier.deductCoins(50); // Cuesta 50 S-Coins
+    if (!success) return false;
+
+    state = state.copyWith(isShowingErrors: true);
+    
+    // Las pistas desaparecen en 15 segundos
+    Timer(const Duration(seconds: 15), () {
+      if (mounted) {
+        state = state.copyWith(isShowingErrors: false);
+      }
+    });
+
+    _saveGameToStorage();
+    return true;
+  }
+
+  /// Genera una nueva partida de campaña (Fase 3 - Mapa Estelar)
+  void startCampaignGame(
+      int levelNumber, String puzzle, String solution, String difficulty) {
+    _timer?.cancel();
+    _undoStack.clear();
+
+    final String cleanPuzzle = puzzle.padRight(81, '0').substring(0, 81);
+    final String cleanSolution = solution.padRight(81, '1').substring(0, 81);
+
+    List<List<SudokuCell>> newGrid = List.generate(9, (r) {
+      return List.generate(9, (c) {
+        final index = r * 9 + c;
+        final val = int.tryParse(cleanPuzzle[index]) ?? 0;
+        final sol = int.tryParse(cleanSolution[index]) ?? 1;
+        return SudokuCell(
+          row: r,
+          col: c,
+          value: val,
+          solutionValue: sol,
+          isOriginal: val != 0,
+        );
+      });
+    });
+
+    state = GameState(
+      grid: newGrid,
+      difficulty: difficulty,
+      hasStarted: true,
+      isCampaign: true,
+      campaignLevelNumber: levelNumber,
+    );
+
+    _startTimer();
+    _saveGameToStorage();
+  }
 
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
-      _saveGameToStorage();
+      if (!state.isTimerFrozen) {
+        state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
+        _saveGameToStorage();
+      }
     });
   }
 
@@ -628,6 +793,11 @@ class GameNotifier extends StateNotifier<GameState> {
       if (state.difficulty.toLowerCase() == 'experto' ||
           state.difficulty.toLowerCase() == 'expert') {
         profileNotifier.unlockAchievement('gran_maestro');
+      }
+
+      // --- LÓGICA DE CAMPAÑA (Fase 3 - Desbloqueo de Niveles) ---
+      if (state.isCampaign && state.campaignLevelNumber != null) {
+        _ref.read(campaignProvider.notifier).completeLevel(state.campaignLevelNumber!);
       }
 
       profileNotifier.unlockAchievement('primera_victoria');

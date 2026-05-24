@@ -50,11 +50,19 @@ class SudokuCellWidget extends ConsumerWidget {
     // Colores según el modo claro/oscuro con alto contraste premium
     final isDark = themeState.isDarkMode;
     Color cellBgColor;
+
+    // LÓGICA DE VISIÓN VERDADERA (Habilidad Roguelike)
+    bool isMarkedAsErrorByAbility = false;
+    if (gameState.isShowingErrors && cell.value != 0 && cell.value != cell.solutionValue) {
+      isMarkedAsErrorByAbility = true;
+    }
     
     if (isSelected) {
       cellBgColor = isDark
           ? sudokuTheme.textColorDark.withOpacity(0.25)
           : sudokuTheme.textColorLight.withOpacity(0.18);
+    } else if (isMarkedAsErrorByAbility) {
+      cellBgColor = Colors.redAccent.withOpacity(0.2); // Resaltado de la habilidad
     } else if (settings.enableHighlighting && isSameNumber) {
       cellBgColor = isDark
           ? sudokuTheme.textColorDark.withOpacity(0.15)

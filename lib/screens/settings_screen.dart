@@ -100,7 +100,7 @@ class SettingsScreen extends ConsumerWidget {
             // Footer
             Center(
               child: Text(
-                'Sudoku Master v1.0.0',
+                'Numbra v1.0.0',
                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
             ),

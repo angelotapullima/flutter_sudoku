@@ -68,11 +68,11 @@ class ShareVictoryCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'SUDOKU MASTER',
+                'NUMBRA',
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 2.0,
+                  letterSpacing: 2.5,
                   color: theme.primaryColor,
                 ),
               ),

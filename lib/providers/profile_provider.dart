@@ -191,6 +191,11 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
       print('✅ Progreso sincronizado exitosamente con la nube.');
     } else {
       print('⚠️ Error al sincronizar con el backend: ${result['message']}');
+      // SI EL ERROR ES 401, CERRAR SESIÓN AUTOMÁTICAMENTE (Token inválido o DB reset)
+      if (result['status'] == 401) {
+        print('🚪 Detectada sesión inválida. Cerrando sesión local...');
+        await logout();
+      }
     }
   }
 
@@ -205,9 +210,14 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
       await _saveServerProfileLocally(serverProfile);
       print('✅ Perfil actualizado desde la nube.');
     } else {
-      print('⚠️ No se pudo obtener perfil de la nube, usando local: ${result['message']}');
-      // Si falla la descarga directa, intentamos una sincronización bidireccional
-      syncWithServer();
+      print('⚠️ No se pudo obtener perfil de la nube: ${result['message']}');
+      
+      if (result['status'] == 401) {
+        await logout();
+      } else {
+        // Si falla por otra cosa, intentamos una sincronización bidireccional
+        syncWithServer();
+      }
     }
   }
 

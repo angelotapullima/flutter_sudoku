@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'services/local_storage_service.dart';
 import 'providers/storage_provider.dart';
 import 'providers/theme_provider.dart';
-import 'screens/main_navigation_screen.dart';
 import 'screens/animated_splash_screen.dart';
 
 void main() async {
@@ -41,7 +40,7 @@ class MyApp extends ConsumerWidget {
     final baseTheme = isDark ? ThemeData.dark() : ThemeData.light();
 
     return MaterialApp(
-      title: 'Sudoku Master',
+      title: 'Numbra',
       debugShowCheckedModeBanner: false,
       theme: baseTheme.copyWith(
         colorScheme: ColorScheme.fromSeed(
@@ -50,7 +49,8 @@ class MyApp extends ConsumerWidget {
           primary: sudokuTheme.primaryColor,
           secondary: sudokuTheme.accentColor,
         ),
-        scaffoldBackgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+        scaffoldBackgroundColor:
+            isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
         textTheme: GoogleFonts.outfitTextTheme(baseTheme.textTheme),
         useMaterial3: true,
         // Configurar estilos de diálogos, etc.

@@ -6,12 +6,14 @@ import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/gamification_provider.dart';
 import 'home_screen.dart';
+import 'star_map_screen.dart';
 import 'tournament_screen.dart';
 import 'daily_challenge_screen.dart';
 import 'stats_screen.dart';
 import 'level_progress_screen.dart';
 import 'login_screen.dart';
 import 'settings_screen.dart';
+import 'clan_screen.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
@@ -25,7 +27,8 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
-    TournamentScreen(),
+    StarMapScreen(),
+    ClanScreen(),
     DailyChallengeScreen(),
     StatsScreen(),
   ];
@@ -35,18 +38,21 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     final themeState = ref.watch(themeProvider);
     final themeNotifier = ref.read(themeProvider.notifier);
     final sudokuTheme = themeNotifier.currentSudokuTheme;
-    final isDark = themeState.isDarkMode;
+    final bool isGlobalDark = themeState.isDarkMode;
+    
+    // FORZAR MODO OSCURO EN LA PESTAÑA DE VIAJE (Inmersión Total)
+    final bool isCurrentTabDark = isGlobalDark || _selectedIndex == 1;
     final userProfile = ref.watch(profileProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+      backgroundColor: isCurrentTabDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
       body: SafeArea(
         child: Stack(
           children: [
             Column(
               children: [
-                // 1. Header unificado superior común para todas las vistas
-                _buildUnifiedHeader(context, userProfile, sudokuTheme, isDark),
+                // 1. Header unificado superior común (Adaptativo)
+                _buildUnifiedHeader(context, userProfile, sudokuTheme, isCurrentTabDark),
                 
                 // 2. Pantalla seleccionada activa
                 Expanded(
@@ -61,14 +67,51 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               ],
             ),
 
-            // 3. Barra de navegación inferior flotante ultra-premium (Glassmorphic)
+            // 3. Barra de navegación inferior flotante ultra-premium (Adaptativa)
             Positioned(
               left: 16,
               right: 16,
               bottom: 16,
-              child: _buildGlassmorphicNavBar(sudokuTheme, isDark),
+              child: _buildGlassmorphicNavBar(sudokuTheme, isCurrentTabDark),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassmorphicNavBar(dynamic sudokuTheme, bool isDark) {
+    return Container(
+      height: 72,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF16161E).withOpacity(0.95) : Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.4 : 0.15),
+            blurRadius: 25,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, Icons.grid_view_rounded, 'Inicio', sudokuTheme, isDark),
+              _buildNavItem(1, Icons.public_rounded, 'Viaje', sudokuTheme, isDark),
+              _buildNavItem(2, Icons.shield_rounded, 'Logias', sudokuTheme, isDark),
+              _buildNavItem(3, Icons.local_fire_department_rounded, 'Reto', sudokuTheme, isDark),
+              _buildNavItem(4, Icons.person_rounded, 'Perfil', sudokuTheme, isDark),
+            ],
+          ),
         ),
       ),
     );
@@ -80,18 +123,12 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     dynamic sudokuTheme,
     bool isDark,
   ) {
-    // Determinar rango dinámico
-    String rango = 'Aprendiz';
-    if (userProfile.level >= 6 && userProfile.level <= 10) {
-      rango = 'Analista';
-    } else if (userProfile.level >= 11) {
-      rango = 'Gran Maestro';
-    }
+    final String rango = userProfile.rankTitle;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+        color: isDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
         border: Border(
           bottom: BorderSide(
             color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[200]!,
@@ -102,7 +139,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Nivel y Rango (Clicable para ver progreso gamificado)
+          // Nivel y Rango
           InkWell(
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const LevelProgressScreen()),
@@ -151,27 +188,22 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             ),
           ),
           
-          // S-Coins (Monedas) y Ajustes
           Row(
             children: [
+              // Monedas
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                  color: isDark ? const Color(0xFF16161E) : Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
+                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.black12,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 4,
-                    ),
-                  ],
                 ),
                 child: Row(
                   children: [
-                    const Text('🪙 ', style: TextStyle(fontSize: 15)),
+                    const Text('🪙', style: TextStyle(fontSize: 14)),
+                    const SizedBox(width: 6),
                     Text(
                       '${userProfile.coins}',
                       style: GoogleFonts.outfit(
@@ -184,29 +216,29 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              // Indicador de Misiones
-              Consumer(
-                builder: (context, ref, child) {
-                  final gamification = ref.watch(gamificationProvider);
-                  final completedCount = gamification.missions.where((m) => m.isCompleted).length;
-                  
-                  return GestureDetector(
-                    onTap: () => _showMissionsModal(context),
-                    child: Stack(
+              // Misiones
+              GestureDetector(
+                onTap: () => _showMissionsModal(context),
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final gamification = ref.watch(gamificationProvider);
+                    final completedCount = gamification.missions.where((m) => m.isCompleted).length;
+
+                    return Stack(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            color: isDark ? const Color(0xFF16161E) : Colors.white,
+                            shape: BoxShape.circle,
                             border: Border.all(
-                              color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
+                              color: isDark ? Colors.white.withOpacity(0.1) : Colors.black12,
                             ),
                           ),
                           child: Icon(
-                            Icons.assignment_turned_in_rounded,
-                            size: 20,
-                            color: completedCount > 0 ? Colors.green : (isDark ? Colors.white38 : Colors.grey),
+                            Icons.assignment_rounded,
+                            size: 18,
+                            color: isDark ? Colors.white70 : const Color(0xFF2B2B36),
                           ),
                         ),
                         if (completedCount > 0)
@@ -216,23 +248,22 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: const BoxDecoration(
-                                color: Colors.red,
+                                color: Colors.redAccent,
                                 shape: BoxShape.circle,
                               ),
-                              constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
                               child: Text(
                                 '$completedCount',
-                                textAlign: TextAlign.center,
                                 style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
                       ],
-                    ),
-                  );
-                }
+                    );
+                  }
+                ),
               ),
               const SizedBox(width: 8),
+              // Ajustes
               GestureDetector(
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const SettingsScreen()),
@@ -240,17 +271,11 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                    color: isDark ? const Color(0xFF16161E) : Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
+                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.black12,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 4,
-                      ),
-                    ],
                   ),
                   child: Icon(
                     Icons.settings_outlined,
@@ -266,82 +291,34 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     );
   }
 
-  Widget _buildGlassmorphicNavBar(dynamic sudokuTheme, bool isDark) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-        child: Container(
-          height: 68,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E2E).withOpacity(0.85) : Colors.white.withOpacity(0.88),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(0, Icons.grid_on_rounded, 'Sudoku', sudokuTheme),
-              _buildNavItem(1, Icons.emoji_events_rounded, 'Liga', sudokuTheme),
-              _buildNavItem(2, Icons.offline_bolt_rounded, 'Reto', sudokuTheme),
-              _buildNavItem(3, Icons.person_rounded, 'Perfil', sudokuTheme),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(int index, IconData icon, String label, dynamic sudokuTheme) {
+  Widget _buildNavItem(int index, IconData icon, String label, dynamic sudokuTheme, bool isDark) {
     final isSelected = _selectedIndex == index;
-    final activeColor = sudokuTheme.primaryColor;
-    
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: isSelected
-            ? BoxDecoration(
-                color: activeColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(16),
-              )
-            : null,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? activeColor : Colors.grey[500],
-              size: isSelected ? 24 : 22,
+
+    return InkWell(
+      onTap: () => setState(() => _selectedIndex = index),
+      borderRadius: BorderRadius.circular(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected
+                ? sudokuTheme.primaryColor
+                : (isDark ? Colors.white38 : Colors.black38),
+            size: 26,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected
+                  ? sudokuTheme.primaryColor
+                  : (isDark ? Colors.white38 : Colors.black38),
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: GoogleFonts.outfit(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? activeColor : Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -424,54 +401,55 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                           : ListView.builder(
                               itemCount: gamification.missions.length,
                               itemBuilder: (context, index) {
-                            final mission = gamification.missions[index];
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50],
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: mission.isCompleted ? Colors.green : Colors.transparent,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          mission.title,
-                                          style: const TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                        Text(
-                                          mission.description,
-                                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        LinearProgressIndicator(
-                                          value: mission.requirementValue > 0 ? (mission.currentProgress / mission.requirementValue) : 0,
-                                          backgroundColor: Colors.grey[200],
-                                          valueColor: AlwaysStoppedAnimation<Color>(
-                                            mission.isCompleted ? Colors.green : Colors.amber,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                final mission = gamification.missions[index];
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(20),
                                   ),
-                                  const SizedBox(width: 16),
-                                  Column(
+                                  child: Row(
                                     children: [
-                                      Text('🪙 +${mission.rewardCoins}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                      Text('⭐ +${mission.rewardXp}', style: const TextStyle(fontSize: 10)),
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: isDark ? Colors.blueAccent.withOpacity(0.1) : Colors.blueAccent.withOpacity(0.05),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.stars_rounded, color: Colors.blueAccent, size: 24),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(mission.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                            Text(mission.description, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                            const SizedBox(height: 8),
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(4),
+                                              child: LinearProgressIndicator(
+                                                value: mission.currentProgress / mission.requirementValue,
+                                                backgroundColor: Colors.black12,
+                                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Column(
+                                        children: [
+                                          Text('🪙 ${mission.rewardCoins}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
+                                          Text('✨ ${mission.rewardXp}', style: const TextStyle(fontSize: 10)),
+                                        ],
+                                      ),
                                     ],
                                   ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                                );
+                              },
+                            ),
                 ),
               ],
             ),
