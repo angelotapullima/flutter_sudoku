@@ -40,7 +40,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           context,
           ref: ref,
           title: 'Nivel $newLevel',
-          description: '¡Felicidades! Has progresado intelectualmente y subido al siguiente nivel.',
+          description:
+              '¡Felicidades! Has progresado intelectualmente y subido al siguiente nivel.',
           coinsReward: rewardCoins,
           xpReward: 0,
           icon: '👑',
@@ -52,7 +53,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Callback para logro desbloqueado
     profileNotifier.onAchievementUnlocked = (title) {
       if (mounted) {
-        final achievement = Achievement.allAchievements.firstWhere((a) => a.title == title);
+        final achievement =
+            Achievement.allAchievements.firstWhere((a) => a.title == title);
         RewardUnlockModal.show(
           context,
           ref: ref,
@@ -85,7 +87,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+      backgroundColor:
+          isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -99,10 +102,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.02),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.02)
+                        : Colors.black.withOpacity(0.02),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.05)
+                          : Colors.black.withOpacity(0.05),
                     ),
                   ),
                   child: const ThemeSelector(),
@@ -110,50 +117,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
 
               const SizedBox(height: 20),
-
-              // 2. Logotipo e Isotipo Premium del Juego
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [sudokuTheme.primaryColor, sudokuTheme.accentColor],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: [
-                          BoxShadow(
-                            color: sudokuTheme.primaryColor.withOpacity(0.25),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.grid_3x3_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text('SUDOKU', style: fontHeadline),
-                    Text(
-                      'PIENSA • RESUELVE • MEJORA',
-                      style: GoogleFonts.outfit(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4.5,
-                        color: sudokuTheme.primaryColor.withOpacity(0.85),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
 
               // 3. Partida en curso flotante
               if (ref.watch(gameProvider).hasStarted)
@@ -164,7 +127,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 _buildGuestSyncBanner(context, sudokuTheme, isDark),
 
               // 4. Banner Destacado del Reto Diario (Llama de Racha 🔥)
-              _buildDailyChallengeFeatureBanner(context, userProfile, sudokuTheme, isDark),
+              _buildDailyChallengeFeatureBanner(
+                  context, userProfile, sudokuTheme, isDark),
 
               const SizedBox(height: 20),
 
@@ -185,7 +149,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     ),
-                    
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -247,7 +210,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[200]!,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.06)
+                          : Colors.grey[200]!,
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -260,11 +225,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => const StoreScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const StoreScreen()),
                       ),
                       borderRadius: BorderRadius.circular(20),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 14.0),
                         child: Row(
                           children: [
                             Container(
@@ -289,14 +256,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     style: GoogleFonts.outfit(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13.5,
-                                      color: isDark ? Colors.white : const Color(0xFF2B2B36),
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF2B2B36),
                                     ),
                                   ),
                                   Text(
                                     'Desbloquea estilos estéticos con tus S-Coins.',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
                                     ),
                                   ),
                                 ],
@@ -358,7 +329,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           borderRadius: BorderRadius.circular(20),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
             child: Row(
               children: [
                 Container(
@@ -380,11 +352,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: [
                       const Text(
                         'Partida en Curso',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15),
                       ),
                       Text(
                         'Dificultad: ${game.difficulty} • Tiempo: $min:$sec',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
                   ),
@@ -410,7 +384,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ) {
     final streak = userProfile.dailyStreak;
     final hasStreak = streak > 0;
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
@@ -450,7 +424,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -460,7 +435,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           children: [
                             const Text('🔥 ', style: TextStyle(fontSize: 13)),
                             Text(
-                              hasStreak ? 'Racha: $streak ${streak == 1 ? 'día' : 'días'}' : 'Reto del Día',
+                              hasStreak
+                                  ? 'Racha: $streak ${streak == 1 ? 'día' : 'días'}'
+                                  : 'Reto del Día',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -517,9 +494,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _startDailyChallengeDirectly(BuildContext context) {
     final today = DateTime.now();
-    final dateStr = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+    final dateStr =
+        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
     final seed = today.year * 10000 + today.month * 100 + today.day;
-    
+
     // Determinar dificultad por día
     String difficulty = 'Medio';
     final weekday = today.weekday;
@@ -538,10 +516,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (completedDates.contains(dateStr)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('¡Ya has completado el Reto Diario de hoy! Vuelve mañana para continuar tu racha. 🎉'),
+          content: const Text(
+              '¡Ya has completado el Reto Diario de hoy! Vuelve mañana para continuar tu racha. 🎉'),
           backgroundColor: Colors.purple[700],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
@@ -554,14 +534,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildGuestSyncBanner(BuildContext context, SudokuTheme theme, bool isDark) {
+  Widget _buildGuestSyncBanner(
+      BuildContext context, SudokuTheme theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [theme.primaryColor.withOpacity(0.1), theme.accentColor.withOpacity(0.05)],
+            colors: [
+              theme.primaryColor.withOpacity(0.1),
+              theme.accentColor.withOpacity(0.05)
+            ],
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: theme.primaryColor.withOpacity(0.2)),
@@ -580,7 +564,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   Text(
                     'Regístrate para guardar tus monedas y nivel en la nube.',
-                    style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600]),
                   ),
                 ],
               ),
@@ -591,7 +577,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               child: Text(
                 'IR',
-                style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: theme.primaryColor, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -640,7 +627,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           },
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -700,7 +688,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             fontWeight: FontWeight.bold,
                             color: bestTime > 0
                                 ? accentColor
-                                : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                                : (isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600]),
                           ),
                         ),
                       ],
