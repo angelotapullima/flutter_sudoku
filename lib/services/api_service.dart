@@ -462,4 +462,30 @@ class ApiService {
       return false;
     }
   }
+
+  /// Comprar un artículo en la tienda RPG (Fase 4)
+  static Future<Map<String, dynamic>> purchaseItem({
+    required String itemId,
+    required int cost,
+    required String type,
+  }) async {
+    final url = Uri.parse('$baseUrl/profile/purchase');
+    final headers = await _getHeaders();
+    final body = jsonEncode({'itemId': itemId, 'cost': cost, 'type': type});
+    _log('REQ', 'POST', '/profile/purchase');
+
+    try {
+      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 10));
+      final data = jsonDecode(response.body);
+      _log('RES', 'POST', '/profile/purchase', statusCode: response.statusCode, responseBody: response.body);
+      
+      return {
+        'success': response.statusCode == 200,
+        'message': data['message'] ?? data['error'] ?? 'Fallo en la transacción.',
+        'status': response.statusCode
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Sin conexión con el banco estelar.'};
+    }
+  }
 }

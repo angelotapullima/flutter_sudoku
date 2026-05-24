@@ -20,6 +20,15 @@ class LocalStorageService implements StorageService {
   static const String _keyUsername = 'sudoku_username';
   static const String _keyEmail = 'sudoku_email';
 
+  // Claves para el sistema RPG e Inventario (Fase 4)
+  static const String _keyCampaignLevel = 'sudoku_campaign_level';
+  static const String _keyVisionCharges = 'sudoku_vision_charges';
+  static const String _keyTimeFreezeCharges = 'sudoku_time_freeze_charges';
+  static const String _keyDivineTouchCharges = 'sudoku_divine_touch_charges';
+  static const String _keyXpBoostUntil = 'sudoku_xp_boost_until';
+  static const String _keyAvatarBorder = 'sudoku_avatar_border';
+  static const String _keyActiveTitle = 'sudoku_active_title';
+
   // Claves para configuraciones personalizadas del juego
   static const String _keyShowRemaining = 'settings_show_remaining';
   static const String _keyErrorLimit = 'settings_error_limit';
@@ -174,6 +183,80 @@ class LocalStorageService implements StorageService {
   @override
   Future<void> clearActiveGame() async {
     await _prefs.remove(_keyActiveGame);
+  }
+
+  @override
+  Future<void> saveCampaignLevel(int level) async {
+    await _prefs.setInt(_keyCampaignLevel, level);
+  }
+
+  @override
+  int getCampaignLevel() {
+    return _prefs.getInt(_keyCampaignLevel) ?? 1;
+  }
+
+  @override
+  Future<void> saveVisionCharges(int charges) async {
+    await _prefs.setInt(_keyVisionCharges, charges);
+  }
+
+  @override
+  int getVisionCharges() {
+    return _prefs.getInt(_keyVisionCharges) ?? 3;
+  }
+
+  @override
+  Future<void> saveTimeFreezeCharges(int charges) async {
+    await _prefs.setInt(_keyTimeFreezeCharges, charges);
+  }
+
+  @override
+  int getTimeFreezeCharges() {
+    return _prefs.getInt(_keyTimeFreezeCharges) ?? 2;
+  }
+
+  @override
+  Future<void> saveDivineTouchCharges(int charges) async {
+    await _prefs.setInt(_keyDivineTouchCharges, charges);
+  }
+
+  @override
+  int getDivineTouchCharges() {
+    return _prefs.getInt(_keyDivineTouchCharges) ?? 1;
+  }
+
+  @override
+  Future<void> saveXpBoostUntil(String? date) async {
+    if (date == null) {
+      await _prefs.remove(_keyXpBoostUntil);
+    } else {
+      await _prefs.setString(_keyXpBoostUntil, date);
+    }
+  }
+
+  @override
+  String? getXpBoostUntil() {
+    return _prefs.getString(_keyXpBoostUntil);
+  }
+
+  @override
+  Future<void> saveActiveAvatarBorder(String border) async {
+    await _prefs.setString(_keyAvatarBorder, border);
+  }
+
+  @override
+  String getActiveAvatarBorder() {
+    return _prefs.getString(_keyAvatarBorder) ?? 'none';
+  }
+
+  @override
+  Future<void> saveActiveTitle(String title) async {
+    await _prefs.setString(_keyActiveTitle, title);
+  }
+
+  @override
+  String getActiveTitle() {
+    return _prefs.getString(_keyActiveTitle) ?? '';
   }
 
   @override

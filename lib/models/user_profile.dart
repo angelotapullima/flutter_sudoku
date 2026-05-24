@@ -3,6 +3,15 @@ class UserProfile {
   final int xp;
   final int level;
   final int campaignLevel;
+  
+  // Inventario RPG
+  final int visionCharges;
+  final int timeFreezeCharges;
+  final int divineTouchCharges;
+  final String? xpBoostUntil; // ISO String
+  final String activeAvatarBorder;
+  final String activeTitle;
+
   final List<String> unlockedAchievements;
   final int dailyStreak;
   final String lastDailyPlayedDate;
@@ -16,6 +25,12 @@ class UserProfile {
     this.xp = 0,
     this.level = 1,
     this.campaignLevel = 1,
+    this.visionCharges = 3,
+    this.timeFreezeCharges = 2,
+    this.divineTouchCharges = 1,
+    this.xpBoostUntil,
+    this.activeAvatarBorder = 'none',
+    this.activeTitle = '',
     this.unlockedAchievements = const [],
     this.dailyStreak = 0,
     this.lastDailyPlayedDate = '',
@@ -25,8 +40,14 @@ class UserProfile {
     this.email = '',
   });
 
+  bool get hasActiveXpBoost {
+    if (xpBoostUntil == null) return false;
+    final boostDate = DateTime.tryParse(xpBoostUntil!);
+    if (boostDate == null) return false;
+    return boostDate.isAfter(DateTime.now());
+  }
+
   /// Calcula la XP necesaria para subir al siguiente nivel.
-  /// Fórmula simple de progresión premium: Nivel * 1000 XP.
   int get xpNeededForNextLevel => level * 1000;
 
   /// Porcentaje de progreso de XP en el nivel actual (0.0 a 1.0).
@@ -60,6 +81,12 @@ class UserProfile {
     int? xp,
     int? level,
     int? campaignLevel,
+    int? visionCharges,
+    int? timeFreezeCharges,
+    int? divineTouchCharges,
+    String? xpBoostUntil,
+    String? activeAvatarBorder,
+    String? activeTitle,
     List<String>? unlockedAchievements,
     int? dailyStreak,
     String? lastDailyPlayedDate,
@@ -73,6 +100,12 @@ class UserProfile {
       xp: xp ?? this.xp,
       level: level ?? this.level,
       campaignLevel: campaignLevel ?? this.campaignLevel,
+      visionCharges: visionCharges ?? this.visionCharges,
+      timeFreezeCharges: timeFreezeCharges ?? this.timeFreezeCharges,
+      divineTouchCharges: divineTouchCharges ?? this.divineTouchCharges,
+      xpBoostUntil: xpBoostUntil ?? this.xpBoostUntil,
+      activeAvatarBorder: activeAvatarBorder ?? this.activeAvatarBorder,
+      activeTitle: activeTitle ?? this.activeTitle,
       unlockedAchievements: unlockedAchievements ?? this.unlockedAchievements,
       dailyStreak: dailyStreak ?? this.dailyStreak,
       lastDailyPlayedDate: lastDailyPlayedDate ?? this.lastDailyPlayedDate,
@@ -89,6 +122,12 @@ class UserProfile {
       'xp': xp,
       'level': level,
       'campaignLevel': campaignLevel,
+      'visionCharges': visionCharges,
+      'timeFreezeCharges': timeFreezeCharges,
+      'divineTouchCharges': divineTouchCharges,
+      'xpBoostUntil': xpBoostUntil,
+      'activeAvatarBorder': activeAvatarBorder,
+      'activeTitle': activeTitle,
       'unlockedAchievements': unlockedAchievements,
       'dailyStreak': dailyStreak,
       'lastDailyPlayedDate': lastDailyPlayedDate,
@@ -105,6 +144,12 @@ class UserProfile {
       xp: json['xp'] as int? ?? 0,
       level: json['level'] as int? ?? 1,
       campaignLevel: json['campaignLevel'] as int? ?? 1,
+      visionCharges: json['visionCharges'] as int? ?? 3,
+      timeFreezeCharges: json['timeFreezeCharges'] as int? ?? 2,
+      divineTouchCharges: json['divineTouchCharges'] as int? ?? 1,
+      xpBoostUntil: json['xpBoostUntil'] as String?,
+      activeAvatarBorder: json['activeAvatarBorder'] as String? ?? 'none',
+      activeTitle: json['activeTitle'] as String? ?? '',
       unlockedAchievements: List<String>.from(json['unlockedAchievements'] as List<dynamic>? ?? []),
       dailyStreak: json['dailyStreak'] as int? ?? 0,
       lastDailyPlayedDate: json['lastDailyPlayedDate'] as String? ?? '',

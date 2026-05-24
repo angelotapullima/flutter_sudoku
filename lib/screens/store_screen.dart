@@ -1,238 +1,223 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
-import '../widgets/registration_dialog.dart';
+import '../providers/theme_provider.dart';
+import '../services/api_service.dart';
 
-class StoreScreen extends ConsumerWidget {
+class StoreScreen extends ConsumerStatefulWidget {
   const StoreScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final themeState = ref.watch(themeProvider);
-    final themeNotifier = ref.read(themeProvider.notifier);
-    final isDark = themeState.isDarkMode;
+  ConsumerState<StoreScreen> createState() => _StoreScreenState();
+}
 
-    final userProfile = ref.watch(profileProvider);
+class _StoreScreenState extends ConsumerState<StoreScreen> {
+  bool _isProcessing = false;
+
+  Future<void> _handlePurchase({
+    required String itemId,
+    required int cost,
+    required String type,
+    required String name,
+  }) async {
+    final user = ref.read(profileProvider);
+    if (user.coins < cost) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No tienes suficientes S-Coins 🪙')),
+      );
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+    final result = await ApiService.purchaseItem(itemId: itemId, cost: cost, type: type);
+    
+    if (mounted) {
+      setState(() => _isProcessing = false);
+      if (result['success']) {
+        // Actualizar perfil local
+        await ref.read(profileProvider.notifier).syncWithServer();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('¡Has adquirido: $name! 🚀')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = ref.watch(profileProvider);
+    final theme = ref.read(themeProvider.notifier).currentSudokuTheme;
+    final isDark = ref.watch(themeProvider).isDarkMode;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+      backgroundColor: isDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
       appBar: AppBar(
+        title: Text('CENTRO DE SUMINISTROS', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 1)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: Icon(
-            Icons.arrow_back_ios_rounded,
-            color: isDark ? Colors.white : Colors.black87,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          'TIENDA DE TEMAS',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
+        foregroundColor: isDark ? Colors.white : Colors.black87,
         actions: [
-          // Monedas
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(right: 16),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? Colors.white10 : Colors.grey[200]!,
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Text('🪙 ', style: TextStyle(fontSize: 14)),
-                  Text(
-                    '${userProfile.coins}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
+          Container(
+            margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.amber.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.amber.withOpacity(0.3)),
+            ),
+            child: Center(
+              child: Text(
+                '🪙 ${user.coins}',
+                style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
               ),
             ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Personaliza tu Experiencia',
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
+      body: _isProcessing 
+        ? const Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionHeader('CONSUMIBLES TÁCTICOS', 'Pociones para tu viaje lógico'),
+                const SizedBox(height: 16),
+                _buildStoreItem(
+                  id: 'vision_pack',
+                  name: 'Cristal de Visión (x5)',
+                  desc: 'Detecta errores sin perder vidas.',
+                  icon: '🔮',
+                  cost: 150,
+                  type: 'consumable',
+                  theme: theme,
+                  isDark: isDark,
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Desbloquea paletas estéticas premium con tus S-Coins y personaliza el acento visual de todo el tablero.',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                _buildStoreItem(
+                  id: 'time_pack',
+                  name: 'Reloj Eterno (x3)',
+                  desc: 'Congela el tiempo por 45s.',
+                  icon: '⏳',
+                  cost: 80,
+                  type: 'consumable',
+                  theme: theme,
+                  isDark: isDark,
                 ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Grid de temas
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: SudokuTheme.availableThemes.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.82,
+                _buildStoreItem(
+                  id: 'divine_pack',
+                  name: 'Orbe de Purificación',
+                  desc: 'Limpia errores y revela 3 números.',
+                  icon: '✨',
+                  cost: 100,
+                  type: 'consumable',
+                  theme: theme,
+                  isDark: isDark,
                 ),
-                itemBuilder: (context, index) {
-                  final theme = SudokuTheme.availableThemes[index];
-                  final isPurchased = themeState.purchasedThemeIds.contains(theme.id);
-                  final isActive = themeState.activeThemeId == theme.id;
-                  final canBuy = userProfile.coins >= theme.price;
 
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: isActive
-                            ? theme.primaryColor
-                            : isDark
-                                ? Colors.white10
-                                : Colors.grey[200]!,
-                        width: isActive ? 2.0 : 1.0,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Icono y circulo de color
-                        CircleAvatar(
-                          radius: 28,
-                          backgroundColor: theme.primaryColor.withOpacity(0.12),
-                          child: Text(
-                            theme.icon,
-                            style: const TextStyle(fontSize: 28),
-                          ),
-                        ),
-                        
-                        // Información del tema
-                        Column(
-                          children: [
-                            Text(
-                              theme.name,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              theme.isPremium
-                                  ? (isPurchased ? 'Desbloqueado' : 'Premium')
-                                  : 'Inicial Gratuito',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: theme.isPremium
-                                    ? (isPurchased ? Colors.green : Colors.amber[700])
-                                    : Colors.grey,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        
-                        // Botón de acción (Equipar / Comprar)
-                        SizedBox(
-                          width: double.infinity,
-                          height: 36,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (!userProfile.isRegistered) {
-                                RegistrationDialog.show(context);
-                                return;
-                              }
-                              if (isPurchased) {
-                                themeNotifier.changeActiveTheme(theme.id);
-                              } else {
-                                final success = themeNotifier.buyTheme(
-                                  theme,
-                                  userProfile.coins,
-                                  (coinsLeft) => ref.read(profileProvider.notifier).deductCoins(theme.price),
-                                );
-                                if (success) {
-                                  // Comprobar si al equipar el nuevo tema, tenemos 3 o más comprados
-                                  // Leemos la lista actualizada directamente del provider notifier
-                                  final totalPurchased = ref.read(themeProvider).purchasedThemeIds.length;
-                                  if (totalPurchased >= 3) {
-                                    ref.read(profileProvider.notifier).unlockAchievement('coleccionista_temas');
-                                  }
-                                }
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: isActive
-                                  ? Colors.grey[400]
-                                  : isPurchased
-                                      ? theme.primaryColor
-                                      : (canBuy ? Colors.amber[700] : Colors.grey[300]),
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor: Colors.grey[300],
-                              elevation: isActive ? 0 : 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: FittedBox(
-                              child: Text(
-                                isActive
-                                    ? 'Equipado'
-                                    : isPurchased
-                                        ? 'Equipar'
-                                        : '🪙 ${theme.price}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-            ],
+                const SizedBox(height: 32),
+                _buildSectionHeader('IMPULSORES', 'Sube de rango más rápido'),
+                const SizedBox(height: 16),
+                _buildStoreItem(
+                  id: 'xp_boost_24h',
+                  name: 'Doble XP (24 Horas)',
+                  desc: 'Gana x2 de experiencia en todo.',
+                  icon: '📜',
+                  cost: 300,
+                  type: 'boost',
+                  theme: theme,
+                  isDark: isDark,
+                ),
+
+                const SizedBox(height: 32),
+                _buildSectionHeader('ESTÉTICA NEO-CYBER', 'Personaliza tu identidad'),
+                const SizedBox(height: 16),
+                _buildStoreItem(
+                  id: 'border_neon_blue',
+                  name: 'Marco de Aura Cian',
+                  desc: 'Un brillo eléctrico para tu perfil.',
+                  icon: '⭕',
+                  cost: 500,
+                  type: 'border',
+                  theme: theme,
+                  isDark: isDark,
+                ),
+                _buildStoreItem(
+                  id: 'border_golden_king',
+                  name: 'Marco Real Dorado',
+                  desc: 'Solo para los maestros del grid.',
+                  icon: '🔱',
+                  cost: 1200,
+                  type: 'border',
+                  theme: theme,
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 100), // Espacio para el navbar
+              ],
+            ),
           ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.blueAccent),
+        ),
+        Text(
+          subtitle,
+          style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStoreItem({
+    required String id,
+    required String name,
+    required String desc,
+    required String icon,
+    required int cost,
+    required String type,
+    required dynamic theme,
+    required bool isDark,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.03) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: theme.primaryColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Center(child: Text(icon, style: const TextStyle(fontSize: 24))),
+        ),
+        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        subtitle: Text(desc, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        trailing: ElevatedButton(
+          onPressed: () => _handlePurchase(itemId: id, cost: cost, type: type, name: name),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.primaryColor,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 0,
+          ),
+          child: Text('🪙 $cost', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
         ),
       ),
     );

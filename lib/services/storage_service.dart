@@ -77,6 +77,34 @@ abstract class StorageService {
   /// Limpia la partida en progreso (cuando se completa o abandona).
   Future<void> clearActiveGame();
 
+  /// Guarda el nivel de campaña.
+  Future<void> saveCampaignLevel(int level);
+  int getCampaignLevel();
+
+  /// Guarda las cargas de Visión Verdadera.
+  Future<void> saveVisionCharges(int charges);
+  int getVisionCharges();
+
+  /// Guarda las cargas de Reloj Estelar.
+  Future<void> saveTimeFreezeCharges(int charges);
+  int getTimeFreezeCharges();
+
+  /// Guarda las cargas de Toque Divino.
+  Future<void> saveDivineTouchCharges(int charges);
+  int getDivineTouchCharges();
+
+  /// Guarda la fecha de expiración del XP Boost.
+  Future<void> saveXpBoostUntil(String? date);
+  String? getXpBoostUntil();
+
+  /// Guarda el borde de avatar activo.
+  Future<void> saveActiveAvatarBorder(String border);
+  String getActiveAvatarBorder();
+
+  /// Guarda el título activo.
+  Future<void> saveActiveTitle(String title);
+  String getActiveTitle();
+
   /// Guarda las configuraciones personalizadas del juego
   Future<void> saveSettings({
     required bool showRemainingNumbers,
