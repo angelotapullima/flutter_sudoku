@@ -12,6 +12,7 @@ import 'stats_screen.dart';
 import 'level_progress_screen.dart';
 import 'settings_screen.dart';
 import 'clan_screen.dart';
+import 'how_to_play_screen.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
@@ -268,6 +269,41 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                   _buildSidebarItem(2, Icons.shield_rounded, 'Logia / Clanes', sudokuTheme, isDark),
                   _buildSidebarItem(3, Icons.local_fire_department_rounded, 'Desafío Diario', sudokuTheme, isDark),
                   _buildSidebarItem(4, Icons.person_rounded, 'Estadísticas & Liga', sudokuTheme, isDark),
+                  const SizedBox(height: 12),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Divider(height: 1, color: Colors.white10),
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const HowToPlayScreen()),
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      height: 48,
+                      margin: const EdgeInsets.symmetric(horizontal: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.help_outline_rounded,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 14),
+                          Text(
+                            '¿Cómo Jugar?',
+                            style: GoogleFonts.outfit(
+                              color: isDark ? Colors.white60 : Colors.black54,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -532,6 +568,28 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                   ),
                   child: Icon(
                     Icons.settings_outlined,
+                    size: 18,
+                    color: isDark ? Colors.white70 : const Color(0xFF2B2B36),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // ¿Cómo Jugar? (Tutorial)
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const HowToPlayScreen()),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF16161E) : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.black12,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.help_outline_rounded,
                     size: 18,
                     color: isDark ? Colors.white70 : const Color(0xFF2B2B36),
                   ),

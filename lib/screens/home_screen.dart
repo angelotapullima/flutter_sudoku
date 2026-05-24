@@ -11,6 +11,7 @@ import '../providers/storage_provider.dart';
 import 'game_screen.dart';
 import 'store_screen.dart';
 import 'login_screen.dart';
+import 'how_to_play_screen.dart';
 import '../widgets/responsive_content_wrapper.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -202,6 +203,104 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
 
               const SizedBox(height: 20),
+
+              // Tarjeta Interactiva de Academia/Tutorial
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark
+                          ? [sudokuTheme.primaryColor.withOpacity(0.18), const Color(0xFF131320)]
+                          : [sudokuTheme.primaryColor.withOpacity(0.08), Colors.white],
+                    ),
+                    border: Border.all(
+                      color: sudokuTheme.primaryColor.withOpacity(0.25),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isDark ? 0.15 : 0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const HowToPlayScreen()),
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: sudokuTheme.primaryColor.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Text(
+                                '💡',
+                                style: TextStyle(fontSize: 26),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '¿NUEVO EN EL COSMOS?',
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 12,
+                                      letterSpacing: 1.2,
+                                      color: sudokuTheme.primaryColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Aprende las Leyes del Sudoku',
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: isDark ? Colors.white : const Color(0xFF2B2B36),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Domina el rellenado del grid estelar y conquista el cosmos.',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 14,
+                              color: sudokuTheme.primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
 
               // 6. Acceso Refinado al Pie a la Tienda de Temas
               Padding(
