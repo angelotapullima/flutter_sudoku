@@ -35,8 +35,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     if (mounted) {
       setState(() => _isProcessing = false);
       if (result['success']) {
-        // Actualizar perfil local
-        await ref.read(profileProvider.notifier).syncWithServer();
+        // Actualizar perfil local descargando los datos definitivos desde el servidor
+        await ref.read(profileProvider.notifier).refreshProfileFromServer();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('¡Has adquirido: $name! 🚀')),
         );

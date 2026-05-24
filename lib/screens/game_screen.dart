@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:screenshot/screenshot.dart';
@@ -20,11 +21,30 @@ import '../utils/platform_file_saver.dart';
 // Proveedor local para el efecto visual de flash
 final showFlashProvider = StateProvider.autoDispose<bool>((ref) => false);
 
-class GameScreen extends ConsumerWidget {
+class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GameScreen> createState() => _GameScreenState();
+}
+
+class _GameScreenState extends ConsumerState<GameScreen> {
+  late final FocusNode _keyboardFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _keyboardFocusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _keyboardFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final gameState = ref.watch(gameProvider);
     final themeState = ref.watch(themeProvider);
     final themeNotifier = ref.read(themeProvider.notifier);
@@ -54,265 +74,378 @@ class GameScreen extends ConsumerWidget {
       }
     });
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final double width = constraints.maxWidth;
-                final bool isDesktop = width > 800;
+    // Asegurar que la pantalla mantenga el foco para la captura del teclado físico
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_keyboardFocusNode.hasFocus) {
+        _keyboardFocusNode.requestFocus();
+      }
+    });
 
-                if (isDesktop) {
-                  // --- DISEÑO WEB DE ESCRITORIO PANORÁMICO REAL (A PANTALLA COMPLETA) ---
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Columna Izquierda: Tablero de Sudoku Centrado + Header de Partida
-                        Expanded(
-                          flex: 3,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                               // Header del juego en escritorio
-                              _buildDesktopHeader(context, ref, gameState, settings, sudokuTheme, isDark, min, sec),
-                              const SizedBox(height: 16),
-                              // Grid del Sudoku limitado a un tamaño ergonómico máximo
-                              const Center(
-                                child: SizedBox(
-                                  width: 460,
-                                  child: SudokuGrid(),
+    return KeyboardListener(
+      focusNode: _keyboardFocusNode,
+      autofocus: true,
+      onKeyEvent: (KeyEvent event) {
+        if (event is KeyDownEvent) {
+          final logicalKey = event.logicalKey;
+
+          // 1. Ingresar números del 1 al 9 (Soporte robusto y unificado para teclado y Numpad en Web/PC)
+          int? number;
+          if (logicalKey == LogicalKeyboardKey.digit1 || logicalKey == LogicalKeyboardKey.numpad1) number = 1;
+          else if (logicalKey == LogicalKeyboardKey.digit2 || logicalKey == LogicalKeyboardKey.numpad2) number = 2;
+          else if (logicalKey == LogicalKeyboardKey.digit3 || logicalKey == LogicalKeyboardKey.numpad3) number = 3;
+          else if (logicalKey == LogicalKeyboardKey.digit4 || logicalKey == LogicalKeyboardKey.numpad4) number = 4;
+          else if (logicalKey == LogicalKeyboardKey.digit5 || logicalKey == LogicalKeyboardKey.numpad5) number = 5;
+          else if (logicalKey == LogicalKeyboardKey.digit6 || logicalKey == LogicalKeyboardKey.numpad6) number = 6;
+          else if (logicalKey == LogicalKeyboardKey.digit7 || logicalKey == LogicalKeyboardKey.numpad7) number = 7;
+          else if (logicalKey == LogicalKeyboardKey.digit8 || logicalKey == LogicalKeyboardKey.numpad8) number = 8;
+          else if (logicalKey == LogicalKeyboardKey.digit9 || logicalKey == LogicalKeyboardKey.numpad9) number = 9;
+
+          if (number != null) {
+            ref.read(gameProvider.notifier).inputNumber(number);
+            return;
+          }
+
+          // 2. Navegación fluida por el tablero usando flechas de dirección o WASD
+          int selRow = gameState.selectedRow;
+          int selCol = gameState.selectedCol;
+
+          if (logicalKey == LogicalKeyboardKey.arrowUp || logicalKey == LogicalKeyboardKey.keyW) {
+            if (selRow == -1 || selCol == -1) {
+              selRow = 0;
+              selCol = 0;
+            } else {
+              selRow = (selRow - 1 + 9) % 9;
+            }
+            ref.read(gameProvider.notifier).selectCell(selRow, selCol);
+            return;
+          } else if (logicalKey == LogicalKeyboardKey.arrowDown || logicalKey == LogicalKeyboardKey.keyS) {
+            if (selRow == -1 || selCol == -1) {
+              selRow = 0;
+              selCol = 0;
+            } else {
+              selRow = (selRow + 1) % 9;
+            }
+            ref.read(gameProvider.notifier).selectCell(selRow, selCol);
+            return;
+          } else if (logicalKey == LogicalKeyboardKey.arrowLeft || logicalKey == LogicalKeyboardKey.keyA) {
+            if (selRow == -1 || selCol == -1) {
+              selRow = 0;
+              selCol = 0;
+            } else {
+              selCol = (selCol - 1 + 9) % 9;
+            }
+            ref.read(gameProvider.notifier).selectCell(selRow, selCol);
+            return;
+          } else if (logicalKey == LogicalKeyboardKey.arrowRight || logicalKey == LogicalKeyboardKey.keyD) {
+            if (selRow == -1 || selCol == -1) {
+              selRow = 0;
+              selCol = 0;
+            } else {
+              selCol = (selCol + 1) % 9;
+            }
+            ref.read(gameProvider.notifier).selectCell(selRow, selCol);
+            return;
+          }
+
+          // 3. Borrar casilla seleccionada (Backspace, Delete, tecla 0 o Numpad 0)
+          if (logicalKey == LogicalKeyboardKey.backspace ||
+              logicalKey == LogicalKeyboardKey.delete ||
+              logicalKey == LogicalKeyboardKey.digit0 ||
+              logicalKey == LogicalKeyboardKey.numpad0) {
+            ref.read(gameProvider.notifier).eraseCell();
+          }
+
+          // 4. Notas (Lápiz) con la tecla 'N'
+          if (logicalKey == LogicalKeyboardKey.keyN) {
+            ref.read(gameProvider.notifier).toggleNotesMode();
+          }
+
+          // 5. Deshacer con 'U' (Undo) o con el atajo Ctrl+Z
+          if (logicalKey == LogicalKeyboardKey.keyU ||
+              (logicalKey == LogicalKeyboardKey.keyZ &&
+               HardwareKeyboard.instance.isControlPressed)) {
+            ref.read(gameProvider.notifier).undo();
+          }
+
+          // 6. Pausar/Reanudar con la tecla 'P' o la tecla 'Escape'
+          if (logicalKey == LogicalKeyboardKey.keyP || logicalKey == LogicalKeyboardKey.escape) {
+            ref.read(gameProvider.notifier).togglePause();
+          }
+
+          // 7. Usar una pista (Hint) con la tecla 'H'
+          if (logicalKey == LogicalKeyboardKey.keyH) {
+            ref.read(gameProvider.notifier).useHint();
+          }
+        }
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTapDown: (_) {
+          if (!_keyboardFocusNode.hasFocus) {
+            _keyboardFocusNode.requestFocus();
+          }
+        },
+        child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+        body: SafeArea(
+          child: Stack(
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final double width = constraints.maxWidth;
+                  final bool isDesktop = width > 800;
+
+                  if (isDesktop) {
+                    // --- DISEÑO WEB DE ESCRITORIO PANORÁMICO REAL (A PANTALLA COMPLETA) ---
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Columna Izquierda: Tablero de Sudoku Centrado + Header de Partida
+                          Expanded(
+                            flex: 3,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                 // Header del juego en escritorio
+                                _buildDesktopHeader(context, ref, gameState, settings, sudokuTheme, isDark, min, sec),
+                                const SizedBox(height: 16),
+                                // Grid del Sudoku limitado a un tamaño ergonómico máximo
+                                const Center(
+                                  child: SizedBox(
+                                    width: 460,
+                                    child: SudokuGrid(),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        const SizedBox(width: 32),
-                        
-                        // Columna Derecha: Panel de Control Táctico Flotante
-                        Container(
-                          width: 380,
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E1E2E).withOpacity(0.6) : Colors.white.withOpacity(0.9),
-                            borderRadius: BorderRadius.circular(28),
-                            border: Border.all(
-                              color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.05),
-                              width: 1.5,
+                              ],
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
                           ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                          
+                          const SizedBox(width: 32),
+                          
+                          // Columna Derecha: Panel de Control Táctico Flotante
+                          Container(
+                            width: 380,
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1E1E2E).withOpacity(0.6) : Colors.white.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(
+                                color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.05),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Título del Panel de Operaciones
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'PANEL TÁCTICO',
+                                      style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: sudokuTheme.primaryColor,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                    // Errores
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: gameState.errorsCount > 0 
+                                            ? Colors.redAccent.withOpacity(0.12)
+                                            : (isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.04)),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        settings.enableErrorLimit
+                                            ? 'Errores: ${gameState.errorsCount}/3'
+                                            : 'Errores: ${gameState.errorsCount}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                const Divider(height: 1),
+                                const SizedBox(height: 20),
+                                
+                                // Botones de control (Deshacer, Borrar, Notas, Pista)
+                                const ControlButtons(),
+                                const SizedBox(height: 24),
+                                
+                                // Habilidades RPG
+                                Text(
+                                  'HABILIDADES TÁCTICAS',
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11.5,
+                                    color: Colors.grey[500],
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                AbilityBar(
+                                  onAbilityUsed: () {
+                                    ref.read(showFlashProvider.notifier).state = true;
+                                  },
+                                ),
+                                const SizedBox(height: 28),
+                                
+                                // Teclado Numérico
+                                const NumberPad(),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  // --- DISEÑO MÓVIL ORIGINAL (COLUMNA VERTICAL CON SCROLL) ---
+                  return SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        // Barra de encabezado
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Título del Panel de Operaciones
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              IconButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
+                              ),
+                              Column(
                                 children: [
                                   Text(
-                                    'PANEL TÁCTICO',
+                                    gameState.isTournament
+                                        ? 'LIGA ${gameState.tournamentDivision.toUpperCase()}'
+                                        : gameState.difficulty.toUpperCase(),
                                     style: GoogleFonts.outfit(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 15,
+                                      fontSize: 16,
+                                      letterSpacing: 1.0,
                                       color: sudokuTheme.primaryColor,
-                                      letterSpacing: 1.2,
                                     ),
                                   ),
-                                  // Errores
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: gameState.errorsCount > 0 
-                                          ? Colors.redAccent.withOpacity(0.12)
-                                          : (isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.04)),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      settings.enableErrorLimit
-                                          ? 'Errores: ${gameState.errorsCount}/3'
-                                          : 'Errores: ${gameState.errorsCount}',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey,
-                                      ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    settings.enableErrorLimit
+                                        ? 'Errores: ${gameState.errorsCount}/3'
+                                        : 'Errores: ${gameState.errorsCount}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey,
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 20),
-                              const Divider(height: 1),
-                              const SizedBox(height: 20),
-                              
-                              // Botones de control (Deshacer, Borrar, Notas, Pista)
-                              const ControlButtons(),
-                              const SizedBox(height: 24),
-                              
-                              // Habilidades RPG
-                              Text(
-                                'HABILIDADES TÁCTICAS',
-                                style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11.5,
-                                  color: Colors.grey[500],
-                                  letterSpacing: 1.0,
-                                ),
+                              Row(
+                                children: [
+                                  if (settings.showTimer) ...[
+                                    Text(
+                                      '$min:$sec',
+                                      style: GoogleFonts.shareTechMono(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: gameState.isTimerFrozen ? Colors.amber : (isDark ? Colors.white : Colors.black),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                  ],
+                                  IconButton(
+                                    onPressed: () => _shareVictory(
+                                      context, 
+                                      ref, 
+                                      gameState.difficulty, 
+                                      '$min:$sec', 
+                                      sudokuTheme, 
+                                      isDark
+                                    ),
+                                    icon: const Icon(Icons.share_rounded, size: 22),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => ref.read(gameProvider.notifier).togglePause(),
+                                    icon: Icon(
+                                      gameState.isPaused
+                                          ? Icons.play_circle_outline_rounded
+                                          : Icons.pause_circle_outline_rounded,
+                                      size: 26,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                                    ),
+                                    icon: const Icon(Icons.settings_outlined, size: 24),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 10),
-                              AbilityBar(
-                                onAbilityUsed: () {
-                                  ref.read(showFlashProvider.notifier).state = true;
-                                },
-                              ),
-                              const SizedBox(height: 28),
-                              
-                              // Teclado Numérico
-                              const NumberPad(),
                             ],
                           ),
                         ),
+                        const Divider(height: 1),
+                        const SizedBox(height: 12),
+                        const SudokuGrid(),
+                        const SizedBox(height: 12),
+                        const ControlButtons(),
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: AbilityBar(
+                            onAbilityUsed: () {
+                              ref.read(showFlashProvider.notifier).state = true;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const NumberPad(),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   );
-                }
-
-                // --- DISEÑO MÓVIL ORIGINAL (COLUMNA VERTICAL CON SCROLL) ---
-                return SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Barra de encabezado
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-                            ),
-                            Column(
-                              children: [
-                                Text(
-                                  gameState.isTournament
-                                      ? 'LIGA ${gameState.tournamentDivision.toUpperCase()}'
-                                      : gameState.difficulty.toUpperCase(),
-                                  style: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    letterSpacing: 1.0,
-                                    color: sudokuTheme.primaryColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  settings.enableErrorLimit
-                                      ? 'Errores: ${gameState.errorsCount}/3'
-                                      : 'Errores: ${gameState.errorsCount}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                if (settings.showTimer) ...[
-                                  Text(
-                                    '$min:$sec',
-                                    style: GoogleFonts.shareTechMono(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: gameState.isTimerFrozen ? Colors.amber : (isDark ? Colors.white : Colors.black),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                ],
-                                IconButton(
-                                  onPressed: () => _shareVictory(
-                                    context, 
-                                    ref, 
-                                    gameState.difficulty, 
-                                    '$min:$sec', 
-                                    sudokuTheme, 
-                                    isDark
-                                  ),
-                                  icon: const Icon(Icons.share_rounded, size: 22),
-                                ),
-                                IconButton(
-                                  onPressed: () => ref.read(gameProvider.notifier).togglePause(),
-                                  icon: Icon(
-                                    gameState.isPaused
-                                        ? Icons.play_circle_outline_rounded
-                                        : Icons.pause_circle_outline_rounded,
-                                    size: 26,
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                                  ),
-                                  icon: const Icon(Icons.settings_outlined, size: 24),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      const SizedBox(height: 12),
-                      const SudokuGrid(),
-                      const SizedBox(height: 12),
-                      const ControlButtons(),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: AbilityBar(
-                          onAbilityUsed: () {
-                            ref.read(showFlashProvider.notifier).state = true;
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      const NumberPad(),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                );
-              },
-            ),
-
-            // CAPA DE PAUSA (ANTI-TRAMPAS)
-            if (gameState.isPaused)
-              _buildPauseOverlay(context, ref, sudokuTheme, isDark),
-
-            // EFECTO VISUAL DIVINO
-            if (showFlash)
-              DivineFlashEffect(
-                color: Colors.white,
-                onComplete: () {
-                  ref.read(showFlashProvider.notifier).state = false;
                 },
               ),
-          ],
+
+              // CAPA DE PAUSA (ANTI-TRAMPAS)
+              if (gameState.isPaused)
+                _buildPauseOverlay(context, ref, sudokuTheme, isDark),
+
+              // EFECTO VISUAL DIVINO
+              if (showFlash)
+                DivineFlashEffect(
+                  color: Colors.white,
+                  onComplete: () {
+                    ref.read(showFlashProvider.notifier).state = false;
+                  },
+                ),
+            ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildPauseOverlay(BuildContext context, WidgetRef ref, SudokuTheme theme, bool isDark) {
     return BackdropFilter(
