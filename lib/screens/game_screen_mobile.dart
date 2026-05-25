@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/settings_provider.dart';
 import '../widgets/sudoku_grid.dart';
 import '../widgets/control_buttons.dart';
 import '../widgets/number_pad.dart';
 import '../widgets/ability_bar.dart';
-import '../widgets/divine_flash_effect.dart';
 import 'settings_screen.dart';
 
 class GameScreenMobile extends ConsumerWidget {
@@ -87,16 +84,22 @@ class GameScreenMobile extends ConsumerWidget {
           Column(
             children: [
               Text(
-                gameState.isCampaign ? 'VIAJE NIVEL ${gameState.campaignLevelNumber}' : gameState.difficulty.toUpperCase(),
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: sudokuTheme.primaryColor),
+                gameState.isCampaign
+                    ? 'VIAJE NIVEL ${gameState.campaignLevelNumber}'
+                    : gameState.difficulty.toUpperCase(),
+                style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: sudokuTheme.primaryColor),
               ),
               Text(
                 'Errores: ${gameState.errorsCount}/3',
                 style: TextStyle(
-                  fontSize: 9, 
-                  fontWeight: FontWeight.bold, 
-                  color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey
-                ),
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: gameState.errorsCount > 0
+                        ? Colors.redAccent
+                        : Colors.grey),
               ),
             ],
           ),
@@ -106,21 +109,25 @@ class GameScreenMobile extends ConsumerWidget {
                 Text(
                   '$min:$sec',
                   style: GoogleFonts.shareTechMono(
-                    fontSize: 18, 
-                    fontWeight: FontWeight.bold, 
-                    color: gameState.isTimerFrozen ? Colors.amber : (isDark ? Colors.white : Colors.black)
-                  ),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: gameState.isTimerFrozen
+                          ? Colors.amber
+                          : (isDark ? Colors.white : Colors.black)),
                 ),
               const SizedBox(width: 8),
               IconButton(
                 onPressed: () => ref.read(gameProvider.notifier).togglePause(),
                 icon: Icon(
-                  gameState.isPaused ? Icons.play_circle_outline_rounded : Icons.pause_circle_outline_rounded,
+                  gameState.isPaused
+                      ? Icons.play_circle_outline_rounded
+                      : Icons.pause_circle_outline_rounded,
                   size: 22,
                 ),
               ),
               IconButton(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsScreen())),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => const SettingsScreen())),
                 icon: const Icon(Icons.settings_outlined, size: 20),
               ),
             ],

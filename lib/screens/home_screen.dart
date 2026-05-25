@@ -8,6 +8,7 @@ import '../widgets/theme_selector.dart';
 import '../widgets/reward_unlock_modal.dart';
 import '../models/user_profile.dart';
 import '../providers/storage_provider.dart';
+import '../utils/enums.dart';
 import 'game_screen.dart';
 import 'store_screen.dart';
 import 'login_screen.dart';
@@ -59,7 +60,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final bool isDesktop = constraints.maxWidth > 800;
+            final double width = constraints.maxWidth;
+            final double height = constraints.maxHeight;
+
+            // Detección de Layout Trifecta
+            DeviceLayoutType layoutType;
+            if (width > 1100) {
+              layoutType = DeviceLayoutType.desktop;
+            } else if (width > height && height < 600) {
+              layoutType = DeviceLayoutType.landscapeMobile;
+            } else {
+              layoutType = DeviceLayoutType.portraitMobile;
+            }
+
+            final bool isDesktop = layoutType == DeviceLayoutType.desktop;
+            final bool isLandscape = layoutType == DeviceLayoutType.landscapeMobile;
             final double horizontalPadding = isDesktop ? 40.0 : 20.0;
 
             return SingleChildScrollView(
@@ -88,14 +103,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                     // 2. Partida en Curso
                     if (ref.watch(gameProvider).hasStarted) 
-                      _buildActiveGameCard(context, ref, sudokuTheme, isDark, horizontalPadding),
+                      _buildActiveGameCard(context, ref, sudokuTheme, isDark, horizontalPadding, isLandscape),
 
                     // 3. Banner de Registro
                     if (!userProfile.isRegistered)
-                      _buildSyncBanner(context, sudokuTheme, isDark, horizontalPadding),
+                      _buildSyncBanner(context, sudokuTheme, isDark, horizontalPadding, isLandscape),
 
                     // 4. Reto Diario
-                    _buildDailyChallengeBanner(context, userProfile, sudokuTheme, isDark, horizontalPadding),
+                    _buildDailyChallengeBanner(context, userProfile, sudokuTheme, isDark, horizontalPadding, isLandscape),
 
                     const SizedBox(height: 32),
 
@@ -108,22 +123,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Text(
                             'Selecciona Dificultad',
                             style: GoogleFonts.outfit(
-                              fontSize: 22,
+                              fontSize: isLandscape ? 18 : 22,
                               fontWeight: FontWeight.bold,
                               color: isDark ? Colors.white : const Color(0xFF2B2B36),
                             ),
                           ),
                           const SizedBox(height: 16),
-                          isDesktop 
+                          (isDesktop || isLandscape)
                             ? Row(
                                 children: [
-                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'FÁCIL', icon: '🌱', bestTime: storage.getBestTime('Fácil'), accentColor: Colors.teal, isDark: isDark)),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'MEDIO', icon: '⚡', bestTime: storage.getBestTime('Medio'), accentColor: Colors.blueAccent, isDark: isDark)),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'DIFÍCIL', icon: '🔮', bestTime: storage.getBestTime('Difícil'), accentColor: Colors.purpleAccent, isDark: isDark)),
-                                  const SizedBox(width: 16),
-                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'EXPERTO', icon: '👑', bestTime: storage.getBestTime('Experto'), accentColor: Colors.redAccent, isDark: isDark)),
+                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'FÁCIL', icon: '🌱', bestTime: storage.getBestTime('Fácil'), accentColor: Colors.teal, isDark: isDark, isLandscape: isLandscape)),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'MEDIO', icon: '⚡', bestTime: storage.getBestTime('Medio'), accentColor: Colors.blueAccent, isDark: isDark, isLandscape: isLandscape)),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'DIFÍCIL', icon: '🔮', bestTime: storage.getBestTime('Difícil'), accentColor: Colors.purpleAccent, isDark: isDark, isLandscape: isLandscape)),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'EXPERTO', icon: '👑', bestTime: storage.getBestTime('Experto'), accentColor: Colors.redAccent, isDark: isDark, isLandscape: isLandscape)),
                                 ],
                               )
                             : GridView.count(
@@ -132,7 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 14,
                                 mainAxisSpacing: 14,
-                                childAspectRatio: 1.15, // Un poco más alto para evitar overflow
+                                childAspectRatio: 1.15,
                                 children: [
                                   _buildModernDifficultyCard(context, ref, title: 'Fácil', icon: '🌱', bestTime: storage.getBestTime('Fácil'), accentColor: Colors.teal, isDark: isDark),
                                   _buildModernDifficultyCard(context, ref, title: 'Medio', icon: '⚡', bestTime: storage.getBestTime('Medio'), accentColor: Colors.blueAccent, isDark: isDark),
@@ -147,12 +162,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 24),
 
                     // 6. Academia Cosmos
-                    _buildAcademyCard(context, sudokuTheme, isDark, horizontalPadding),
+                    _buildAcademyCard(context, sudokuTheme, isDark, horizontalPadding, isLandscape),
 
                     const SizedBox(height: 16),
 
                     // 7. Centro de Suministros
-                    _buildStoreCard(context, sudokuTheme, isDark, horizontalPadding),
+                    _buildStoreCard(context, sudokuTheme, isDark, horizontalPadding, isLandscape),
 
                     const SizedBox(height: 100),
                   ],
@@ -165,7 +180,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildActiveGameCard(BuildContext context, WidgetRef ref, dynamic sudokuTheme, bool isDark, double padding) {
+  Widget _buildActiveGameCard(BuildContext context, WidgetRef ref, dynamic sudokuTheme, bool isDark, double padding, bool isLandscape) {
     final game = ref.watch(gameProvider);
     final min = (game.elapsedSeconds ~/ 60).toString().padLeft(2, '0');
     final sec = (game.elapsedSeconds % 60).toString().padLeft(2, '0');
@@ -177,29 +192,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: sudokuTheme.primaryColor.withOpacity(0.3), width: 1.5),
-          boxShadow: [
-            BoxShadow(color: sudokuTheme.primaryColor.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 5)),
-          ],
+          boxShadow: [BoxShadow(color: sudokuTheme.primaryColor.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 5))],
         ),
         child: InkWell(
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const GameScreen())),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: isLandscape ? 10 : 16),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: EdgeInsets.all(isLandscape ? 8 : 10),
                   decoration: BoxDecoration(color: sudokuTheme.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
-                  child: Icon(Icons.play_arrow_rounded, color: sudokuTheme.primaryColor, size: 24),
+                  child: Icon(Icons.play_arrow_rounded, color: sudokuTheme.primaryColor, size: isLandscape ? 20 : 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Partida en Curso', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
-                      Text('Dificultad: ${game.difficulty} • Tiempo: $min:$sec', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600])),
+                      Text('Partida en Curso', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: isLandscape ? 14 : 16, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
+                      Text('Dificultad: ${game.difficulty} • Tiempo: $min:$sec', style: TextStyle(fontSize: isLandscape ? 11 : 12, color: isDark ? Colors.grey[400] : Colors.grey[600])),
                     ],
                   ),
                 ),
@@ -220,11 +233,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildSyncBanner(BuildContext context, dynamic theme, bool isDark, double padding) {
+  Widget _buildSyncBanner(BuildContext context, dynamic theme, bool isDark, double padding, bool isLandscape) {
     return Padding(
       padding: EdgeInsets.only(left: padding, right: padding, bottom: 20.0),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: isLandscape ? 10 : 14),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -232,14 +245,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.cloud_outlined, size: 24, color: Colors.grey),
+            Icon(Icons.cloud_outlined, size: isLandscape ? 20 : 24, color: Colors.grey),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('¡Sincroniza tu progreso!', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
-                  Text('Asegura tus datos en la nube.', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600])),
+                  Text('¡Sincroniza tu progreso!', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: isLandscape ? 13 : 15)),
+                  if (!isLandscape) Text('Asegura tus datos en la nube.', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600])),
                 ],
               ),
             ),
@@ -253,7 +266,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildDailyChallengeBanner(BuildContext context, UserProfile profile, dynamic theme, bool isDark, double padding) {
+  Widget _buildDailyChallengeBanner(BuildContext context, UserProfile profile, dynamic theme, bool isDark, double padding, bool isLandscape) {
     final today = DateTime.now().toIso8601String().substring(0, 10);
     final isCompleted = profile.completedDailyDates.contains(today);
 
@@ -261,7 +274,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       padding: EdgeInsets.symmetric(horizontal: padding),
       child: Container(
         width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 140),
+        constraints: BoxConstraints(minHeight: isLandscape ? 100 : 140),
         decoration: BoxDecoration(
           gradient: const LinearGradient(colors: [Color(0xFF7B1FA2), Color(0xFF6200EA)], begin: Alignment.topLeft, end: Alignment.bottomRight),
           borderRadius: BorderRadius.circular(32),
@@ -269,9 +282,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         child: Stack(
           children: [
-            Positioned(right: -20, bottom: -20, child: Icon(Icons.local_fire_department_rounded, size: 140, color: Colors.white.withOpacity(0.1))),
+            Positioned(right: -20, bottom: -20, child: Icon(Icons.local_fire_department_rounded, size: isLandscape ? 100 : 140, color: Colors.white.withOpacity(0.1))),
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(isLandscape ? 16.0 : 24.0),
               child: Row(
                 children: [
                   Expanded(
@@ -292,15 +305,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: isLandscape ? 4 : 8),
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
                             'RETO DIARIO',
-                            style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
+                            style: GoogleFonts.outfit(fontSize: isLandscape ? 22 : 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
                           ),
                         ),
-                        Text(
+                        if (!isLandscape) Text(
                           'Resuelve el tablero único de hoy.',
                           style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
                         ),
@@ -308,11 +321,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   Container(
-                    width: 50, height: 50,
+                    width: isLandscape ? 44 : 50, height: isLandscape ? 44 : 50,
                     decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
                     child: IconButton(
                       onPressed: () {},
-                      icon: Icon(isCompleted ? Icons.check_rounded : Icons.play_arrow_rounded, color: Colors.white, size: 28),
+                      icon: Icon(isCompleted ? Icons.check_rounded : Icons.play_arrow_rounded, color: Colors.white, size: isLandscape ? 24 : 28),
                     ),
                   ),
                 ],
@@ -324,7 +337,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildAcademyCard(BuildContext context, dynamic theme, bool isDark, double padding) {
+  Widget _buildAcademyCard(BuildContext context, dynamic theme, bool isDark, double padding, bool isLandscape) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: padding),
       child: Container(
@@ -337,7 +350,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const HowToPlayScreen())),
           borderRadius: BorderRadius.circular(22),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: isLandscape ? 10 : 16),
             child: Row(
               children: [
                 Container(
@@ -350,8 +363,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('ACADEMIA COSMOS', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
-                      Text('Domina las leyes de Numbra.', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                      Text('ACADEMIA COSMOS', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: isLandscape ? 13 : 15, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
+                      if (!isLandscape) Text('Domina las leyes de Numbra.', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                     ],
                   ),
                 ),
@@ -364,7 +377,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildStoreCard(BuildContext context, dynamic theme, bool isDark, double padding) {
+  Widget _buildStoreCard(BuildContext context, dynamic theme, bool isDark, double padding, bool isLandscape) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: padding),
       child: Container(
@@ -377,7 +390,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const StoreScreen())),
           borderRadius: BorderRadius.circular(22),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: isLandscape ? 10 : 16),
             child: Row(
               children: [
                 Container(
@@ -390,8 +403,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('CENTRO DE SUMINISTROS', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
-                      Text('Adquiere pociones y boosters.', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                      Text('CENTRO DE SUMINISTROS', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: isLandscape ? 13 : 15, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
+                      if (!isLandscape) Text('Adquiere pociones y boosters.', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                     ],
                   ),
                 ),
@@ -404,7 +417,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildModernDifficultyCard(BuildContext context, WidgetRef ref, {required String title, required String icon, required int bestTime, required Color accentColor, required bool isDark}) {
+  Widget _buildModernDifficultyCard(BuildContext context, WidgetRef ref, {required String title, required String icon, required int bestTime, required Color accentColor, required bool isDark, bool isLandscape = false}) {
     final min = (bestTime ~/ 60).toString().padLeft(2, '0');
     final sec = (bestTime % 60).toString().padLeft(2, '0');
     return Container(
@@ -423,7 +436,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           },
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(14.0), // Padding más compacto
+            padding: EdgeInsets.all(isLandscape ? 10.0 : 14.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -431,21 +444,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(icon, style: const TextStyle(fontSize: 22)), // Icono más pequeño
+                    Text(icon, style: TextStyle(fontSize: isLandscape ? 18 : 22)),
                     Container(width: 6, height: 6, decoration: BoxDecoration(color: accentColor, shape: BoxShape.circle)),
                   ],
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: isLandscape ? 8 : 10),
                 FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 1, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
+                  child: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: isLandscape ? 13 : 15, letterSpacing: 1, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
                 ),
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    const Icon(Icons.timer_outlined, size: 10, color: Colors.grey),
+                    Icon(Icons.timer_outlined, size: isLandscape ? 8 : 10, color: Colors.grey),
                     const SizedBox(width: 4),
-                    Text(bestTime > 0 ? '$min:$sec' : 'Sin Récord', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[500])),
+                    Text(bestTime > 0 ? '$min:$sec' : 'Sin Récord', style: GoogleFonts.outfit(fontSize: isLandscape ? 9 : 10, fontWeight: FontWeight.bold, color: Colors.grey[500])),
                   ],
                 ),
               ],

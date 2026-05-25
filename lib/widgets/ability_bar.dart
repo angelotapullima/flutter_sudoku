@@ -22,8 +22,8 @@ class AbilityBar extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Modo compacto basado en el ancho disponible por botón
-        final bool isCompact = (constraints.maxWidth / 3) < 60;
+        // Modo compacto basado en el ancho disponible por botón o altura reducida
+        final bool isCompact = (constraints.maxWidth / 3) < 60 || constraints.maxHeight < 90;
 
         return Container(
           padding: EdgeInsets.symmetric(
@@ -109,38 +109,38 @@ class AbilityBar extends ConsumerWidget {
     final double iconSize = isCompact ? 18 : 22;
     final double circleSize = isCompact ? 32 : 44;
 
-    return Expanded( // Asegura fluidez horizontal
+    return Expanded( 
       child: GestureDetector(
         onTap: disabled ? null : onTap,
         onLongPress: () => _showAbilityInfo(context, label, isDark, theme),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: circleSize,
-              height: circleSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isActive 
-                  ? Colors.amber.withOpacity(0.2) 
-                  : (disabled ? Colors.grey.withOpacity(0.1) : theme.primaryColor.withOpacity(0.1)),
-                border: Border.all(
-                  color: isActive ? Colors.amber : (disabled ? Colors.grey.withOpacity(0.3) : theme.primaryColor.withOpacity(0.3)),
-                  width: isCompact ? 1 : 2,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: circleSize,
+                height: circleSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isActive 
+                    ? Colors.amber.withOpacity(0.2) 
+                    : (disabled ? Colors.grey.withOpacity(0.1) : theme.primaryColor.withOpacity(0.1)),
+                  border: Border.all(
+                    color: isActive ? Colors.amber : (disabled ? Colors.grey.withOpacity(0.3) : theme.primaryColor.withOpacity(0.3)),
+                    width: isCompact ? 1 : 2,
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  color: isActive ? Colors.amber : (disabled ? Colors.grey : theme.primaryColor),
+                  size: iconSize,
                 ),
               ),
-              child: Icon(
-                icon,
-                color: isActive ? Colors.amber : (disabled ? Colors.grey : theme.primaryColor),
-                size: iconSize,
-              ),
-            ),
-            if (!isCompact) ...[
-              const SizedBox(height: 4),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
+              if (!isCompact) ...[
+                const SizedBox(height: 4),
+                Text(
                   label,
                   style: GoogleFonts.outfit(
                     fontSize: 9,
@@ -149,24 +149,24 @@ class AbilityBar extends ConsumerWidget {
                     color: isActive ? Colors.amber : (isDark ? Colors.white70 : Colors.black54),
                   ),
                 ),
+              ],
+              // Costo (Pequeño)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('🪙', style: TextStyle(fontSize: 7, color: disabled ? Colors.grey : Colors.amber)),
+                  Text(
+                    '$cost',
+                    style: TextStyle(
+                      fontSize: 8, 
+                      fontWeight: FontWeight.bold,
+                      color: disabled ? Colors.grey : (isDark ? Colors.white38 : Colors.black38),
+                    ),
+                  ),
+                ],
               ),
             ],
-            // Costo (Pequeño)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('🪙', style: TextStyle(fontSize: 7, color: disabled ? Colors.grey : Colors.amber)),
-                Text(
-                  '$cost',
-                  style: TextStyle(
-                    fontSize: 8, 
-                    fontWeight: FontWeight.bold,
-                    color: disabled ? Colors.grey : (isDark ? Colors.white38 : Colors.black38),
-                  ),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );

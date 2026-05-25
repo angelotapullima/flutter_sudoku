@@ -9,6 +9,13 @@ enum TutorialScript {
   powerDivine,
 }
 
+/// TIPOS DE LAYOUT SEGÚN DISPOSITIVO Y ORIENTACIÓN
+enum DeviceLayoutType { 
+  portraitMobile, 
+  landscapeMobile, 
+  desktop 
+}
+
 /// DIFICULTADES DEL JUEGO
 enum GameDifficulty {
   easy,

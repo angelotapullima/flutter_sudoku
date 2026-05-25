@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/settings_provider.dart';
 import '../widgets/sudoku_grid.dart';
 import '../widgets/control_buttons.dart';
 import '../widgets/number_pad.dart';
@@ -56,11 +54,16 @@ class GameScreenDesktop extends ConsumerWidget {
                 flex: 1,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.02),
-                    border: Border(left: BorderSide(color: isDark ? Colors.white10 : Colors.black12)),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.02)
+                        : Colors.black.withOpacity(0.02),
+                    border: Border(
+                        left: BorderSide(
+                            color: isDark ? Colors.white10 : Colors.black12)),
                   ),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 32),
                     child: Column(
                       children: [
                         _buildDesktopStats(isDark),
@@ -100,16 +103,22 @@ class GameScreenDesktop extends ConsumerWidget {
           Column(
             children: [
               Text(
-                gameState.isCampaign ? 'VIAJE NIVEL ${gameState.campaignLevelNumber}' : gameState.difficulty.toUpperCase(),
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: sudokuTheme.primaryColor),
+                gameState.isCampaign
+                    ? 'VIAJE NIVEL ${gameState.campaignLevelNumber}'
+                    : gameState.difficulty.toUpperCase(),
+                style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: sudokuTheme.primaryColor),
               ),
               Text(
                 'Errores: ${gameState.errorsCount}/3',
                 style: TextStyle(
-                  fontSize: 12, 
-                  fontWeight: FontWeight.bold, 
-                  color: gameState.errorsCount > 0 ? Colors.redAccent : Colors.grey
-                ),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: gameState.errorsCount > 0
+                        ? Colors.redAccent
+                        : Colors.grey),
               ),
             ],
           ),
@@ -119,21 +128,25 @@ class GameScreenDesktop extends ConsumerWidget {
                 Text(
                   '$min:$sec',
                   style: GoogleFonts.shareTechMono(
-                    fontSize: 24, 
-                    fontWeight: FontWeight.bold, 
-                    color: gameState.isTimerFrozen ? Colors.amber : (isDark ? Colors.white : Colors.black)
-                  ),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: gameState.isTimerFrozen
+                          ? Colors.amber
+                          : (isDark ? Colors.white : Colors.black)),
                 ),
               const SizedBox(width: 8),
               IconButton(
                 onPressed: () => ref.read(gameProvider.notifier).togglePause(),
                 icon: Icon(
-                  gameState.isPaused ? Icons.play_circle_outline_rounded : Icons.pause_circle_outline_rounded,
+                  gameState.isPaused
+                      ? Icons.play_circle_outline_rounded
+                      : Icons.pause_circle_outline_rounded,
                   size: 28,
                 ),
               ),
               IconButton(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsScreen())),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => const SettingsScreen())),
                 icon: const Icon(Icons.settings_outlined, size: 24),
               ),
             ],
@@ -147,14 +160,14 @@ class GameScreenDesktop extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: sudokuTheme.primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20)
-      ),
+          color: sudokuTheme.primaryColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20)),
       child: Column(
         children: [
           _buildStatRow('Tiempo Transcurrido', '$min:$sec', isDark),
           const SizedBox(height: 12),
-          _buildStatRow('Errores Cometidos', '${gameState.errorsCount}/3', isDark),
+          _buildStatRow(
+              'Errores Cometidos', '${gameState.errorsCount}/3', isDark),
         ],
       ),
     );
@@ -164,8 +177,11 @@ class GameScreenDesktop extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 13)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        Text(label,
+            style: TextStyle(
+                color: isDark ? Colors.white60 : Colors.black54, fontSize: 13)),
+        Text(value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
       ],
     );
   }

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/settings_provider.dart';
 import '../widgets/sudoku_grid.dart';
 import '../widgets/control_buttons.dart';
 import '../widgets/number_pad.dart';
@@ -43,17 +41,19 @@ class GameScreenLandscape extends ConsumerWidget {
                 flex: 11,
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                     child: const SudokuGrid(),
                   ),
                 ),
               ),
-              
+
               // LADO DERECHO: Centro de Comando (CERO SCROLL)
               Expanded(
                 flex: 9,
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 8.0, top: 4.0, bottom: 4.0),
+                  padding:
+                      const EdgeInsets.only(right: 8.0, top: 4.0, bottom: 4.0),
                   child: Column(
                     children: [
                       // 1. Controles y Habilidades lado a lado
@@ -64,13 +64,16 @@ class GameScreenLandscape extends ConsumerWidget {
                           children: [
                             const Expanded(flex: 10, child: ControlButtons()),
                             const SizedBox(width: 4),
-                            Expanded(flex: 9, child: AbilityBar(onAbilityUsed: onAbilityUsed)),
+                            Expanded(
+                                flex: 9,
+                                child:
+                                    AbilityBar(onAbilityUsed: onAbilityUsed)),
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 4),
-                      
+
                       // 2. Teclado Numérico Compacto
                       const Expanded(
                         flex: 4,
@@ -93,7 +96,9 @@ class GameScreenLandscape extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0B0B12) : Colors.white,
-        border: Border(bottom: BorderSide(color: isDark ? Colors.white10 : Colors.black12)),
+        border: Border(
+            bottom:
+                BorderSide(color: isDark ? Colors.white10 : Colors.black12)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -111,10 +116,14 @@ class GameScreenLandscape extends ConsumerWidget {
           ),
           Text(
             '${gameState.difficulty.toUpperCase()} • $min:$sec',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11, color: sudokuTheme.primaryColor),
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                color: sudokuTheme.primaryColor),
           ),
           IconButton(
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsScreen())),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => const SettingsScreen())),
             icon: const Icon(Icons.settings_outlined, size: 14),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),

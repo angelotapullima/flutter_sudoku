@@ -33,10 +33,10 @@ class NumberPad extends ConsumerWidget {
       builder: (context, constraints) {
         final double width = constraints.maxWidth;
         final double height = constraints.maxHeight;
-        final bool isLandscape = height < 200;
-
-        if (isLandscape) {
-          // DISEÑO ULTRA COMPACTO PARA LANDSCAPE (Grid 5x2 o similar)
+        
+        // 1. MODO LANDSCAPE (Horizontal Mobile)
+        // Se detecta por altura muy reducida del widget
+        if (height < 150) {
           return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -45,7 +45,7 @@ class NumberPad extends ConsumerWidget {
               crossAxisCount: 5,
               mainAxisSpacing: 4,
               crossAxisSpacing: 4,
-              childAspectRatio: 1.5,
+              childAspectRatio: 1.8,
             ),
             itemCount: 9,
             itemBuilder: (context, index) {
@@ -63,23 +63,16 @@ class NumberPad extends ConsumerWidget {
                     border: Border.all(color: sudokuTheme.primaryColor.withOpacity(0.2)),
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    '$number',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: sudokuTheme.primaryColor,
-                    ),
-                  ),
+                  child: Text('$number', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: sudokuTheme.primaryColor)),
                 ),
               );
             },
           );
         }
 
-        // DISEÑO ORIGINAL (Mobile Portrait / Desktop)
-        final bool isDesktop = width > 400;
-        if (isDesktop) {
+        // 2. MODO DESKTOP (Web amplia)
+        // Solo si el ancho es muy grande (ej. > 600px en el contenedor del pad)
+        if (width > 600) {
           return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -120,37 +113,62 @@ class NumberPad extends ConsumerWidget {
           );
         }
 
-        // Mobile Portrait clásico
-        final double buttonSize = (width - 60) / 9;
+        // 3. MODO PORTRAIT MOBILE (UNA SOLA LÍNEA)
+        // Forzado para anchos menores a 600px
+        final double totalPadding = 20.0;
+        final double spacing = 4.0;
+        final double buttonWidth = (width - totalPadding - (spacing * 8)) / 9;
+
         return Container(
-          height: buttonSize * 1.5,
+          width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(9, (index) {
               final number = index + 1;
               final countLeft = 9 - getCorrectCount(number);
-              if (settings.showRemainingNumbers && countLeft <= 0) return const SizedBox.shrink();
+              
+              // Si el número ya se completó, lo ocultamos para dar sensación de progreso
+              if (settings.showRemainingNumbers && countLeft <= 0) {
+                return SizedBox(width: buttonWidth + spacing);
+              }
 
-              return GestureDetector(
-                key: keys.numKeys[index],
-                onTap: () => ref.read(gameProvider.notifier).inputNumber(number),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: buttonSize,
-                      height: buttonSize * 1.1,
-                      decoration: BoxDecoration(
-                        color: sudokuTheme.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+              return Padding(
+                padding: EdgeInsets.only(right: index == 8 ? 0 : spacing),
+                child: GestureDetector(
+                  key: keys.numKeys[index],
+                  onTap: () => ref.read(gameProvider.notifier).inputNumber(number),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: buttonWidth,
+                        height: buttonWidth * 1.3, // Un poco más alto para facilitar el toque
+                        decoration: BoxDecoration(
+                          color: sudokuTheme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: sudokuTheme.primaryColor.withOpacity(0.15)),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '$number', 
+                          style: TextStyle(
+                            fontSize: buttonWidth * 0.5, 
+                            fontWeight: FontWeight.bold, 
+                            color: sudokuTheme.primaryColor
+                          )
+                        ),
                       ),
-                      alignment: Alignment.center,
-                      child: Text('$number', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: sudokuTheme.primaryColor)),
-                    ),
-                    if (settings.showTimer)
-                       Text('$countLeft', style: const TextStyle(fontSize: 9, color: Colors.grey)),
-                  ],
+                      if (settings.showRemainingNumbers)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            '$countLeft', 
+                            style: const TextStyle(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.bold)
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               );
             }),

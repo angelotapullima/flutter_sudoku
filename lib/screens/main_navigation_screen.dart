@@ -14,8 +14,7 @@ import 'settings_screen.dart';
 import 'clan_screen.dart';
 import 'how_to_play_screen.dart';
 import '../providers/tutorial_keys_provider.dart';
-
-enum DeviceLayoutType { portraitMobile, landscapeMobile, desktop }
+import '../utils/enums.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});

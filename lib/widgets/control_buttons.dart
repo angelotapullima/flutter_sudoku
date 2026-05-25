@@ -18,8 +18,8 @@ class ControlButtons extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Mejor detección de espacio: Si el ancho por botón es menor a 60px, activamos modo compacto
-        final bool isCompact = (constraints.maxWidth / 4) < 60;
+        // Mejor detección de espacio: Consideramos tanto ancho como alto
+        final bool isCompact = (constraints.maxWidth / 4) < 60 || constraints.maxHeight < 80;
 
         return Padding(
           padding: EdgeInsets.symmetric(
@@ -81,45 +81,45 @@ class ControlButtons extends ConsumerWidget {
     String? badge,
     Color? badgeColor,
   }) {
-    return Expanded( // Cambiado a Expanded para que use el espacio proporcionalmente y no desborde
+    return Expanded( 
       child: GestureDetector(
         onTap: onTap,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              clipBehavior: Clip.none,
-              children: [
-                Icon(icon, size: isCompact ? 20 : 26, color: color),
-                if (badge != null)
-                  Positioned(
-                    top: isCompact ? -4 : -6,
-                    right: isCompact ? -4 : -8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: badgeColor ?? Colors.blue,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        badge,
-                        style: TextStyle(
-                          fontSize: isCompact ? 7 : 8,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(icon, size: isCompact ? 20 : 26, color: color),
+                  if (badge != null)
+                    Positioned(
+                      top: isCompact ? -4 : -6,
+                      right: isCompact ? -4 : -8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: badgeColor ?? Colors.blue,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          badge,
+                          style: TextStyle(
+                            fontSize: isCompact ? 7 : 8,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-            if (!isCompact) ...[
-              const SizedBox(height: 4),
-              FittedBox( // Asegura que el texto se encoja si es necesario
-                fit: BoxFit.scaleDown,
-                child: Text(
+                ],
+              ),
+              if (!isCompact) ...[
+                const SizedBox(height: 4),
+                Text(
                   label,
                   style: TextStyle(
                     fontSize: 11,
@@ -127,9 +127,9 @@ class ControlButtons extends ConsumerWidget {
                     color: color,
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
