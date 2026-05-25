@@ -5,7 +5,6 @@ import '../providers/clan_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import 'login_screen.dart';
-import '../widgets/responsive_content_wrapper.dart';
 
 class ClanScreen extends ConsumerStatefulWidget {
   const ClanScreen({super.key});
@@ -39,28 +38,32 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
     }
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
+      backgroundColor:
+          isDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
       body: LayoutBuilder(
         builder: (context, constraints) {
           // Detectar Landscape Mobile (Ancho > Alto y Alto < 500)
-          final bool isLandscape = constraints.maxWidth > constraints.maxHeight && constraints.maxHeight < 500;
+          final bool isLandscape =
+              constraints.maxWidth > constraints.maxHeight &&
+                  constraints.maxHeight < 500;
 
           if (clanState.inClan) {
-            return isLandscape 
-              ? _buildLandscapeMyClanView(clanState, isDark, sudokuTheme)
-              : _buildMyClanView(clanState, isDark, sudokuTheme);
+            return isLandscape
+                ? _buildLandscapeMyClanView(clanState, isDark, sudokuTheme)
+                : _buildMyClanView(clanState, isDark, sudokuTheme);
           }
-          
-          return clanState.inClan 
-            ? _buildMyClanView(clanState, isDark, sudokuTheme) 
-            : _buildClanSelectionView(clanState, isDark, sudokuTheme);
+
+          return clanState.inClan
+              ? _buildMyClanView(clanState, isDark, sudokuTheme)
+              : _buildClanSelectionView(clanState, isDark, sudokuTheme);
         },
       ),
     );
   }
 
   // --- NUEVA VISTA LANDSCAPE PARA EL CLAN (SIDE-BY-SIDE) ---
-  Widget _buildLandscapeMyClanView(ClanState state, bool isDark, dynamic theme) {
+  Widget _buildLandscapeMyClanView(
+      ClanState state, bool isDark, dynamic theme) {
     final details = state.details!;
 
     return Row(
@@ -71,7 +74,9 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
           child: Container(
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF13131A) : Colors.white,
-              border: Border(right: BorderSide(color: isDark ? Colors.white10 : Colors.black12)),
+              border: Border(
+                  right: BorderSide(
+                      color: isDark ? Colors.white10 : Colors.black12)),
             ),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -99,7 +104,8 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                   labelColor: theme.primaryColor,
                   unselectedLabelColor: Colors.grey,
                   indicatorColor: theme.primaryColor,
-                  labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  labelStyle: const TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.bold),
                   tabs: const [
                     Tab(text: 'CHAT'),
                     Tab(text: 'MIEMBROS'),
@@ -121,27 +127,40 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
     );
   }
 
-  Widget _buildLandscapeClanInfo(ClanDetails details, dynamic theme, bool isDark) {
+  Widget _buildLandscapeClanInfo(
+      ClanDetails details, dynamic theme, bool isDark) {
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: theme.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
-          child: Text(details.tag, style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+          decoration: BoxDecoration(
+              color: theme.primaryColor.withOpacity(0.1),
+              shape: BoxShape.circle),
+          child: Text(details.tag,
+              style: TextStyle(
+                  color: theme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12)),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(details.name, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold)),
-              Text(details.description, style: const TextStyle(fontSize: 10, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text(details.name,
+                  style: GoogleFonts.outfit(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(details.description,
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
         IconButton(
           onPressed: () => _showLeaveClanDialog(context, theme),
-          icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 16),
+          icon: const Icon(Icons.logout_rounded,
+              color: Colors.redAccent, size: 16),
           constraints: const BoxConstraints(),
           padding: EdgeInsets.zero,
         ),
@@ -152,13 +171,24 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
   Widget _buildLandscapeWarBotin(bool isDark) {
     return Container(
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: Colors.amber.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.withOpacity(0.2))),
+      decoration: BoxDecoration(
+          color: Colors.amber.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.amber.withOpacity(0.2))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('🎁 BOTÍN DE GUERRA', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.amber, letterSpacing: 0.5)),
+          const Text('🎁 BOTÍN DE GUERRA',
+              style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.amber,
+                  letterSpacing: 0.5)),
           const SizedBox(height: 2),
-          Text('500 🪙 y 50 💎 por derrotar al Titán.', style: TextStyle(fontSize: 10, color: isDark ? Colors.white70 : Colors.black87)),
+          Text('500 🪙 y 50 💎 por derrotar al Titán.',
+              style: TextStyle(
+                  fontSize: 10,
+                  color: isDark ? Colors.white70 : Colors.black87)),
         ],
       ),
     );
@@ -171,8 +201,11 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('⚔️ DAÑO AL TITÁN', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-            Text('${details.monsterDamageTotal} HP', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+            const Text('⚔️ DAÑO AL TITÁN',
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+            Text('${details.monsterDamageTotal} HP',
+                style:
+                    const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 4),
@@ -200,7 +233,8 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
             const SizedBox(height: 16),
             Text(
               'LOGIAS CERRADAS',
-              style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 2),
+              style: GoogleFonts.outfit(
+                  fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 2),
             ),
             const SizedBox(height: 8),
             Text(
@@ -210,13 +244,18 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginScreen())),
+              onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const LoginScreen())),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primaryColor,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text('INICIAR SESIÓN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text('INICIAR SESIÓN',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -270,7 +309,9 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF16161E) : Colors.white,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)
+        ],
       ),
       child: Column(
         children: [
@@ -283,21 +324,31 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                   color: theme.primaryColor.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Text(details.tag, style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold)),
+                child: Text(details.tag,
+                    style: TextStyle(
+                        color: theme.primaryColor,
+                        fontWeight: FontWeight.bold)),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(details.name, style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold)),
-                    Text(details.description, style: const TextStyle(fontSize: 12, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(details.name,
+                        style: GoogleFonts.outfit(
+                            fontSize: 22, fontWeight: FontWeight.bold)),
+                    Text(details.description,
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
               IconButton(
                 onPressed: () => _showLeaveClanDialog(context, theme),
-                icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+                icon: const Icon(Icons.logout_rounded,
+                    color: Colors.redAccent, size: 20),
                 tooltip: 'Abandonar Logia',
               ),
             ],
@@ -322,11 +373,17 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                     children: [
                       const Text(
                         'BOTÍN DE GUERRA SEMANAL',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.amber, letterSpacing: 1),
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.amber,
+                            letterSpacing: 1),
                       ),
                       Text(
                         'Derroten al Titán para recibir 500 🪙 y 50 💎 cada uno.',
-                        style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : Colors.black87),
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: isDark ? Colors.white70 : Colors.black87),
                       ),
                     ],
                   ),
@@ -341,8 +398,14 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('⚔️ DAÑO AL MONSTRUO', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                  Text('${details.monsterDamageTotal} / 100,000 HP', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  const Text('⚔️ DAÑO AL MONSTRUO',
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1)),
+                  Text('${details.monsterDamageTotal} / 100,000 HP',
+                      style: const TextStyle(
+                          fontSize: 10, fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 8),
@@ -380,23 +443,30 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 12.0),
                   child: Column(
-                    crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                    crossAxisAlignment: isMe
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
                     children: [
                       if (!isMe)
                         Padding(
                           padding: const EdgeInsets.only(left: 4.0, bottom: 4),
-                          child: Text(
-                            msg.username, 
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: theme.primaryColor)
-                          ),
+                          child: Text(msg.username,
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.primaryColor)),
                         ),
                       Container(
-                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.75),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
-                          color: isMe 
-                            ? theme.primaryColor 
-                            : (isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]),
+                          color: isMe
+                              ? theme.primaryColor
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.08)
+                                  : Colors.grey[200]),
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(20),
                             topRight: const Radius.circular(20),
@@ -404,13 +474,14 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                             bottomRight: Radius.circular(isMe ? 0 : 20),
                           ),
                         ),
-                        child: Text(
-                          msg.message, 
-                          style: TextStyle(
-                            fontSize: 14, 
-                            color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87)
-                          )
-                        ),
+                        child: Text(msg.message,
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: isMe
+                                    ? Colors.white
+                                    : (isDark
+                                        ? Colors.white
+                                        : Colors.black87))),
                       ),
                     ],
                   ),
@@ -425,7 +496,11 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF16161E) : Colors.white,
             boxShadow: [
-              if (!isDark) BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, -2))
+              if (!isDark)
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 5,
+                    offset: const Offset(0, -2))
             ],
           ),
           child: Row(
@@ -433,7 +508,9 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
               Expanded(
                 child: TextField(
                   controller: _messageController,
-                  style: TextStyle(fontSize: 14, color: isDark ? Colors.white : Colors.black87),
+                  style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black87),
                   onSubmitted: (val) {
                     if (val.trim().isEmpty) return;
                     ref.read(clanProvider.notifier).sendChatMessage(val);
@@ -442,10 +519,15 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                   decoration: InputDecoration(
                     hintText: 'Escribe un mensaje...',
                     hintStyle: TextStyle(fontSize: 13, color: Colors.grey[500]),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none),
                     filled: true,
-                    fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    fillColor: isDark
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.grey[100],
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
                   ),
                 ),
               ),
@@ -455,7 +537,9 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                 child: InkWell(
                   onTap: () {
                     if (_messageController.text.trim().isEmpty) return;
-                    ref.read(clanProvider.notifier).sendChatMessage(_messageController.text);
+                    ref
+                        .read(clanProvider.notifier)
+                        .sendChatMessage(_messageController.text);
                     _messageController.clear();
                   },
                   borderRadius: BorderRadius.circular(24),
@@ -465,7 +549,8 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                       color: theme.primaryColor.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.send_rounded, color: theme.primaryColor, size: 20),
+                    child: Icon(Icons.send_rounded,
+                        color: theme.primaryColor, size: 20),
                   ),
                 ),
               ),
@@ -490,16 +575,23 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
           decoration: BoxDecoration(
             color: isDark ? Colors.white.withOpacity(0.03) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: isMVP ? Border.all(color: Colors.amber.withOpacity(0.5), width: 1.5) : null,
+            border: isMVP
+                ? Border.all(color: Colors.amber.withOpacity(0.5), width: 1.5)
+                : null,
           ),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             leading: Stack(
               clipBehavior: Clip.none,
               children: [
                 CircleAvatar(
                   backgroundColor: theme.primaryColor.withOpacity(0.1),
-                  child: Text('${member['level']}', style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                  child: Text('${member['level']}',
+                      style: TextStyle(
+                          color: theme.primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12)),
                 ),
                 if (isMVP)
                   const Positioned(
@@ -511,17 +603,28 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
             ),
             title: Row(
               children: [
-                Text(member['username'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(member['username'],
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 15)),
                 if (member['role'] == 'leader')
                   Container(
                     margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                    child: const Text('LÍDER', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                        color: Colors.blueAccent.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4)),
+                    child: const Text('LÍDER',
+                        style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blueAccent)),
                   ),
               ],
             ),
-            subtitle: Text('Miembro desde: ${member['joined_at'].toString().substring(0, 10)}', style: const TextStyle(fontSize: 11)),
+            subtitle: Text(
+                'Miembro desde: ${member['joined_at'].toString().substring(0, 10)}',
+                style: const TextStyle(fontSize: 11)),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -529,12 +632,17 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                 Text(
                   '⚔️ $weeklyDamage',
                   style: GoogleFonts.shareTechMono(
-                    fontSize: 16, 
-                    fontWeight: FontWeight.bold, 
-                    color: isMVP ? Colors.amber : (isDark ? Colors.white70 : Colors.black87)
-                  ),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isMVP
+                          ? Colors.amber
+                          : (isDark ? Colors.white70 : Colors.black87)),
                 ),
-                const Text('DAÑO SEMANAL', style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                const Text('DAÑO SEMANAL',
+                    style: TextStyle(
+                        fontSize: 7,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5)),
               ],
             ),
           ),
@@ -550,23 +658,31 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          Text('HALL DE LOGIAS', style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold)),
-          Text('Únete a una comunidad y derrota al monstruo semanal.', style: TextStyle(color: Colors.grey[500])),
+          Text('HALL DE LOGIAS',
+              style: GoogleFonts.outfit(
+                  fontSize: 28, fontWeight: FontWeight.bold)),
+          Text('Únete a una comunidad y derrota al monstruo semanal.',
+              style: TextStyle(color: Colors.grey[500])),
           const SizedBox(height: 32),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _showCreateClanDialog(context, theme, isDark),
+                  onPressed: () =>
+                      _showCreateClanDialog(context, theme, isDark),
                   icon: const Icon(Icons.add),
                   label: const Text('FUNDAR LOGIA'),
-                  style: ElevatedButton.styleFrom(backgroundColor: theme.primaryColor, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.primaryColor,
+                      foregroundColor: Colors.white),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          const Text('LOGIAS DISPONIBLES', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1)),
+          const Text('LOGIAS DISPONIBLES',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1)),
           const SizedBox(height: 12),
           // Lista de Logias con altura adaptativa
           ListView.builder(
@@ -578,12 +694,15 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 child: ListTile(
-                  title: Text(clan['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(clan['name'],
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(clan['description']),
                   trailing: ElevatedButton(
-                    onPressed: () => ref.read(clanProvider.notifier).joinClan(clan['id']),
+                    onPressed: () =>
+                        ref.read(clanProvider.notifier).joinClan(clan['id']),
                     child: const Text('UNIRSE'),
                   ),
                 ),
@@ -600,9 +719,12 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('¿Abandonar Logia?'),
-        content: const Text('Dejarás de aportar daño al monstruo y perderás el acceso al chat de esta logia.'),
+        content: const Text(
+            'Dejarás de aportar daño al monstruo y perderás el acceso al chat de esta logia.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCELAR')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CANCELAR')),
           TextButton(
             onPressed: () async {
               final success = await ref.read(clanProvider.notifier).leaveClan();
@@ -615,7 +737,8 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                 }
               }
             },
-            child: const Text('ABANDONAR', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('ABANDONAR',
+                style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -630,85 +753,100 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          return AlertDialog(
-            backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            title: Text('Fundar Logia', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameC, 
-                  decoration: const InputDecoration(labelText: 'Nombre de la Logia', hintText: 'Ej: Guerreros Lógicos'),
-                  enabled: !isSaving,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: tagC, 
-                  decoration: const InputDecoration(labelText: 'Tag', hintText: 'Máx 10 letras (Ej: LOGIC)'),
-                  enabled: !isSaving,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descC, 
-                  decoration: const InputDecoration(labelText: 'Descripción corta'),
-                  enabled: !isSaving,
-                  maxLines: 2,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: isSaving ? null : () => Navigator.pop(context), 
-                child: const Text('CANCELAR')
+      builder: (context) => StatefulBuilder(builder: (context, setModalState) {
+        return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text('Fundar Logia',
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameC,
+                decoration: const InputDecoration(
+                    labelText: 'Nombre de la Logia',
+                    hintText: 'Ej: Guerreros Lógicos'),
+                enabled: !isSaving,
               ),
-              ElevatedButton(
-                onPressed: isSaving ? null : () async {
-                  if (nameC.text.isEmpty || tagC.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Nombre y Tag son obligatorios')),
-                    );
-                    return;
-                  }
-
-                  setModalState(() => isSaving = true);
-                  
-                  final success = await ref.read(clanProvider.notifier).fundClan(
-                    nameC.text.trim(), 
-                    tagC.text.trim(), 
-                    descC.text.trim()
-                  );
-
-                  if (mounted) {
-                    if (success) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('¡Logia fundada con éxito! 🛡️')),
-                      );
-                    } else {
-                      setModalState(() => isSaving = false);
-                      final error = ref.read(clanProvider).error ?? 'Error al crear logia';
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(error), backgroundColor: Colors.redAccent),
-                      );
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.primaryColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: isSaving 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('FUNDAR', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: tagC,
+                decoration: const InputDecoration(
+                    labelText: 'Tag', hintText: 'Máx 10 letras (Ej: LOGIC)'),
+                enabled: !isSaving,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descC,
+                decoration:
+                    const InputDecoration(labelText: 'Descripción corta'),
+                enabled: !isSaving,
+                maxLines: 2,
               ),
             ],
-          );
-        }
-      ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: isSaving ? null : () => Navigator.pop(context),
+                child: const Text('CANCELAR')),
+            ElevatedButton(
+              onPressed: isSaving
+                  ? null
+                  : () async {
+                      if (nameC.text.isEmpty || tagC.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Nombre y Tag son obligatorios')),
+                        );
+                        return;
+                      }
+
+                      setModalState(() => isSaving = true);
+
+                      final success = await ref
+                          .read(clanProvider.notifier)
+                          .fundClan(nameC.text.trim(), tagC.text.trim(),
+                              descC.text.trim());
+
+                      if (mounted) {
+                        if (success) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('¡Logia fundada con éxito! 🛡️')),
+                          );
+                        } else {
+                          setModalState(() => isSaving = false);
+                          final error = ref.read(clanProvider).error ??
+                              'Error al crear logia';
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(error),
+                                backgroundColor: Colors.redAccent),
+                          );
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2))
+                  : const Text('FUNDAR',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      }),
     );
   }
 }

@@ -33,12 +33,13 @@ class SudokuCellWidget extends ConsumerWidget {
     // Resaltado inteligente
     bool isHighlighted = false;
     bool isSameNumber = false;
+    bool isSameBox = false;
 
     if (gameState.selectedRow != -1 && gameState.selectedCol != -1) {
       // 1. Compartir fila, columna o caja 3x3
       final selR = gameState.selectedRow;
       final selC = gameState.selectedCol;
-      final isSameBox = (row ~/ 3 == selR ~/ 3) && (col ~/ 3 == selC ~/ 3);
+      isSameBox = (row ~/ 3 == selR ~/ 3) && (col ~/ 3 == selC ~/ 3);
       if (row == selR || col == selC || isSameBox) {
         isHighlighted = true;
       }
@@ -130,8 +131,9 @@ class SudokuCellWidget extends ConsumerWidget {
             : Stack(
                 alignment: Alignment.center,
                 children: [
-                  // MODO VISIÓN VERDADERA: Mostrar "Número Fantasma" (Solución tenue)
-                  if (gameState.isShowingErrors)
+                  // MODO VISIÓN VERDADERA (ESCÁNER DE SECTOR GALÁCTICO): Mostrar "Número Fantasma" (Solución tenue)
+                  // únicamente en las celdas vacías del Sector Galáctico (Caja 3x3) actualmente seleccionado.
+                  if (gameState.isShowingErrors && isSameBox)
                     Text(
                       '${cell.solutionValue}',
                       style: TextStyle(

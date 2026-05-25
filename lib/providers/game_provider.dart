@@ -527,13 +527,17 @@ class GameNotifier extends StateNotifier<GameState> {
     final profileNotifier = _ref.read(profileProvider.notifier);
     final userProfile = _ref.read(profileProvider);
 
-    // Verificar cargas (Fase 4 RPG)
-    if (userProfile.divineTouchCharges <= 0) return false;
-
-    // Descontar carga
-    profileNotifier.updateProfile(userProfile.copyWith(
-      divineTouchCharges: userProfile.divineTouchCharges - 1
-    ));
+    // Verificar e implementar la lógica híbrida F2P (Cargas vs. Monedas en caliente)
+    if (userProfile.divineTouchCharges > 0) {
+      // 1. Consumir carga del inventario si tiene
+      profileNotifier.updateProfile(userProfile.copyWith(
+        divineTouchCharges: userProfile.divineTouchCharges - 1
+      ));
+    } else {
+      // 2. Si no tiene cargas, comprar en caliente por 130 S-Coins (penalización)
+      if (userProfile.coins < 130) return false;
+      profileNotifier.deductCoins(130);
+    }
 
     _pushToUndoStack();
 
@@ -627,13 +631,17 @@ class GameNotifier extends StateNotifier<GameState> {
     final profileNotifier = _ref.read(profileProvider.notifier);
     final userProfile = _ref.read(profileProvider);
 
-    // Verificar si tiene cargas en el inventario (Fase 4 RPG)
-    if (userProfile.timeFreezeCharges <= 0) return false;
-
-    // Descontar una carga del inventario
-    profileNotifier.updateProfile(userProfile.copyWith(
-      timeFreezeCharges: userProfile.timeFreezeCharges - 1
-    ));
+    // Verificar e implementar la lógica híbrida F2P (Cargas vs. Monedas en caliente)
+    if (userProfile.timeFreezeCharges > 0) {
+      // 1. Consumir carga del inventario si tiene
+      profileNotifier.updateProfile(userProfile.copyWith(
+        timeFreezeCharges: userProfile.timeFreezeCharges - 1
+      ));
+    } else {
+      // 2. Si no tiene cargas, comprar en caliente por 45 S-Coins (penalización)
+      if (userProfile.coins < 45) return false;
+      profileNotifier.deductCoins(45);
+    }
 
     state = state.copyWith(isTimerFrozen: true);
 
@@ -648,25 +656,29 @@ class GameNotifier extends StateNotifier<GameState> {
     return true;
   }
 
-  /// HABILIDAD: VISIÓN VERDADERA (Resalta errores actuales por 15 segundos)
+  /// HABILIDAD: VISIÓN VERDADERA (Resalta errores actuales por 10 segundos)
   bool useTrueVision() {
     if (state.isShowingErrors || !state.hasStarted || state.isGameOver || state.isGameWon) return false;
 
     final profileNotifier = _ref.read(profileProvider.notifier);
     final userProfile = _ref.read(profileProvider);
 
-    // Verificar cargas
-    if (userProfile.visionCharges <= 0) return false;
-
-    // Descontar carga
-    profileNotifier.updateProfile(userProfile.copyWith(
-      visionCharges: userProfile.visionCharges - 1
-    ));
+    // Verificar e implementar la lógica híbrida F2P (Cargas vs. Monedas en caliente)
+    if (userProfile.visionCharges > 0) {
+      // 1. Consumir carga del inventario si tiene
+      profileNotifier.updateProfile(userProfile.copyWith(
+        visionCharges: userProfile.visionCharges - 1
+      ));
+    } else {
+      // 2. Si no tiene cargas, comprar en caliente por 65 S-Coins (penalización)
+      if (userProfile.coins < 65) return false;
+      profileNotifier.deductCoins(65);
+    }
 
     state = state.copyWith(isShowingErrors: true);
 
-    // Las pistas desaparecen en 15 segundos
-    Timer(const Duration(seconds: 15), () {
+    // Las pistas desaparecen en 10 segundos (Rebalanceado de 15s para mayor desafío)
+    Timer(const Duration(seconds: 10), () {
       if (mounted) {
         state = state.copyWith(isShowingErrors: false);
       }

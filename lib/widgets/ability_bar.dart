@@ -45,7 +45,7 @@ class AbilityBar extends ConsumerWidget {
                 key: keys.visionKey,
                 icon: Icons.auto_awesome_rounded,
                 label: 'VISIÓN',
-                cost: 50,
+                cost: 65,
                 isActive: gameState.isShowingErrors,
                 onTap: () {
                   final success = ref.read(gameProvider.notifier).useTrueVision();
@@ -53,7 +53,7 @@ class AbilityBar extends ConsumerWidget {
                 },
                 theme: sudokuTheme,
                 isDark: isDark,
-                canAfford: userProfile.coins >= 50,
+                canAfford: userProfile.coins >= 65,
                 isCompact: isCompact,
               ),
               _buildAbilityButton(
@@ -62,7 +62,7 @@ class AbilityBar extends ConsumerWidget {
                 key: keys.clockKey,
                 icon: Icons.hourglass_bottom_rounded,
                 label: 'RELOJ',
-                cost: 30,
+                cost: 45,
                 isActive: gameState.isTimerFrozen,
                 onTap: () {
                   final success = ref.read(gameProvider.notifier).useFreezeTimer();
@@ -70,7 +70,7 @@ class AbilityBar extends ConsumerWidget {
                 },
                 theme: sudokuTheme,
                 isDark: isDark,
-                canAfford: userProfile.coins >= 30,
+                canAfford: userProfile.coins >= 45,
                 isCompact: isCompact,
               ),
               _buildAbilityButton(
@@ -79,7 +79,7 @@ class AbilityBar extends ConsumerWidget {
                 key: keys.divineKey,
                 icon: Icons.psychology_rounded,
                 label: 'DIVINO',
-                cost: 100,
+                cost: 130,
                 isActive: false, 
                 onTap: () {
                   final success = ref.read(gameProvider.notifier).useDivineTouch();
@@ -87,7 +87,7 @@ class AbilityBar extends ConsumerWidget {
                 },
                 theme: sudokuTheme,
                 isDark: isDark,
-                canAfford: userProfile.coins >= 100,
+                canAfford: userProfile.coins >= 130,
                 isCompact: isCompact,
               ),
             ],
