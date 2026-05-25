@@ -16,96 +16,59 @@ class ControlButtons extends ConsumerWidget {
     final isDark = themeState.isDarkMode;
     final colorScheme = isDark ? Colors.white70 : Colors.black87;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          // Botón DESHACER
-          _buildActionButton(
-            icon: Icons.undo_rounded,
-            label: 'Deshacer',
-            onTap: () => ref.read(gameProvider.notifier).undo(),
-            color: colorScheme,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Mejor detección de espacio: Si el ancho por botón es menor a 60px, activamos modo compacto
+        final bool isCompact = (constraints.maxWidth / 4) < 60;
+
+        return Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: isCompact ? 2 : 8.0, 
+            horizontal: 2.0
           ),
-          
-          // Botón BORRAR
-          _buildActionButton(
-            icon: Icons.cleaning_services_rounded,
-            label: 'Borrar',
-            onTap: () => ref.read(gameProvider.notifier).eraseCell(),
-            color: colorScheme,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildActionButton(
+                icon: Icons.undo_rounded,
+                label: 'Deshacer',
+                onTap: () => ref.read(gameProvider.notifier).undo(),
+                color: colorScheme,
+                isCompact: isCompact,
+              ),
+              _buildActionButton(
+                icon: Icons.cleaning_services_rounded,
+                label: 'Borrar',
+                onTap: () => ref.read(gameProvider.notifier).eraseCell(),
+                color: colorScheme,
+                isCompact: isCompact,
+              ),
+              _buildActionButton(
+                icon: Icons.edit_rounded,
+                label: 'Notas',
+                onTap: () => ref.read(gameProvider.notifier).toggleNotesMode(),
+                color: gameState.isNotesMode
+                    ? (isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight)
+                    : colorScheme,
+                badge: gameState.isNotesMode ? 'ON' : null,
+                badgeColor: isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight,
+                isCompact: isCompact,
+              ),
+              _buildActionButton(
+                icon: Icons.lightbulb_rounded,
+                label: 'Pista',
+                onTap: () {
+                  ref.read(gameProvider.notifier).useHint();
+                },
+                color: colorScheme,
+                badge: gameState.hintsUsed < 3 ? '${3 - gameState.hintsUsed}' : '🪙35',
+                badgeColor: gameState.hintsUsed < 3 ? Colors.green : Colors.amber[700]!,
+                isCompact: isCompact,
+              ),
+            ],
           ),
-          
-          // Botón MODO NOTAS (LÁPIZ)
-          _buildActionButton(
-            icon: Icons.edit_rounded,
-            label: 'Notas',
-            onTap: () => ref.read(gameProvider.notifier).toggleNotesMode(),
-            color: gameState.isNotesMode
-                ? (isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight)
-                : colorScheme,
-            badge: gameState.isNotesMode ? 'ON' : null,
-            badgeColor: isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight,
-          ),
-          
-          // Botón PISTA
-          _buildActionButton(
-            icon: Icons.lightbulb_rounded,
-            label: 'Pista',
-            onTap: () {
-              final result = ref.read(gameProvider.notifier).useHint();
-              if (result == 'noSelection') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text('Selecciona una casilla vacía primero'),
-                      ],
-                    ),
-                    backgroundColor: Colors.blueGrey,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              } else if (result == 'alreadyCorrect') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.check_circle_outline, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text('Selecciona una casilla vacía para usar la pista'),
-                      ],
-                    ),
-                    backgroundColor: Colors.blueAccent,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              } else if (result == 'noCoins') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.monetization_on_outlined, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text('🪙 Monedas insuficientes. ¡Juega para ganar S-Coins!'),
-                      ],
-                    ),
-                    backgroundColor: Colors.redAccent,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              }
-            },
-            color: colorScheme,
-            // Primeras 3 pistas gratis (se muestra la cantidad de pistas restantes con un número), luego cuesta 35 monedas
-            badge: gameState.hintsUsed < 3 ? '${3 - gameState.hintsUsed}' : '🪙35',
-            badgeColor: gameState.hintsUsed < 3 ? Colors.green : Colors.amber[700]!,
-          ),
-        ],
-      ),
+        );
+      }
     );
   }
 
@@ -114,53 +77,58 @@ class ControlButtons extends ConsumerWidget {
     required String label,
     required VoidCallback onTap,
     required Color color,
+    required bool isCompact,
     String? badge,
     Color? badgeColor,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 70,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.none,
+    return Expanded( // Cambiado a Expanded para que use el espacio proporcionalmente y no desborde
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
+            Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
               children: [
-                Icon(icon, size: 28, color: color),
-                const SizedBox(height: 4),
-                Text(
+                Icon(icon, size: isCompact ? 20 : 26, color: color),
+                if (badge != null)
+                  Positioned(
+                    top: isCompact ? -4 : -6,
+                    right: isCompact ? -4 : -8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: badgeColor ?? Colors.blue,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        badge,
+                        style: TextStyle(
+                          fontSize: isCompact ? 7 : 8,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            if (!isCompact) ...[
+              const SizedBox(height: 4),
+              FittedBox( // Asegura que el texto se encoja si es necesario
+                fit: BoxFit.scaleDown,
+                child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: color,
                   ),
                 ),
-              ],
-            ),
-            if (badge != null)
-              Positioned(
-                top: -8,
-                right: -4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: badgeColor ?? Colors.blue,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    badge,
-                    style: const TextStyle(
-                      fontSize: 8.5,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
               ),
+            ],
           ],
         ),
       ),
