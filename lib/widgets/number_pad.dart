@@ -51,7 +51,34 @@ class NumberPad extends ConsumerWidget {
             itemBuilder: (context, index) {
               final number = index + 1;
               final countLeft = 9 - getCorrectCount(number);
-              if (settings.showRemainingNumbers && countLeft <= 0) return const SizedBox.shrink();
+              final bool isCompleted = countLeft <= 0;
+              final bool shouldDim = settings.showRemainingNumbers && isCompleted;
+
+              // En lugar de SizedBox.shrink que desordena las celdas en GridView,
+              // atenuamos con opacidad baja y deshabilitamos clics para conservar el grid estático.
+              if (shouldDim) {
+                return Opacity(
+                  opacity: 0.15,
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white10 : Colors.black12,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.transparent),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '$number',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: sudokuTheme.primaryColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
 
               return GestureDetector(
                 key: keys.numKeys[index],
@@ -62,8 +89,31 @@ class NumberPad extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: sudokuTheme.primaryColor.withOpacity(0.2)),
                   ),
-                  alignment: Alignment.center,
-                  child: Text('$number', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: sudokuTheme.primaryColor)),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$number',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: sudokuTheme.primaryColor,
+                        ),
+                      ),
+                      if (settings.showRemainingNumbers)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 1),
+                          child: Text(
+                            '$countLeft',
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white38 : Colors.black38,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -130,7 +180,7 @@ class NumberPad extends ConsumerWidget {
               
               // Si el número ya se completó, lo ocultamos para dar sensación de progreso
               if (settings.showRemainingNumbers && countLeft <= 0) {
-                return SizedBox(width: buttonWidth + spacing);
+                return SizedBox(width: index == 8 ? buttonWidth : buttonWidth + spacing);
               }
 
               return Padding(

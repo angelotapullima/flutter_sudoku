@@ -13,6 +13,7 @@ import 'game_screen.dart';
 import 'store_screen.dart';
 import 'login_screen.dart';
 import 'how_to_play_screen.dart';
+import 'daily_challenge_screen.dart';
 import '../widgets/responsive_content_wrapper.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -269,6 +270,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildDailyChallengeBanner(BuildContext context, UserProfile profile, dynamic theme, bool isDark, double padding, bool isLandscape) {
     final today = DateTime.now().toIso8601String().substring(0, 10);
     final isCompleted = profile.completedDailyDates.contains(today);
+    final void Function() onDailyChallengeTap = () {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => const DailyChallengeScreen()),
+      );
+    };
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: padding),
@@ -280,58 +286,65 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           borderRadius: BorderRadius.circular(32),
           boxShadow: [BoxShadow(color: const Color(0xFF6200EA).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
         ),
-        child: Stack(
-          children: [
-            Positioned(right: -20, bottom: -20, child: Icon(Icons.local_fire_department_rounded, size: isLandscape ? 100 : 140, color: Colors.white.withOpacity(0.1))),
-            Padding(
-              padding: EdgeInsets.all(isLandscape ? 16.0 : 24.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 12),
-                              SizedBox(width: 4),
-                              Text('Reto del Día', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
-                            ],
-                          ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onDailyChallengeTap,
+            borderRadius: BorderRadius.circular(32),
+            child: Stack(
+              children: [
+                Positioned(right: -20, bottom: -20, child: Icon(Icons.local_fire_department_rounded, size: isLandscape ? 100 : 140, color: Colors.white.withOpacity(0.1))),
+                Padding(
+                  padding: EdgeInsets.all(isLandscape ? 16.0 : 24.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 12),
+                                  SizedBox(width: 4),
+                                  Text('Reto del Día', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: isLandscape ? 4 : 8),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'RETO DIARIO',
+                                style: GoogleFonts.outfit(fontSize: isLandscape ? 22 : 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
+                              ),
+                            ),
+                            if (!isLandscape) Text(
+                              'Resuelve el tablero único de hoy.',
+                              style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                            ),
+                          ],
                         ),
-                        SizedBox(height: isLandscape ? 4 : 8),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'RETO DIARIO',
-                            style: GoogleFonts.outfit(fontSize: isLandscape ? 22 : 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
-                          ),
+                      ),
+                      Container(
+                        width: isLandscape ? 44 : 50, height: isLandscape ? 44 : 50,
+                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                        child: IconButton(
+                          onPressed: onDailyChallengeTap,
+                          icon: Icon(isCompleted ? Icons.check_rounded : Icons.play_arrow_rounded, color: Colors.white, size: isLandscape ? 24 : 28),
                         ),
-                        if (!isLandscape) Text(
-                          'Resuelve el tablero único de hoy.',
-                          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  Container(
-                    width: isLandscape ? 44 : 50, height: isLandscape ? 44 : 50,
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: Icon(isCompleted ? Icons.check_rounded : Icons.play_arrow_rounded, color: Colors.white, size: isLandscape ? 24 : 28),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

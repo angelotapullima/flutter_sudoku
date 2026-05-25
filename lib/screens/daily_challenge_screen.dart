@@ -92,12 +92,119 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     // Dificultad del reto de hoy
     final String todayDifficulty = _getDifficultyForWeekday(today.weekday);
 
+    final bool canPop = ModalRoute.of(context)?.canPop ?? false;
+
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+      appBar: canPop
+          ? AppBar(
+              title: Text(
+                'RETO DIARIO',
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              foregroundColor: isDark ? Colors.white : Colors.black87,
+              leading: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back_ios_rounded, size: 18),
+              ),
+            )
+          : null,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final double width = constraints.maxWidth;
-          final bool isDesktop = width > 800;
+          final double height = constraints.maxHeight;
+
+          // Detección precisa de Landscape Mobile para celular en horizontal
+          final bool isLandscapeMobile = width > height && height < 500;
+          final bool isDesktop = width > 800 && !isLandscapeMobile;
+
+          if (isLandscapeMobile) {
+            // --- DISEÑO EXCLUSIVO OPTIMIZADO PARA LANDSCAPE MOBILE ---
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Columna Izquierda: Racha y Reto del Día
+                    Expanded(
+                      flex: 11,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'MI RACHA',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: sudokuTheme.primaryColor,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          _buildStreakCard(userProfile.dailyStreak, isDark, isLandscape: true),
+                          const SizedBox(height: 16),
+                          Text(
+                            'RETO DEL DÍA',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: sudokuTheme.primaryColor,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          _buildChallengeCard(hasCompletedToday, todayDifficulty, today, sudokuTheme, isDark, isLandscape: true),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(width: 16),
+                    
+                    // Columna Derecha: Calendario Semanal y Reglas
+                    Expanded(
+                      flex: 9,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CALENDARIO SEMANAL',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: sudokuTheme.primaryColor,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          _buildWeeklyCalendar(weekDates, weekDaysNames, todayStr, userProfile.completedDailyDates, sudokuTheme, isDark, isLandscape: true),
+                          const SizedBox(height: 16),
+                          Text(
+                            'REGLAS Y PREMIOS',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: sudokuTheme.primaryColor,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          _buildInfoSection(isDark, isLandscape: true),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
 
           if (isDesktop) {
             // --- DISEÑO WEB PANORÁMICO DE ESCRITORIO ---
@@ -211,14 +318,14 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     );
   }
 
-  Widget _buildStreakCard(int streak, bool isDark) {
+  Widget _buildStreakCard(int streak, bool isDark, {bool isLandscape = false}) {
     final bool hasStreak = streak > 0;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isLandscape ? 12 : 24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(isLandscape ? 16 : 28),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -239,12 +346,12 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
       child: Stack(
         children: [
           Positioned(
-            right: -10,
-            bottom: -20,
+            right: isLandscape ? -5 : -10,
+            bottom: isLandscape ? -10 : -20,
             child: Text(
               '🔥',
               style: TextStyle(
-                fontSize: 100,
+                fontSize: isLandscape ? 50 : 100,
                 color: Colors.white.withOpacity(0.18),
               ),
             ),
@@ -255,7 +362,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: EdgeInsets.symmetric(horizontal: isLandscape ? 8 : 12, vertical: isLandscape ? 4 : 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -264,9 +371,9 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                       children: [
                         Text(
                           hasStreak ? 'RACHA ACTIVA' : 'SIN RACHA',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
+                            fontSize: isLandscape ? 8 : 10,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.0,
                           ),
@@ -276,7 +383,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: isLandscape ? 6 : 16),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
@@ -284,32 +391,32 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                   Text(
                     '$streak',
                     style: GoogleFonts.outfit(
-                      fontSize: 64,
+                      fontSize: isLandscape ? 34 : 64,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                       height: 0.9,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: isLandscape ? 4 : 8),
                   Text(
-                    streak == 1 ? 'día seguido' : 'días seguidos',
+                    streak == 1 ? 'día' : 'días',
                     style: GoogleFonts.outfit(
-                      fontSize: 18,
+                      fontSize: isLandscape ? 12 : 18,
                       fontWeight: FontWeight.w500,
                       color: Colors.white.withOpacity(0.85),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: isLandscape ? 4 : 12),
               Text(
                 hasStreak
-                    ? '¡Sigue así! Tu mente se vuelve más ágil con cada día completado.'
-                    : 'Completa el Sudoku de hoy para iniciar tu racha y ganar grandes premios.',
+                    ? (isLandscape ? '¡Sigue así! Racha activa hoy.' : '¡Sigue así! Tu mente se vuelve más ágil con cada día completado.')
+                    : (isLandscape ? 'Inicia tu racha diaria ahora.' : 'Completa el Sudoku de hoy para iniciar tu racha y ganar grandes premios.'),
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: isLandscape ? 10 : 13,
                   color: Colors.white.withOpacity(0.9),
-                  height: 1.4,
+                  height: 1.3,
                 ),
               ),
             ],
@@ -325,14 +432,15 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     String todayStr,
     List<String> completedDates,
     dynamic sudokuTheme,
-    bool isDark,
-  ) {
+    bool isDark, {
+    bool isLandscape = false,
+  }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isLandscape ? 12 : 20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(isLandscape ? 16 : 24),
         border: Border.all(
           color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[200]!,
         ),
@@ -349,12 +457,12 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
           Text(
             'Progreso de la Semana',
             style: GoogleFonts.outfit(
-              fontSize: 16,
+              fontSize: isLandscape ? 13 : 16,
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : const Color(0xFF2B2B36),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isLandscape ? 8 : 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(7, (index) {
@@ -369,17 +477,17 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                   Text(
                     names[index],
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: isLandscape ? 9 : 11,
                       fontWeight: FontWeight.bold,
                       color: isToday
                           ? sudokuTheme.primaryColor
                           : (isDark ? Colors.grey[400] : Colors.grey[600]),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: isLandscape ? 4 : 8),
                   Container(
-                    width: 38,
-                    height: 38,
+                    width: isLandscape ? 28 : 38,
+                    height: isLandscape ? 28 : 38,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isCompleted
@@ -398,12 +506,12 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                     ),
                     child: Center(
                       child: isCompleted
-                          ? const Icon(Icons.check_rounded, color: Color(0xFF4CAF50), size: 20)
+                          ? Icon(Icons.check_rounded, color: const Color(0xFF4CAF50), size: isLandscape ? 14 : 20)
                           : (isToday
                               ? Text(
                                   '⭐',
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: isLandscape ? 11 : 14,
                                     color: sudokuTheme.primaryColor,
                                   ),
                                 )
@@ -433,14 +541,15 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     String difficulty,
     DateTime today,
     dynamic sudokuTheme,
-    bool isDark,
-  ) {
+    bool isDark, {
+    bool isLandscape = false,
+  }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isLandscape ? 12 : 24),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(isLandscape ? 16 : 28),
         border: Border.all(
           color: hasCompletedToday
               ? const Color(0xFF4CAF50).withOpacity(0.4)
@@ -464,11 +573,11 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
             children: [
               Row(
                 children: [
-                  const Text('🧠 ', style: TextStyle(fontSize: 20)),
+                  Text('🧠 ', style: TextStyle(fontSize: isLandscape ? 15 : 20)),
                   Text(
                     'Reto de Hoy',
                     style: GoogleFonts.outfit(
-                      fontSize: 18,
+                      fontSize: isLandscape ? 14 : 18,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : const Color(0xFF2B2B36),
                     ),
@@ -476,7 +585,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: isLandscape ? 6 : 10, vertical: isLandscape ? 2 : 4),
                 decoration: BoxDecoration(
                   color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[100]!,
                   borderRadius: BorderRadius.circular(10),
@@ -484,7 +593,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                 child: Text(
                   'Dificultad: $difficulty',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: isLandscape ? 9 : 11,
                     fontWeight: FontWeight.bold,
                     color: sudokuTheme.primaryColor,
                   ),
@@ -492,27 +601,27 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Resuelve el Sudoku determinista del día y reclama las recompensas antes de que termine el tiempo.',
-            style: TextStyle(
-              fontSize: 13,
+          SizedBox(height: isLandscape ? 6 : 16),
+          Text(
+            isLandscape ? 'Resuelve el Sudoku determinista único de hoy.' : 'Resuelve el Sudoku determinista del día y reclama las recompensas antes de que termine el tiempo.',
+            style: const TextStyle(
+              fontSize: 12,
               color: Colors.grey,
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: isLandscape ? 10 : 20),
           
           // Recompensas del día
           Row(
             children: [
-              _buildRewardBadge('🪙 +50 S-Coins', Colors.amber[700]!, isDark),
-              const SizedBox(width: 12),
-              _buildRewardBadge('⚡ +200 XP', sudokuTheme.primaryColor, isDark),
+              _buildRewardBadge('🪙 +50', Colors.amber[700]!, isDark, isLandscape: isLandscape),
+              SizedBox(width: isLandscape ? 8 : 12),
+              _buildRewardBadge('⚡ +200 XP', sudokuTheme.primaryColor, isDark, isLandscape: isLandscape),
             ],
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: isLandscape ? 12 : 24),
 
           // Botón de acción e indicador de tiempo
           if (hasCompletedToday) ...[
@@ -585,16 +694,16 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                       MaterialPageRoute(builder: (context) => const GameScreen()),
                     );
                   },
-                  borderRadius: BorderRadius.circular(18),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                  borderRadius: BorderRadius.circular(isLandscape ? 12 : 18),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: isLandscape ? 10 : 16),
                     child: Center(
                       child: Text(
-                        'JUGAR RETO DIARIO (GRATIS)',
+                        isLandscape ? 'JUGAR RETO AHORA' : 'JUGAR RETO DIARIO (GRATIS)',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
-                          fontSize: 14,
+                          fontSize: isLandscape ? 11 : 14,
                           letterSpacing: 1.0,
                         ),
                       ),
@@ -627,12 +736,12 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     );
   }
 
-  Widget _buildRewardBadge(String text, Color color, bool isDark) {
+  Widget _buildRewardBadge(String text, Color color, bool isDark, {bool isLandscape = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: isLandscape ? 8 : 14, vertical: isLandscape ? 4 : 8),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(isLandscape ? 8 : 12),
         border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Text(
@@ -646,42 +755,42 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     );
   }
 
-  Widget _buildInfoSection(bool isDark) {
+  Widget _buildInfoSection(bool isDark, {bool isLandscape = false}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isLandscape ? 10 : 20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E2E).withOpacity(0.5) : Colors.grey[50]!,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(isLandscape ? 16 : 24),
         border: Border.all(
           color: isDark ? Colors.white.withOpacity(0.03) : Colors.grey[100]!,
         ),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text('🏆 ', style: TextStyle(fontSize: 16)),
+              Text('🏆 ', style: TextStyle(fontSize: isLandscape ? 12 : 16)),
               Text(
                 'Reglas de los Retos Diarios',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  fontSize: isLandscape ? 11 : 14,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 12),
+          SizedBox(height: isLandscape ? 6 : 12),
           Text(
             '• El reto cambia a la medianoche todos los días.\n'
             '• La dificultad cambia según el día de la semana.\n'
-            '• Completarlo desbloquea el check dorado del día.\n'
-            '• Jugar todos los días seguidos mantiene encendida tu llama de racha 🔥 y desbloquea la valiosa medalla "Hábito Diario" al llegar a 3 días seguidos.',
+            '• Completarlo desbloquea el check dorado.\n'
+            '• Jugar todos los días mantiene tu llama de racha 🔥 activa.',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: isLandscape ? 10 : 12,
               color: Colors.grey,
-              height: 1.6,
+              height: isLandscape ? 1.3 : 1.6,
             ),
           ),
         ],
