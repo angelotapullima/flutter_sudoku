@@ -387,8 +387,17 @@ class StatsScreen extends ConsumerWidget {
   }
 
   Widget _buildStatsTable(dynamic storage, bool isDark, Color accent, {bool isLandscape = false}) {
-    const difficulties = ['Fácil', 'Medio', 'Difícil', 'Experto'];
-    return Container(decoration: BoxDecoration(color: isDark ? const Color(0xFF1E1E2E) : Colors.white, borderRadius: BorderRadius.circular(isLandscape ? 16 : 24), border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!)), clipBehavior: Clip.antiAlias, child: Table(columnWidths: const {0: FlexColumnWidth(1.2), 1: FlexColumnWidth(1.0), 2: FlexColumnWidth(1.0), 3: FlexColumnWidth(1.2)}, border: TableBorder(horizontalInside: BorderSide(color: isDark ? Colors.white10 : Colors.grey[100]!, width: 1.0)), children: [TableRow(decoration: BoxDecoration(color: isDark ? const Color(0xFF252538) : Colors.grey[50]), children: [_buildHeaderCell('Nivel'), _buildHeaderCell('Jugadas'), _buildHeaderCell('Ganadas'), _buildHeaderCell('Mejor T.')]), ...difficulties.map((diff) { final played = storage.getGamesPlayed(diff); final won = storage.getGamesWon(diff); final bestTime = storage.getBestTime(diff); final String bestTimeStr = bestTime == 0 ? '-' : '${(bestTime ~/ 60).toString().padLeft(2, '0')}:${(bestTime % 60).toString().padLeft(2, '0')}'; return TableRow(children: [_buildDataCell(diff, isBold: true), _buildDataCell('$played'), _buildDataCell('$won'), _buildDataCell(bestTimeStr, color: bestTime > 0 ? accent : null)]); })]));
+    const difficulties = [
+      'Iniciado',
+      'Cadete',
+      'Explorador',
+      'Viajero',
+      'Estratega',
+      'Experto',
+      'Maestro',
+      'Leyenda del Cosmos'
+    ];
+    return Container(decoration: BoxDecoration(color: isDark ? const Color(0xFF1E1E2E) : Colors.white, borderRadius: BorderRadius.circular(isLandscape ? 16 : 24), border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!)), clipBehavior: Clip.antiAlias, child: Table(columnWidths: const {0: FlexColumnWidth(1.4), 1: FlexColumnWidth(1.0), 2: FlexColumnWidth(1.0), 3: FlexColumnWidth(1.2)}, border: TableBorder(horizontalInside: BorderSide(color: isDark ? Colors.white10 : Colors.grey[100]!, width: 1.0)), children: [TableRow(decoration: BoxDecoration(color: isDark ? const Color(0xFF252538) : Colors.grey[50]), children: [_buildHeaderCell('Nivel'), _buildHeaderCell('Jugadas'), _buildHeaderCell('Ganadas'), _buildHeaderCell('Mejor T.')]), ...difficulties.map((diff) { final played = storage.getGamesPlayed(diff); final won = storage.getGamesWon(diff); final bestTime = storage.getBestTime(diff); final String bestTimeStr = bestTime == 0 ? '-' : '${(bestTime ~/ 60).toString().padLeft(2, '0')}:${(bestTime % 60).toString().padLeft(2, '0')}'; return TableRow(children: [_buildDataCell(diff, isBold: true), _buildDataCell('$played'), _buildDataCell('$won'), _buildDataCell(bestTimeStr, color: bestTime > 0 ? accent : null)]); })]));
   }
 
   Widget _buildHeaderCell(String text) {
@@ -550,13 +559,29 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: Row(
-                children: ['Fácil', 'Medio', 'Difícil', 'Experto'].map((diff) {
+                children: [
+                  'Iniciado',
+                  'Cadete',
+                  'Explorador',
+                  'Viajero',
+                  'Estratega',
+                  'Experto',
+                  'Maestro',
+                  'Leyenda del Cosmos'
+                ].map((diff) {
                   final isSel = _activeDifficulty == diff;
-                  Color diffColor = diff == 'Medio'
-                      ? Colors.blueAccent
-                      : (diff == 'Difícil'
-                          ? Colors.purpleAccent
-                          : (diff == 'Experto' ? Colors.redAccent : Colors.teal));
+                  Color diffColor;
+                  switch (diff) {
+                    case 'Iniciado': diffColor = Colors.tealAccent; break;
+                    case 'Cadete': diffColor = Colors.teal; break;
+                    case 'Explorador': diffColor = Colors.cyan; break;
+                    case 'Viajero': diffColor = Colors.blueAccent; break;
+                    case 'Estratega': diffColor = Colors.indigoAccent; break;
+                    case 'Experto': diffColor = Colors.purpleAccent; break;
+                    case 'Maestro': diffColor = Colors.deepOrangeAccent; break;
+                    case 'Leyenda del Cosmos': diffColor = Colors.redAccent; break;
+                    default: diffColor = Colors.teal;
+                  }
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: ChoiceChip(
@@ -608,5 +633,62 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
   Widget _buildLeaderboardList(bool isDark, Color accentColor) { return ListView.builder(physics: const NeverScrollableScrollPhysics(), shrinkWrap: true, itemCount: _leaderboardList.length, itemBuilder: (context, index) { final player = _leaderboardList[index]; final rank = index + 1; final username = player['username'] as String? ?? 'Desconocido'; final level = player['level'] as int? ?? 1; String recordStr = _activeTab == 'speed' ? '${(player['best_time'] as int? ?? 0) ~/ 60}:${((player['best_time'] as int? ?? 0) % 60).toString().padLeft(2, '0')} min' : '🪙 ${player['coins'] as int? ?? 0}'; Color? rankBgColor; Widget rankWidget; if (rank == 1) { rankBgColor = Colors.amber.withOpacity(0.12); rankWidget = const Text('👑', style: TextStyle(fontSize: 20)); } else if (rank == 2) { rankBgColor = Colors.blueGrey.withOpacity(0.08); rankWidget = const Text('🥈', style: TextStyle(fontSize: 20)); } else if (rank == 3) { rankBgColor = Colors.brown.withOpacity(0.08); rankWidget = const Text('🥉', style: TextStyle(fontSize: 20)); } else { rankWidget = Container(width: 26, height: 26, alignment: Alignment.center, decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.grey[200], shape: BoxShape.circle), child: Text('$rank', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: isDark ? Colors.white70 : Colors.black87))); } String getAvatar(int level) => level <= 2 ? '🌱' : (level <= 5 ? '🧠' : (level <= 9 ? '⚡' : (level <= 14 ? '🔮' : '👑'))); return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12), decoration: BoxDecoration(color: rankBgColor ?? (isDark ? const Color(0xFF1E1E2E) : Colors.white), borderRadius: BorderRadius.circular(18), border: Border.all(color: rank == 1 ? Colors.amber.withOpacity(0.35) : (isDark ? Colors.white10 : Colors.grey[100]!), width: rank == 1 ? 1.5 : 1.0)), child: Row(children: [Container(width: 32, alignment: Alignment.centerLeft, child: rankWidget), CircleAvatar(radius: 18, backgroundColor: accentColor.withOpacity(0.12), child: Text(getAvatar(level), style: const TextStyle(fontSize: 18))), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(username, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5, color: isDark ? Colors.white : Colors.black87)), Text('Nivel $level', style: TextStyle(fontSize: 10.5, color: isDark ? Colors.grey[400] : Colors.grey[600], fontWeight: FontWeight.w500))])), Text(recordStr, style: GoogleFonts.shareTechMono(fontWeight: FontWeight.bold, fontSize: 13, color: rank == 1 ? Colors.amber[700] : accentColor))])); }); }
   Widget _buildDesktopTypeSelector(bool isDark, Color accentColor) { return Column(children: [_buildDesktopTypeOption(label: 'General (Nivel)', subtitle: 'XP', icon: '👑', isActive: _activeTab == 'level', accentColor: accentColor, isDark: isDark, onTap: () { setState(() { _activeTab = 'level'; }); _fetchLeaderboard(); }), const SizedBox(height: 12), _buildDesktopTypeOption(label: 'Velocidad', subtitle: 'Tiempo', icon: '⚡', isActive: _activeTab == 'speed', accentColor: accentColor, isDark: isDark, onTap: () { setState(() { _activeTab = 'speed'; }); _fetchLeaderboard(); })]); }
   Widget _buildDesktopTypeOption({required String label, required String subtitle, required String icon, required bool isActive, required Color accentColor, required bool isDark, required VoidCallback onTap}) { return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(16), child: AnimatedContainer(duration: const Duration(milliseconds: 200), padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: isActive ? accentColor.withOpacity(0.12) : (isDark ? const Color(0xFF14141F) : Colors.grey[50]), borderRadius: BorderRadius.circular(16), border: Border.all(color: isActive ? accentColor : (isDark ? Colors.white10 : Colors.grey[200]!), width: 1.5)), child: Row(children: [Text(icon, style: const TextStyle(fontSize: 22)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isActive ? accentColor : (isDark ? Colors.white : Colors.black87))), const SizedBox(height: 2), Text(subtitle, style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : Colors.grey[600]))]))]))); }
-  Widget _buildDesktopDifficultySelector(bool isDark) { return Column(children: ['Fácil', 'Medio', 'Difícil', 'Experto'].map((diff) { final isSel = _activeDifficulty == diff; Color diffColor = diff == 'Medio' ? Colors.blueAccent : (diff == 'Difícil' ? Colors.purpleAccent : (diff == 'Experto' ? Colors.redAccent : Colors.teal)); return Padding(padding: const EdgeInsets.only(bottom: 8.0), child: InkWell(onTap: () { setState(() { _activeDifficulty = diff; }); _fetchLeaderboard(); }, borderRadius: BorderRadius.circular(12), child: AnimatedContainer(duration: const Duration(milliseconds: 150), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: isSel ? diffColor.withOpacity(0.12) : (isDark ? const Color(0xFF14141F) : Colors.grey[50]), borderRadius: BorderRadius.circular(12), border: Border.all(color: isSel ? diffColor : (isDark ? Colors.white10 : Colors.grey[200]!), width: 1.2)), child: Row(children: [Container(width: 8, height: 8, decoration: BoxDecoration(color: diffColor, shape: BoxShape.circle)), const SizedBox(width: 10), Text(diff, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: isSel ? diffColor : (isDark ? Colors.grey[350] : Colors.grey[700]))), const Spacer(), if (isSel) Icon(Icons.check_circle_outline_rounded, color: diffColor, size: 16)])))); }).toList()); }
+  Widget _buildDesktopDifficultySelector(bool isDark) {
+    return Column(
+      children: [
+        'Iniciado',
+        'Cadete',
+        'Explorador',
+        'Viajero',
+        'Estratega',
+        'Experto',
+        'Maestro',
+        'Leyenda del Cosmos'
+      ].map((diff) {
+        final isSel = _activeDifficulty == diff;
+        Color diffColor;
+        switch (diff) {
+          case 'Iniciado': diffColor = Colors.tealAccent; break;
+          case 'Cadete': diffColor = Colors.teal; break;
+          case 'Explorador': diffColor = Colors.cyan; break;
+          case 'Viajero': diffColor = Colors.blueAccent; break;
+          case 'Estratega': diffColor = Colors.indigoAccent; break;
+          case 'Experto': diffColor = Colors.purpleAccent; break;
+          case 'Maestro': diffColor = Colors.deepOrangeAccent; break;
+          case 'Leyenda del Cosmos': diffColor = Colors.redAccent; break;
+          default: diffColor = Colors.teal;
+        }
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _activeDifficulty = diff;
+              });
+              _fetchLeaderboard();
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isSel ? diffColor.withOpacity(0.12) : (isDark ? const Color(0xFF14141F) : Colors.grey[50]),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isSel ? diffColor : (isDark ? Colors.white10 : Colors.grey[200]!), width: 1.2),
+              ),
+              child: Row(
+                children: [
+                  Container(width: 8, height: 8, decoration: BoxDecoration(color: diffColor, shape: BoxShape.circle)),
+                  const SizedBox(width: 10),
+                  Text(diff, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: isSel ? diffColor : (isDark ? Colors.grey[350] : Colors.grey[700]))),
+                  const Spacer(),
+                  if (isSel) Icon(Icons.check_circle_outline_rounded, color: diffColor, size: 16)
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
 }

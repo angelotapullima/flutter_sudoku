@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/sudoku_cell.dart';
 import '../utils/sudoku_generator.dart';
+import '../utils/sudoku_crypto.dart';
 import '../services/storage_service.dart';
 import 'storage_provider.dart';
 import 'profile_provider.dart';
@@ -301,7 +302,8 @@ class GameNotifier extends StateNotifier<GameState> {
     // Validación de seguridad para evitar RangeError (Fase 3 Fix)
     // El puzzle y la solución deben tener exactamente 81 caracteres.
     final String cleanPuzzle = puzzle.padRight(81, '0').substring(0, 81);
-    final String cleanSolution = solution.padRight(81, '1').substring(0, 81);
+    final String decryptedSolution = SudokuCrypto.decryptSolutionResilient(solution);
+    final String cleanSolution = decryptedSolution.padRight(81, '1').substring(0, 81);
 
     List<List<SudokuCell>> newGrid = List.generate(9, (r) {
       return List.generate(9, (c) {
@@ -736,7 +738,8 @@ class GameNotifier extends StateNotifier<GameState> {
     _undoStack.clear();
 
     final String cleanPuzzle = puzzle.padRight(81, '0').substring(0, 81);
-    final String cleanSolution = solution.padRight(81, '1').substring(0, 81);
+    final String decryptedSolution = SudokuCrypto.decryptSolutionResilient(solution);
+    final String cleanSolution = decryptedSolution.padRight(81, '1').substring(0, 81);
 
     List<List<SudokuCell>> newGrid = List.generate(9, (r) {
       return List.generate(9, (c) {

@@ -63,7 +63,16 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
 
   /// Construye un mapa con el progreso local completo para sincronizar con la nube
   Map<String, dynamic> getLocalProgressMap() {
-    const difficulties = ['Fácil', 'Medio', 'Difícil', 'Experto'];
+    const difficulties = [
+      'Iniciado',
+      'Cadete',
+      'Explorador',
+      'Viajero',
+      'Estratega',
+      'Experto',
+      'Maestro',
+      'Leyenda del Cosmos'
+    ];
     final recordsList = difficulties.map((diff) {
       return {
         'difficulty': diff,

@@ -17,24 +17,40 @@ class SudokuGenerator {
     // 3. Clonar el tablero completo para crear el de juego
     List<List<int>> board = List.generate(9, (r) => List.from(solution[r]));
 
-    // 4. Remover celdas según la dificultad asegurando una solución única
+    // 4. Remover celdas según la dificultad gradual asegurando una solución única
     int cellsToRemove = 40; // Por defecto
     switch (difficulty.toLowerCase()) {
-      case 'fácil':
-      case 'easy':
-        cellsToRemove = 36; // Quedan ~45 celdas
+      case 'iniciado':
+      case 'apprentice':
+        cellsToRemove = 30; // Quedan ~51 celdas (Súper fácil para aprender)
         break;
-      case 'medio':
-      case 'medium':
-        cellsToRemove = 46; // Quedan ~35 celdas
+      case 'cadete':
+      case 'cadet':
+        cellsToRemove = 35; // Quedan ~46 celdas
         break;
-      case 'difícil':
-      case 'hard':
-        cellsToRemove = 53; // Quedan ~28 celdas
+      case 'explorador':
+      case 'explorer':
+        cellsToRemove = 39; // Quedan ~42 celdas
+        break;
+      case 'viajero':
+      case 'traveler':
+        cellsToRemove = 43; // Quedan ~38 celdas
+        break;
+      case 'estratega':
+      case 'strategist':
+        cellsToRemove = 47; // Quedan ~34 celdas
         break;
       case 'experto':
       case 'expert':
-        cellsToRemove = 58; // Quedan ~23 celdas
+        cellsToRemove = 51; // Quedan ~30 celdas
+        break;
+      case 'maestro':
+      case 'master':
+        cellsToRemove = 54; // Quedan ~27 celdas
+        break;
+      case 'leyenda del cosmos':
+      case 'legend':
+        cellsToRemove = 57; // Quedan ~24 celdas (Sudoku extremo)
         break;
     }
 
