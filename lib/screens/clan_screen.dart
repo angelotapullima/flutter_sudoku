@@ -40,38 +40,181 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
-      body: ResponsiveContentWrapper(
-        child: clanState.inClan ? _buildMyClanView(clanState, isDark, sudokuTheme) : _buildClanSelectionView(clanState, isDark, sudokuTheme),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Detectar Landscape Mobile (Ancho > Alto y Alto < 500)
+          final bool isLandscape = constraints.maxWidth > constraints.maxHeight && constraints.maxHeight < 500;
+
+          if (clanState.inClan) {
+            return isLandscape 
+              ? _buildLandscapeMyClanView(clanState, isDark, sudokuTheme)
+              : _buildMyClanView(clanState, isDark, sudokuTheme);
+          }
+          
+          return clanState.inClan 
+            ? _buildMyClanView(clanState, isDark, sudokuTheme) 
+            : _buildClanSelectionView(clanState, isDark, sudokuTheme);
+        },
       ),
+    );
+  }
+
+  // --- NUEVA VISTA LANDSCAPE PARA EL CLAN (SIDE-BY-SIDE) ---
+  Widget _buildLandscapeMyClanView(ClanState state, bool isDark, dynamic theme) {
+    final details = state.details!;
+
+    return Row(
+      children: [
+        // Lado Izquierdo: Información del Clan y Barra de Daño (Scrollable)
+        Expanded(
+          flex: 4,
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF13131A) : Colors.white,
+              border: Border(right: BorderSide(color: isDark ? Colors.white10 : Colors.black12)),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  _buildLandscapeClanInfo(details, theme, isDark),
+                  const SizedBox(height: 16),
+                  _buildLandscapeWarBotin(isDark),
+                  const SizedBox(height: 16),
+                  _buildLandscapeMonsterDamage(details, theme),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // Lado Derecho: Chat y Miembros
+        Expanded(
+          flex: 6,
+          child: DefaultTabController(
+            length: 2,
+            child: Column(
+              children: [
+                TabBar(
+                  labelColor: theme.primaryColor,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: theme.primaryColor,
+                  labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  tabs: const [
+                    Tab(text: 'CHAT'),
+                    Tab(text: 'MIEMBROS'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      _buildChatView(state, isDark, theme),
+                      _buildMembersList(state, isDark, theme),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeClanInfo(ClanDetails details, dynamic theme, bool isDark) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: theme.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
+          child: Text(details.tag, style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(details.name, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(details.description, style: const TextStyle(fontSize: 10, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: () => _showLeaveClanDialog(context, theme),
+          icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 16),
+          constraints: const BoxConstraints(),
+          padding: EdgeInsets.zero,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeWarBotin(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(color: Colors.amber.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.withOpacity(0.2))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('🎁 BOTÍN DE GUERRA', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.amber, letterSpacing: 0.5)),
+          const SizedBox(height: 2),
+          Text('500 🪙 y 50 💎 por derrotar al Titán.', style: TextStyle(fontSize: 10, color: isDark ? Colors.white70 : Colors.black87)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLandscapeMonsterDamage(ClanDetails details, dynamic theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('⚔️ DAÑO AL TITÁN', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+            Text('${details.monsterDamageTotal} HP', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: (details.monsterDamageTotal / 100000).clamp(0.0, 1.0),
+            minHeight: 8,
+            backgroundColor: theme.primaryColor.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildLoginRequired(BuildContext context, bool isDark, dynamic theme) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40.0),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('🛡️', style: TextStyle(fontSize: 80)),
-            const SizedBox(height: 24),
+            const Text('🛡️', style: TextStyle(fontSize: 60)), // Reducido de 80
+            const SizedBox(height: 16),
             Text(
               'LOGIAS CERRADAS',
-              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+              style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 2),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               'Debes estar registrado para fundar o unirte a una logia y participar en la guerra colectiva.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[500]),
+              style: TextStyle(color: Colors.grey[500], fontSize: 13),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginScreen())),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primaryColor,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               child: const Text('INICIAR SESIÓN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
