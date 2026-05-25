@@ -260,19 +260,19 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     if (!mounted) return;
     ref.read(gameProvider.notifier).simulateTrueVision();
     _showTutorialMsg(
-        '¡Mira el tablero! Han aparecido "Números Fantasmas" tenues.',
+        '¡Mira el tablero! Aparecen "Números Fantasma" tenues en el sector seleccionado.',
         seconds: 4);
     await Future.delayed(const Duration(seconds: 4));
     if (!mounted) return;
     _showTutorialMsg(
-        'Esta visión de Rayos X te revela la solución de cada celda vacía por 15s.',
+        'Este escáner de Rayos X revela temporalmente la solución de la caja de 3x3 (Sector) seleccionada por 10s.',
         seconds: 5);
     await Future.delayed(const Duration(seconds: 5));
     if (!mounted) return;
     _showTutorialMsg(
-        'Es el poder definitivo para desbloquear tu mente cuando no ves el camino.',
-        seconds: 5);
-    await Future.delayed(const Duration(seconds: 4));
+        '¡Muévete por el tablero usando las flechas de dirección, WASD o clics para escanear y revelar otros sectores!',
+        seconds: 6);
+    await Future.delayed(const Duration(seconds: 5));
   }
 
   Future<void> _executeClockTutorial(TutorialKeys keys) async {
