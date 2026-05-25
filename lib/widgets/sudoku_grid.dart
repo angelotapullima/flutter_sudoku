@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
+import '../providers/tutorial_keys_provider.dart';
 import 'sudoku_cell_widget.dart';
 
 class SudokuGrid extends ConsumerWidget {
@@ -9,6 +10,7 @@ class SudokuGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = ref.watch(themeProvider).isDarkMode;
+    final keys = ref.read(tutorialKeysProvider);
 
     return AspectRatio(
       aspectRatio: 1.0,
@@ -35,7 +37,11 @@ class SudokuGrid extends ConsumerWidget {
               child: Row(
                 children: List.generate(9, (c) {
                   return Expanded(
-                    child: SudokuCellWidget(row: r, col: c),
+                    child: SudokuCellWidget(
+                      key: keys.cellKeys[r][c],
+                      row: r, 
+                      col: c
+                    ),
                   );
                 }),
               ),

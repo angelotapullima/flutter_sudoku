@@ -13,6 +13,7 @@ import 'level_progress_screen.dart';
 import 'settings_screen.dart';
 import 'clan_screen.dart';
 import 'how_to_play_screen.dart';
+import '../providers/tutorial_keys_provider.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
@@ -50,13 +51,13 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         final bool isDesktop = width > 800;
 
         if (isDesktop) {
-          // Diseño Desktop: Sidebar lateral izquierdo + IndexedStack de contenido a la derecha
+          // Diseño Desktop: Sidebar lateral izquierdo (DISEÑO ORIGINAL ÚNICO RESTAURADO)
           return Scaffold(
             backgroundColor: isCurrentTabDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
             body: Row(
               children: [
-                // 1. Sidebar lateral de escritorio
-                _buildDesktopSidebar(userProfile, sudokuTheme, isGlobalDark),
+                // 1. Sidebar lateral original
+                _buildDesktopSidebar(userProfile, sudokuTheme, isGlobalDark, isCurrentTabDark),
                 
                 // 2. Área de visualización principal
                 Expanded(
@@ -78,7 +79,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               children: [
                 Column(
                   children: [
-                    // Header común
+                    // Header común móvil (Adaptativo)
                     _buildUnifiedHeader(context, userProfile, sudokuTheme, isCurrentTabDark),
                     
                     // Contenido
@@ -94,7 +95,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                   ],
                 ),
 
-                // Barra de navegación flotante
+                // Barra de navegación flotante móvil
                 Positioned(
                   left: 16,
                   right: 16,
@@ -109,14 +110,17 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     );
   }
 
-  // --- COMPONENTES EXCLUSIVOS DE ESCRITORIO (SIDEBAR) ---
+  // --- COMPONENTES EXCLUSIVOS DE ESCRITORIO (SIDEBAR ORIGINAL) ---
 
-  Widget _buildDesktopSidebar(dynamic userProfile, dynamic sudokuTheme, bool isDark) {
+  Widget _buildDesktopSidebar(dynamic userProfile, dynamic sudokuTheme, bool isGlobalDark, bool forceDark) {
+    // El sidebar respeta el tema global a menos que estemos en el viaje
+    final bool isDark = forceDark;
+
     return Container(
       width: 270,
       height: double.infinity,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF13131A).withOpacity(0.9) : Colors.white.withOpacity(0.92),
+        color: isDark ? const Color(0xFF13131A) : Colors.white,
         border: Border(
           right: BorderSide(
             color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
@@ -128,7 +132,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         child: Column(
           children: [
             const SizedBox(height: 32),
-            // Logotipo Estilizado de Numbra
+            // Logotipo
             Text(
               'NUMBRA',
               style: GoogleFonts.outfit(
@@ -149,7 +153,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             ),
             const SizedBox(height: 36),
             
-            // Tarjeta de Perfil en el Sidebar
+            // Tarjeta de Perfil
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(16),
@@ -162,50 +166,41 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               ),
               child: Column(
                 children: [
-                  InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const LevelProgressScreen()),
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 22,
-                            backgroundColor: sudokuTheme.primaryColor,
-                            child: Text(
-                              '${userProfile.level}',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Nivel ${userProfile.level}',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : Colors.black87,
-                                  ),
-                                ),
-                                Text(
-                                  userProfile.rankTitle,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: sudokuTheme.primaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor: sudokuTheme.primaryColor,
+                        child: Text(
+                          '${userProfile.level}',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Nivel ${userProfile.level}',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              userProfile.rankTitle,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: sudokuTheme.primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   const Divider(height: 1, color: Colors.white12),
@@ -229,17 +224,19 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                       ),
                       Row(
                         children: [
-                          // Tablón de Misiones
+                          // Academia Cosmos (NUEVO COSTADO AJUSTES)
                           IconButton(
                             constraints: const BoxConstraints(),
                             padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.assignment_rounded, size: 18),
+                            icon: const Icon(Icons.school_outlined, size: 18),
                             color: isDark ? Colors.white70 : Colors.black54,
-                            tooltip: 'Misiones diarias',
-                            onPressed: () => _showMissionsModal(context),
+                            tooltip: 'Academia Cosmos',
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) => const HowToPlayScreen()),
+                            ),
                           ),
-                          const SizedBox(width: 10),
-                          // Ajustes del Juego
+                          const SizedBox(width: 8),
+                          // Ajustes
                           IconButton(
                             constraints: const BoxConstraints(),
                             padding: EdgeInsets.zero,
@@ -259,51 +256,15 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             ),
             const SizedBox(height: 28),
             
-            // Navegación Vertical
+            // Navegación Vertical Desktop
             Expanded(
               child: ListView(
-                physics: const NeverScrollableScrollPhysics(),
                 children: [
                   _buildSidebarItem(0, Icons.grid_view_rounded, 'Inicio', sudokuTheme, isDark),
                   _buildSidebarItem(1, Icons.public_rounded, 'Viaje Estelar', sudokuTheme, isDark),
-                  _buildSidebarItem(2, Icons.shield_rounded, 'Logia / Clanes', sudokuTheme, isDark),
-                  _buildSidebarItem(3, Icons.local_fire_department_rounded, 'Desafío Diario', sudokuTheme, isDark),
-                  _buildSidebarItem(4, Icons.person_rounded, 'Estadísticas & Liga', sudokuTheme, isDark),
-                  const SizedBox(height: 12),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Divider(height: 1, color: Colors.white10),
-                  ),
-                  const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const HowToPlayScreen()),
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      height: 48,
-                      margin: const EdgeInsets.symmetric(horizontal: 14),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.help_outline_rounded,
-                            color: isDark ? Colors.white60 : Colors.black54,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 14),
-                          Text(
-                            '¿Cómo Jugar?',
-                            style: GoogleFonts.outfit(
-                              color: isDark ? Colors.white60 : Colors.black54,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildSidebarItem(2, Icons.shield_rounded, 'Logias', sudokuTheme, isDark),
+                  _buildSidebarItem(3, Icons.local_fire_department_rounded, 'Desafío', sudokuTheme, isDark),
+                  _buildSidebarItem(4, Icons.person_rounded, 'Perfil', sudokuTheme, isDark),
                 ],
               ),
             ),
@@ -413,6 +374,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     bool isDark,
   ) {
     final String rango = userProfile.rankTitle;
+    final keys = ref.read(tutorialKeysProvider);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -430,6 +392,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         children: [
           // Nivel y Rango
           InkWell(
+            key: keys.levelKey,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const LevelProgressScreen()),
             ),
@@ -481,6 +444,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             children: [
               // Monedas
               Container(
+                key: keys.coinsKey,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF16161E) : Colors.white,

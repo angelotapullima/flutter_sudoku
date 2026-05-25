@@ -73,7 +73,7 @@ class CampaignNotifier extends StateNotifier<CampaignState> {
   Future<void> fetchLevels() async {
     state = state.copyWith(isLoading: true);
     try {
-      final result = await ApiService.getActiveTournament(); // Usaremos un nuevo endpoint en realidad
+      await ApiService.getActiveTournament(); // Llamada mantenida por efectos secundarios si los hay, pero sin asignar variable
       // Pero para no romper nada, crearé un nuevo método en ApiService en el siguiente paso
       // Por ahora simulamos carga exitosa si el backend ya responde campaign/levels
       final response = await ApiService.getCampaignLevels();

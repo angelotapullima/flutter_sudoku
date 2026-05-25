@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/gamification_models.dart';
 import '../services/api_service.dart';
 import '../utils/sudoku_generator.dart';
-import 'profile_provider.dart';
 
 class GamificationState {
   final GlobalTournament? activeTournament;
@@ -37,9 +36,8 @@ class GamificationState {
 }
 
 class GamificationNotifier extends StateNotifier<GamificationState> {
-  final Ref _ref;
 
-  GamificationNotifier(this._ref) : super(GamificationState()) {
+  GamificationNotifier() : super(GamificationState()) {
     // Cargar datos iniciales siempre para dar visibilidad de misiones/torneos incluso a invitados
     refreshAll();
   }
@@ -127,5 +125,5 @@ class GamificationNotifier extends StateNotifier<GamificationState> {
 }
 
 final gamificationProvider = StateNotifierProvider<GamificationNotifier, GamificationState>((ref) {
-  return GamificationNotifier(ref);
+  return GamificationNotifier();
 });

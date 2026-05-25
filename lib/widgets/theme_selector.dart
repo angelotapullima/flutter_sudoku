@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
-import 'registration_dialog.dart';
+import '../screens/login_screen.dart';
 
 class ThemeSelector extends ConsumerWidget {
   const ThemeSelector({super.key});
@@ -22,8 +22,11 @@ class ThemeSelector extends ConsumerWidget {
           IconButton(
             onPressed: () => themeNotifier.toggleDarkMode(),
             icon: Icon(
-              themeState.isDarkMode ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
-              color: themeState.isDarkMode ? Colors.amber : Colors.blueGrey[800],
+              themeState.isDarkMode
+                  ? Icons.wb_sunny_rounded
+                  : Icons.nights_stay_rounded,
+              color:
+                  themeState.isDarkMode ? Colors.amber : Colors.blueGrey[800],
               size: 24,
             ),
             tooltip: themeState.isDarkMode ? 'Modo Claro' : 'Modo Oscuro',
@@ -35,13 +38,17 @@ class ThemeSelector extends ConsumerWidget {
               physics: const BouncingScrollPhysics(),
               child: Row(
                 children: SudokuTheme.availableThemes.map((theme) {
-                  final isPurchased = themeState.purchasedThemeIds.contains(theme.id);
+                  final isPurchased =
+                      themeState.purchasedThemeIds.contains(theme.id);
                   final isActive = themeState.activeThemeId == theme.id;
 
                   return GestureDetector(
                     onTap: () {
                       if (!profile.isRegistered) {
-                        RegistrationDialog.show(context);
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (context) => const LoginScreen()),
+                        );
                         return;
                       }
                       if (isPurchased) {
@@ -71,7 +78,8 @@ class ThemeSelector extends ConsumerWidget {
                           // Círculo de color
                           CircleAvatar(
                             radius: 16,
-                            backgroundColor: theme.primaryColor.withOpacity(0.9),
+                            backgroundColor:
+                                theme.primaryColor.withOpacity(0.9),
                             child: Text(
                               theme.icon,
                               style: const TextStyle(fontSize: 14),
@@ -108,7 +116,8 @@ class ThemeSelector extends ConsumerWidget {
     );
   }
 
-  void _showPurchaseDialog(BuildContext context, WidgetRef ref, SudokuTheme theme) {
+  void _showPurchaseDialog(
+      BuildContext context, WidgetRef ref, SudokuTheme theme) {
     // Leemos el perfil para saber si tiene monedas suficientes
     final themeNotifier = ref.read(themeProvider.notifier);
     final profileNotifier = ref.read(profileProvider.notifier);
@@ -122,7 +131,8 @@ class ThemeSelector extends ConsumerWidget {
         final themeColor = theme.primaryColor;
 
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: dark ? const Color(0xFF1E1E2E) : Colors.white,
           title: Row(
             children: [
@@ -143,7 +153,8 @@ class ThemeSelector extends ConsumerWidget {
             children: [
               Text(
                 '¿Deseas desbloquear el tema estético premium "${theme.name}"?',
-                style: TextStyle(color: dark ? Colors.grey[300] : Colors.grey[700]),
+                style: TextStyle(
+                    color: dark ? Colors.grey[300] : Colors.grey[700]),
               ),
               const SizedBox(height: 16),
               Row(
@@ -200,7 +211,8 @@ class ThemeSelector extends ConsumerWidget {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancelar',
-                style: TextStyle(color: dark ? Colors.grey[400] : Colors.grey[600]),
+                style: TextStyle(
+                    color: dark ? Colors.grey[400] : Colors.grey[600]),
               ),
             ),
             ElevatedButton(
@@ -215,7 +227,8 @@ class ThemeSelector extends ConsumerWidget {
                       if (success) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('¡Tema "${theme.name}" desbloqueado y equipado! 🎉'),
+                            content: Text(
+                                '¡Tema "${theme.name}" desbloqueado y equipado! 🎉'),
                             backgroundColor: themeColor,
                           ),
                         );

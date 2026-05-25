@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/settings_provider.dart';
+import '../providers/tutorial_keys_provider.dart';
 
 class NumberPad extends ConsumerWidget {
   const NumberPad({super.key});
@@ -16,6 +17,7 @@ class NumberPad extends ConsumerWidget {
     final sudokuTheme = themeNotifier.currentSudokuTheme;
     final isDark = themeState.isDarkMode;
     final settings = ref.watch(settingsProvider);
+    final keys = ref.read(tutorialKeysProvider);
 
     // Función que calcula la cantidad de veces que el número 'num' ha sido colocado de forma correcta en el tablero.
     int getCorrectCount(int num) {
@@ -62,6 +64,7 @@ class NumberPad extends ConsumerWidget {
                 }
 
                 return GestureDetector(
+                  key: keys.numKeys[index],
                   onTap: () {
                     ref.read(gameProvider.notifier).inputNumber(number);
                   },
@@ -155,6 +158,7 @@ class NumberPad extends ConsumerWidget {
             }
 
             return GestureDetector(
+              key: keys.numKeys[index],
               onTap: () {
                 ref.read(gameProvider.notifier).inputNumber(number);
               },

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/tutorial_keys_provider.dart';
 
 class AbilityBar extends ConsumerWidget {
   final VoidCallback? onAbilityUsed;
@@ -19,6 +20,7 @@ class AbilityBar extends ConsumerWidget {
     final sudokuTheme = ref.read(themeProvider.notifier).currentSudokuTheme;
     final isDark = ref.watch(themeProvider).isDarkMode;
     final userProfile = ref.watch(profileProvider);
+    final keys = ref.read(tutorialKeysProvider);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -32,6 +34,7 @@ class AbilityBar extends ConsumerWidget {
           _buildAbilityButton(
             context,
             ref,
+            key: keys.visionKey,
             icon: Icons.auto_awesome_rounded,
             label: 'VISIÓN',
             cost: 50,
@@ -48,6 +51,7 @@ class AbilityBar extends ConsumerWidget {
           _buildAbilityButton(
             context,
             ref,
+            key: keys.clockKey,
             icon: Icons.hourglass_bottom_rounded,
             label: 'RELOJ',
             cost: 30,
@@ -64,6 +68,7 @@ class AbilityBar extends ConsumerWidget {
           _buildAbilityButton(
             context,
             ref,
+            key: keys.divineKey,
             icon: Icons.psychology_rounded,
             label: 'DIVINO',
             cost: 100,
@@ -94,6 +99,7 @@ class AbilityBar extends ConsumerWidget {
   Widget _buildAbilityButton(
     BuildContext context,
     WidgetRef ref, {
+    Key? key,
     required IconData icon,
     required String label,
     required int cost,
@@ -104,10 +110,10 @@ class AbilityBar extends ConsumerWidget {
     required bool canAfford,
     required double cooldownPercent,
   }) {
-    final Color primaryColor = isActive ? Colors.amber : theme.primaryColor;
     final bool disabled = !canAfford && !isActive;
 
     return GestureDetector(
+      key: key,
       onTap: disabled ? null : onTap,
       onLongPress: () => _showAbilityInfo(context, label, isDark, theme),
       child: Column(

@@ -25,7 +25,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Intentar reanudar partida activa si existe
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(gameProvider.notifier).tryLoadSavedGame();
       _setupGamificationCallbacks();
@@ -34,39 +33,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _setupGamificationCallbacks() {
     final profileNotifier = ref.read(profileProvider.notifier);
-
-    // Callback para subida de nivel
     profileNotifier.onLevelUp = (newLevel, rewardCoins) {
       if (mounted) {
-        RewardUnlockModal.show(
-          context,
-          ref: ref,
-          title: 'Nivel $newLevel',
-          description:
-              '¡Felicidades! Has progresado intelectualmente y subido al siguiente nivel.',
-          coinsReward: rewardCoins,
-          xpReward: 0,
-          icon: '👑',
-          type: 'level',
-        );
+        RewardUnlockModal.show(context, ref: ref, title: 'Nivel $newLevel', description: '¡Felicidades! Has progresado intelectualmente.', coinsReward: rewardCoins, xpReward: 0, icon: '👑', type: 'level');
       }
     };
-
-    // Callback para logro desbloqueado
     profileNotifier.onAchievementUnlocked = (title) {
       if (mounted) {
-        final achievement =
-            Achievement.allAchievements.firstWhere((a) => a.title == title);
-        RewardUnlockModal.show(
-          context,
-          ref: ref,
-          title: title,
-          description: achievement.description,
-          coinsReward: achievement.rewardCoins,
-          xpReward: achievement.rewardXp,
-          icon: achievement.icon,
-          type: 'achievement',
-        );
+        final achievement = Achievement.allAchievements.firstWhere((a) => a.title == title);
+        RewardUnlockModal.show(context, ref: ref, title: title, description: achievement.description, coinsReward: achievement.rewardCoins, xpReward: achievement.rewardXp, icon: achievement.icon, type: 'achievement');
       }
     };
   }
@@ -74,403 +49,169 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final themeState = ref.watch(themeProvider);
-    final themeNotifier = ref.read(themeProvider.notifier);
-    final sudokuTheme = themeNotifier.currentSudokuTheme;
+    final sudokuTheme = ref.read(themeProvider.notifier).currentSudokuTheme;
     final isDark = themeState.isDarkMode;
-
     final userProfile = ref.watch(profileProvider);
     final storage = ref.watch(storageServiceProvider);
 
-    final fontHeadline = GoogleFonts.outfit(
-      fontSize: 32,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 2.5,
-      color: isDark ? Colors.white : const Color(0xFF2B2B36),
-    );
-
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+      backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: ResponsiveContentWrapper(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 12),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final bool isDesktop = constraints.maxWidth > 800;
+            final double horizontalPadding = isDesktop ? 40.0 : 20.0;
 
-              // 1. Selector rápido de temas en pastilla Glassmorphic sutil
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.02)
-                        : Colors.black.withOpacity(0.02),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.black.withOpacity(0.05),
-                    ),
-                  ),
-                  child: const ThemeSelector(),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // 3. Partida en curso flotante
-              if (ref.watch(gameProvider).hasStarted)
-                _buildActiveGameCard(context, ref, sudokuTheme, isDark),
-
-              // 3.5 Banner de Invitado (UX Improvement)
-              if (!userProfile.isRegistered)
-                _buildGuestSyncBanner(context, sudokuTheme, isDark),
-
-              // 4. Banner Destacado del Reto Diario (Llama de Racha 🔥)
-              _buildDailyChallengeFeatureBanner(
-                  context, userProfile, sudokuTheme, isDark),
-
-              const SizedBox(height: 20),
-
-              // 5. Grid 2x2 de Dificultades Modernas
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: ResponsiveContentWrapper(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 12),
+                    
+                    // 1. Selector de Temas
                     Padding(
-                      padding: const EdgeInsets.only(left: 4.0, bottom: 12.0),
-                      child: Text(
-                        'Selecciona Dificultad',
-                        style: GoogleFonts.outfit(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white70 : Colors.black87,
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.02),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
                         ),
+                        child: const ThemeSelector(),
                       ),
                     ),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: MediaQuery.of(context).size.width > 800 ? 4 : 2,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
-                      childAspectRatio: MediaQuery.of(context).size.width > 800 ? 1.35 : 1.18,
-                      children: [
-                        _buildModernDifficultyCard(
-                          context,
-                          ref,
-                          title: 'Fácil',
-                          icon: '🌱',
-                          bestTime: storage.getBestTime('Fácil'),
-                          accentColor: Colors.teal,
-                          isDark: isDark,
-                        ),
-                        _buildModernDifficultyCard(
-                          context,
-                          ref,
-                          title: 'Medio',
-                          icon: '⚡',
-                          bestTime: storage.getBestTime('Medio'),
-                          accentColor: Colors.blueAccent,
-                          isDark: isDark,
-                        ),
-                        _buildModernDifficultyCard(
-                          context,
-                          ref,
-                          title: 'Difícil',
-                          icon: '🔮',
-                          bestTime: storage.getBestTime('Difícil'),
-                          accentColor: Colors.purpleAccent,
-                          isDark: isDark,
-                        ),
-                        _buildModernDifficultyCard(
-                          context,
-                          ref,
-                          title: 'Experto',
-                          icon: '👑',
-                          bestTime: storage.getBestTime('Experto'),
-                          accentColor: Colors.redAccent,
-                          isDark: isDark,
-                        ),
-                      ],
+                    
+                    const SizedBox(height: 24),
+
+                    // 2. Partida en Curso
+                    if (ref.watch(gameProvider).hasStarted) 
+                      _buildActiveGameCard(context, ref, sudokuTheme, isDark, horizontalPadding),
+
+                    // 3. Banner de Registro
+                    if (!userProfile.isRegistered)
+                      _buildSyncBanner(context, sudokuTheme, isDark, horizontalPadding),
+
+                    // 4. Reto Diario
+                    _buildDailyChallengeBanner(context, userProfile, sudokuTheme, isDark, horizontalPadding),
+
+                    const SizedBox(height: 32),
+
+                    // 5. Selector de Dificultad
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Selecciona Dificultad',
+                            style: GoogleFonts.outfit(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF2B2B36),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          isDesktop 
+                            ? Row(
+                                children: [
+                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'FÁCIL', icon: '🌱', bestTime: storage.getBestTime('Fácil'), accentColor: Colors.teal, isDark: isDark)),
+                                  const SizedBox(width: 16),
+                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'MEDIO', icon: '⚡', bestTime: storage.getBestTime('Medio'), accentColor: Colors.blueAccent, isDark: isDark)),
+                                  const SizedBox(width: 16),
+                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'DIFÍCIL', icon: '🔮', bestTime: storage.getBestTime('Difícil'), accentColor: Colors.purpleAccent, isDark: isDark)),
+                                  const SizedBox(width: 16),
+                                  Expanded(child: _buildModernDifficultyCard(context, ref, title: 'EXPERTO', icon: '👑', bestTime: storage.getBestTime('Experto'), accentColor: Colors.redAccent, isDark: isDark)),
+                                ],
+                              )
+                            : GridView.count(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                                childAspectRatio: 1.15, // Un poco más alto para evitar overflow
+                                children: [
+                                  _buildModernDifficultyCard(context, ref, title: 'Fácil', icon: '🌱', bestTime: storage.getBestTime('Fácil'), accentColor: Colors.teal, isDark: isDark),
+                                  _buildModernDifficultyCard(context, ref, title: 'Medio', icon: '⚡', bestTime: storage.getBestTime('Medio'), accentColor: Colors.blueAccent, isDark: isDark),
+                                  _buildModernDifficultyCard(context, ref, title: 'Difícil', icon: '🔮', bestTime: storage.getBestTime('Difícil'), accentColor: Colors.purpleAccent, isDark: isDark),
+                                  _buildModernDifficultyCard(context, ref, title: 'Experto', icon: '👑', bestTime: storage.getBestTime('Experto'), accentColor: Colors.redAccent, isDark: isDark),
+                                ],
+                              ),
+                        ],
+                      ),
                     ),
+
+                    const SizedBox(height: 24),
+
+                    // 6. Academia Cosmos
+                    _buildAcademyCard(context, sudokuTheme, isDark, horizontalPadding),
+
+                    const SizedBox(height: 16),
+
+                    // 7. Centro de Suministros
+                    _buildStoreCard(context, sudokuTheme, isDark, horizontalPadding),
+
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 20),
-
-              // Tarjeta Interactiva de Academia/Tutorial
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: isDark
-                          ? [sudokuTheme.primaryColor.withOpacity(0.18), const Color(0xFF131320)]
-                          : [sudokuTheme.primaryColor.withOpacity(0.08), Colors.white],
-                    ),
-                    border: Border.all(
-                      color: sudokuTheme.primaryColor.withOpacity(0.25),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.15 : 0.02),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => const HowToPlayScreen()),
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: sudokuTheme.primaryColor.withOpacity(0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Text(
-                                '💡',
-                                style: TextStyle(fontSize: 26),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '¿NUEVO EN EL COSMOS?',
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 12,
-                                      letterSpacing: 1.2,
-                                      color: sudokuTheme.primaryColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Aprende las Leyes del Sudoku',
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                      color: isDark ? Colors.white : const Color(0xFF2B2B36),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Domina el rellenado del grid estelar y conquista el cosmos.',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 14,
-                              color: sudokuTheme.primaryColor,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // 6. Acceso Refinado al Pie a la Tienda de Temas
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.06)
-                          : Colors.grey[200]!,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.01),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) => const StoreScreen()),
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 14.0),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.withOpacity(0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.store_rounded,
-                                color: Colors.amber,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'CENTRO DE SUMINISTROS',
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      letterSpacing: 1,
-                                      color: isDark
-                                          ? Colors.white
-                                          : const Color(0xFF2B2B36),
-                                    ),
-                                  ),
-                                  Text(
-                                    'Adquiere pociones, avatares y boosters para tu viaje.',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: isDark
-                                          ? Colors.grey[400]
-                                          : Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 13,
-                              color: sudokuTheme.primaryColor,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-            ],
-          ),
+            );
+          },
         ),
       ),
-    ),
     );
   }
 
-  Widget _buildActiveGameCard(
-    BuildContext context,
-    WidgetRef ref,
-    SudokuTheme theme,
-    bool isDark,
-  ) {
+  Widget _buildActiveGameCard(BuildContext context, WidgetRef ref, dynamic sudokuTheme, bool isDark, double padding) {
     final game = ref.watch(gameProvider);
     final min = (game.elapsedSeconds ~/ 60).toString().padLeft(2, '0');
     final sec = (game.elapsedSeconds % 60).toString().padLeft(2, '0');
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.primaryColor.withOpacity(0.4),
-          width: 1.5,
+    return Padding(
+      padding: EdgeInsets.only(left: padding, right: padding, bottom: 20.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: sudokuTheme.primaryColor.withOpacity(0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(color: sudokuTheme.primaryColor.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 5)),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.primaryColor.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
         child: InkWell(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const GameScreen()),
-          ),
-          borderRadius: BorderRadius.circular(20),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const GameScreen())),
+          borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: theme.primaryColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.play_circle_fill_rounded,
-                    color: theme.primaryColor,
-                    size: 28,
-                  ),
+                  decoration: BoxDecoration(color: sudokuTheme.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
+                  child: Icon(Icons.play_arrow_rounded, color: sudokuTheme.primaryColor, size: 24),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Partida en Curso',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 15),
-                      ),
-                      Text(
-                        'Dificultad: ${game.difficulty} • Tiempo: $min:$sec',
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
+                      Text('Partida en Curso', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
+                      Text('Dificultad: ${game.difficulty} • Tiempo: $min:$sec', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600])),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 16,
-                  color: theme.primaryColor,
+                IconButton(
+                  onPressed: () => ref.read(gameProvider.notifier).quitGame(),
+                  icon: const Icon(Icons.close_rounded, color: Colors.redAccent, size: 20),
+                  tooltip: 'Abandonar partida',
+                  constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
                 ),
+                const SizedBox(width: 8),
+                Icon(Icons.arrow_forward_ios_rounded, color: sudokuTheme.primaryColor, size: 16),
               ],
             ),
           ),
@@ -479,209 +220,102 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildDailyChallengeFeatureBanner(
-    BuildContext context,
-    UserProfile userProfile,
-    SudokuTheme theme,
-    bool isDark,
-  ) {
-    final streak = userProfile.dailyStreak;
-    final hasStreak = streak > 0;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF6B11FF), // Violeta Neón
-                  const Color(0xFFFF1393), // Fucsia Neón
-                ]
-              : [
-                  const Color(0xFF8E2DE2),
-                  const Color(0xFF4A00E0),
-                ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6B11FF).withOpacity(0.25),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _startDailyChallengeDirectly(context),
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('🔥 ', style: TextStyle(fontSize: 13)),
-                            Text(
-                              hasStreak
-                                  ? 'Racha: $streak ${streak == 1 ? 'día' : 'días'}'
-                                  : 'Reto del Día',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'RETO DIARIO',
-                        style: GoogleFonts.outfit(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        hasStreak
-                            ? '¡Mantén encendida la llama de tu racha hoy!'
-                            : 'Resuelve el tablero sembrado único de hoy.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.85),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white30),
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _startDailyChallengeDirectly(BuildContext context) {
-    final today = DateTime.now();
-    final dateStr =
-        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
-    final seed = today.year * 10000 + today.month * 100 + today.day;
-
-    // Determinar dificultad por día
-    String difficulty = 'Medio';
-    final weekday = today.weekday;
-    if (weekday == DateTime.monday || weekday == DateTime.tuesday) {
-      difficulty = 'Fácil';
-    } else if (weekday == DateTime.wednesday || weekday == DateTime.thursday) {
-      difficulty = 'Medio';
-    } else if (weekday == DateTime.friday || weekday == DateTime.saturday) {
-      difficulty = 'Difícil';
-    } else if (weekday == DateTime.sunday) {
-      difficulty = 'Experto';
-    }
-
-    // Verificar si ya se completó el reto hoy
-    final completedDates = ref.read(profileProvider).completedDailyDates;
-    if (completedDates.contains(dateStr)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-              '¡Ya has completado el Reto Diario de hoy! Vuelve mañana para continuar tu racha. 🎉'),
-          backgroundColor: Colors.purple[700],
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      return;
-    }
-
-    // Iniciar partida
-    ref.read(gameProvider.notifier).startDailyChallengeGame(seed, difficulty);
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const GameScreen()),
-    );
-  }
-
-  Widget _buildGuestSyncBanner(
-      BuildContext context, SudokuTheme theme, bool isDark) {
+  Widget _buildSyncBanner(BuildContext context, dynamic theme, bool isDark, double padding) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+      padding: EdgeInsets.only(left: padding, right: padding, bottom: 20.0),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              theme.primaryColor.withOpacity(0.1),
-              theme.accentColor.withOpacity(0.05)
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: theme.primaryColor.withOpacity(0.2)),
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
         ),
         child: Row(
           children: [
-            const Text('☁️', style: TextStyle(fontSize: 24)),
+            const Icon(Icons.cloud_outlined, size: 24, color: Colors.grey),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '¡Sincroniza tu progreso!',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  Text(
-                    'Regístrate para guardar tus monedas y nivel en la nube.',
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600]),
-                  ),
+                  Text('¡Sincroniza tu progreso!', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
+                  Text('Asegura tus datos en la nube.', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600])),
                 ],
               ),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              ),
-              child: Text(
-                'IR',
-                style: TextStyle(
-                    color: theme.primaryColor, fontWeight: FontWeight.bold),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginScreen())),
+              child: Text('IR', style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.w900)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDailyChallengeBanner(BuildContext context, UserProfile profile, dynamic theme, bool isDark, double padding) {
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final isCompleted = profile.completedDailyDates.contains(today);
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: padding),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 140),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFF7B1FA2), Color(0xFF6200EA)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [BoxShadow(color: const Color(0xFF6200EA).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
+        ),
+        child: Stack(
+          children: [
+            Positioned(right: -20, bottom: -20, child: Icon(Icons.local_fire_department_rounded, size: 140, color: Colors.white.withOpacity(0.1))),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 12),
+                              SizedBox(width: 4),
+                              Text('Reto del Día', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'RETO DIARIO',
+                            style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
+                          ),
+                        ),
+                        Text(
+                          'Resuelve el tablero único de hoy.',
+                          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 50, height: 50,
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                    child: IconButton(
+                      onPressed: () {},
+                      icon: Icon(isCompleted ? Icons.check_rounded : Icons.play_arrow_rounded, color: Colors.white, size: 28),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -690,114 +324,128 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildModernDifficultyCard(
-    BuildContext context,
-    WidgetRef ref, {
-    required String title,
-    required String icon,
-    required int bestTime,
-    required Color accentColor,
-    required bool isDark,
-  }) {
-    final String recordText = bestTime == 0
-        ? 'Sin Récord'
-        : '${(bestTime ~/ 60).toString().padLeft(2, '0')}:${(bestTime % 60).toString().padLeft(2, '0')}';
+  Widget _buildAcademyCard(BuildContext context, dynamic theme, bool isDark, double padding) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: padding),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+        ),
+        child: InkWell(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const HowToPlayScreen())),
+          borderRadius: BorderRadius.circular(22),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.indigoAccent.withOpacity(0.1), shape: BoxShape.circle),
+                  child: const Text('🎓', style: TextStyle(fontSize: 20)),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('ACADEMIA COSMOS', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
+                      Text('Domina las leyes de Numbra.', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded, color: theme.primaryColor, size: 14),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
+  Widget _buildStoreCard(BuildContext context, dynamic theme, bool isDark, double padding) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: padding),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+        ),
+        child: InkWell(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const StoreScreen())),
+          borderRadius: BorderRadius.circular(22),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.store_rounded, color: Colors.amber, size: 20),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('CENTRO DE SUMINISTROS', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
+                      Text('Adquiere pociones y boosters.', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded, color: theme.primaryColor, size: 14),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernDifficultyCard(BuildContext context, WidgetRef ref, {required String title, required String icon, required int bestTime, required Color accentColor, required bool isDark}) {
+    final min = (bestTime ~/ 60).toString().padLeft(2, '0');
+    final sec = (bestTime % 60).toString().padLeft(2, '0');
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[200]!,
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.015),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05), width: 1.2),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
             ref.read(gameProvider.notifier).startNewGame(title);
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const GameScreen()),
-            );
+            Navigator.of(context).push(MaterialPageRoute(builder: (context) => const GameScreen()));
           },
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+            padding: const EdgeInsets.all(14.0), // Padding más compacto
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Fila Superior: Icono de dificultad y punto indicador
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      icon,
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: accentColor,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: accentColor.withOpacity(0.4),
-                            blurRadius: 6,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                    ),
+                    Text(icon, style: const TextStyle(fontSize: 22)), // Icono más pequeño
+                    Container(width: 6, height: 6, decoration: BoxDecoration(color: accentColor, shape: BoxShape.circle)),
                   ],
                 ),
-
-                // Fila Inferior: Título y Récord
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 10),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 1, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
+                ),
+                const SizedBox(height: 2),
+                Row(
                   children: [
-                    Text(
-                      title.toUpperCase(),
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: isDark ? Colors.white : const Color(0xFF2B2B36),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.timer_outlined,
-                          size: 11,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          recordText,
-                          style: GoogleFonts.shareTechMono(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: bestTime > 0
-                                ? accentColor
-                                : (isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600]),
-                          ),
-                        ),
-                      ],
-                    ),
+                    const Icon(Icons.timer_outlined, size: 10, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(bestTime > 0 ? '$min:$sec' : 'Sin Récord', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[500])),
                   ],
                 ),
               ],
