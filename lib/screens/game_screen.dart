@@ -10,13 +10,14 @@ import '../providers/settings_provider.dart';
 import '../providers/tutorial_keys_provider.dart';
 import '../widgets/divine_flash_effect.dart';
 import '../widgets/tutorial_hand.dart';
+import '../utils/enums.dart';
 import 'game_screen_mobile.dart';
 import 'game_screen_desktop.dart';
 
 final showFlashProvider = StateProvider.autoDispose<bool>((ref) => false);
 
 class GameScreen extends ConsumerStatefulWidget {
-  final String? tutorialScript;
+  final TutorialScript? tutorialScript;
   const GameScreen({super.key, this.tutorialScript});
 
   @override
@@ -53,20 +54,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   // --- LÓGICA DEL TUTORIAL NARRATIVO ---
 
-  Future<void> _runInGameTutorial(String script) async {
+  Future<void> _runInGameTutorial(TutorialScript script) async {
     if (_isTutorialRunning || !mounted) return;
     setState(() => _isTutorialRunning = true);
 
     final keys = ref.read(tutorialKeysProvider);
 
     switch (script) {
-      case 'law_row': await _executeRowLawTutorial(keys); break;
-      case 'law_col': await _executeColLawTutorial(keys); break;
-      case 'law_box': await _executeBoxLawTutorial(keys); break;
-      case 'mastery_exclusion': await _executeExclusionMasteryTutorial(keys); break;
-      case 'power_vision': await _executePowerTutorial(keys.visionKey, "Habilidad: VISIÓN VERDADERA. Detecta grietas lógicas."); break;
-      case 'power_clock': await _executePowerTutorial(keys.clockKey, "Habilidad: RELOJ ESTELAR. Congela el tiempo sideral."); break;
-      case 'power_divine': await _executePowerTutorial(keys.divineKey, "Habilidad: TOQUE DIVINO. Limpia y revela el camino."); break;
+      case TutorialScript.lawRow: await _executeRowLawTutorial(keys); break;
+      case TutorialScript.lawCol: await _executeColLawTutorial(keys); break;
+      case TutorialScript.lawBox: await _executeBoxLawTutorial(keys); break;
+      case TutorialScript.masteryExclusion: await _executeExclusionMasteryTutorial(keys); break;
+      case TutorialScript.powerVision: await _executeVisionTutorial(keys); break;
+      case TutorialScript.powerClock: await _executeClockTutorial(keys); break;
+      case TutorialScript.powerDivine: await _executeDivineTutorial(keys); break;
     }
 
     if (mounted) {
@@ -78,7 +79,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
   }
 
-  void _showTutorialEndDialog(String script) {
+  void _showTutorialEndDialog(TutorialScript script) {
     if (!mounted) return;
     showDialog(
       context: context,
@@ -97,16 +98,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop(); // Cerrar diálogo
-                  _runInGameTutorial(script); // Reiniciar tutorial
+                  Navigator.of(context).pop(); 
+                  _runInGameTutorial(script); 
                 },
                 child: Text('REPETIR', style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold)),
               ),
               ElevatedButton(
                 onPressed: () {
                   ref.read(gameProvider.notifier).quitGame();
-                  Navigator.of(context).pop(); // Cerrar diálogo
-                  Navigator.of(context).pop(); // Volver a la Academia
+                  Navigator.of(context).pop(); 
+                  Navigator.of(context).pop(); 
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: theme.primaryColor, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 child: const Text('VOLVER'),
@@ -133,7 +134,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     await Future.delayed(const Duration(seconds: 4));
     if (!mounted) return;
 
-    await _moveHandToWidget(keys.numKeys[3]); // Número 4
+    await _moveHandToWidget(keys.numKeys[3]); 
     if (!mounted) return;
     await _pressHand();
     if (!mounted) return;
@@ -158,7 +159,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     await Future.delayed(const Duration(seconds: 4));
     if (!mounted) return;
 
-    await _moveHandToWidget(keys.numKeys[6]); // Número 7
+    await _moveHandToWidget(keys.numKeys[6]); 
     if (!mounted) return;
     await _pressHand();
     if (!mounted) return;
@@ -183,7 +184,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     await Future.delayed(const Duration(seconds: 4));
     if (!mounted) return;
 
-    await _moveHandToWidget(keys.numKeys[0]); // Número 1
+    await _moveHandToWidget(keys.numKeys[0]); 
     if (!mounted) return;
     await _pressHand();
     if (!mounted) return;
@@ -208,7 +209,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     await Future.delayed(const Duration(seconds: 4));
     if (!mounted) return;
 
-    await _moveHandToWidget(keys.cellKeys[1][0]); // Bloqueador: Hay un 6 aquí
+    await _moveHandToWidget(keys.cellKeys[1][0]); 
     if (!mounted) return;
     await _pressHand();
     if (!mounted) return;
@@ -217,7 +218,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     await Future.delayed(const Duration(seconds: 4));
     if (!mounted) return;
 
-    await _moveHandToWidget(keys.cellKeys[0][4]); // Bloqueador: Hay un 7 aquí
+    await _moveHandToWidget(keys.cellKeys[0][4]); 
     if (!mounted) return;
     await _pressHand();
     if (!mounted) return;
@@ -227,7 +228,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     if (!mounted) return;
 
     _showTutorialMsg('Tras descartar los intrusos, el número 4 es la única verdad.', seconds: 5);
-    await _moveHandToWidget(keys.numKeys[3]); // Número 4
+    await _moveHandToWidget(keys.numKeys[3]); 
     if (!mounted) return;
     await _pressHand();
     if (!mounted) return;
@@ -236,13 +237,77 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     await Future.delayed(const Duration(seconds: 3));
   }
 
-  Future<void> _executePowerTutorial(GlobalKey key, String msg) async {
-    await _moveHandToWidget(key);
+  Future<void> _executeVisionTutorial(TutorialKeys keys) async {
+    _showTutorialMsg('TÁCTICA: "Visión Verdadera"', seconds: 4);
+    await Future.delayed(const Duration(seconds: 4));
+    if (!mounted) return;
+
+    await _moveHandToWidget(keys.visionKey);
     if (!mounted) return;
     await _pressHand();
     if (!mounted) return;
-    _showTutorialMsg(msg, seconds: 5);
-    await Future.delayed(const Duration(seconds: 3));
+
+    ref.read(gameProvider.notifier).simulateTrueVision();
+
+    _showTutorialMsg('¡Mira el tablero! Han aparecido "Números Fantasmas" tenues.', seconds: 4);
+    await Future.delayed(const Duration(seconds: 4));
+    if (!mounted) return;
+
+    _showTutorialMsg('Esta visión de Rayos X te revela la solución de cada celda vacía por 15s.', seconds: 5);
+    await Future.delayed(const Duration(seconds: 5));
+    if (!mounted) return;
+
+    _showTutorialMsg('Es el poder definitivo para desbloquear tu mente cuando no ves el camino.', seconds: 5);
+    await Future.delayed(const Duration(seconds: 4));
+  }
+
+  Future<void> _executeClockTutorial(TutorialKeys keys) async {
+    _showTutorialMsg('TÁCTICA: "Reloj Estelar"', seconds: 4);
+    await Future.delayed(const Duration(seconds: 4));
+    if (!mounted) return;
+
+    await _moveHandToWidget(keys.clockKey);
+    if (!mounted) return;
+    await _pressHand();
+    if (!mounted) return;
+
+    ref.read(gameProvider.notifier).simulateFreezeTimer();
+
+    _showTutorialMsg('¡Mira el cronómetro! Se ha vuelto ámbar y el tiempo se ha detenido.', seconds: 5);
+    await Future.delayed(const Duration(seconds: 5));
+    if (!mounted) return;
+
+    _showTutorialMsg('El Reloj Estelar es tu mejor aliado contra la presión del tiempo.', seconds: 5);
+    await Future.delayed(const Duration(seconds: 5));
+    if (!mounted) return;
+
+    _showTutorialMsg('Ideal para los Torneos y Retos Diarios donde cada segundo define tu rango.', seconds: 5);
+    await Future.delayed(const Duration(seconds: 4));
+  }
+
+  Future<void> _executeDivineTutorial(TutorialKeys keys) async {
+    _showTutorialMsg('TÁCTICA: "Toque Divino"', seconds: 4);
+    await Future.delayed(const Duration(seconds: 4));
+    if (!mounted) return;
+
+    await _moveHandToWidget(keys.divineKey);
+    if (!mounted) return;
+    await _pressHand();
+    if (!mounted) return;
+
+    ref.read(gameProvider.notifier).simulateDivineTouch();
+    ref.read(showFlashProvider.notifier).state = true;
+
+    _showTutorialMsg('¡Una bendición! Han aparecido 3 números correctos en el tablero.', seconds: 4);
+    await Future.delayed(const Duration(seconds: 4));
+    if (!mounted) return;
+
+    _showTutorialMsg('El Orbe Divino también purifica el tablero entero, borrando tus errores.', seconds: 5);
+    await Future.delayed(const Duration(seconds: 5));
+    if (!mounted) return;
+
+    _showTutorialMsg('Es el poder definitivo ante el caos. Úsalo con sabiduría.', seconds: 5);
+    await Future.delayed(const Duration(seconds: 4));
   }
 
   void _showTutorialMsg(String msg, {int seconds = 3}) {
@@ -275,8 +340,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   Future<void> _pressHand() async {
+    if (!mounted) return;
     setState(() => _isHandPressing = true);
     await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
     setState(() => _isHandPressing = false);
     await Future.delayed(const Duration(milliseconds: 200));
   }
@@ -292,13 +359,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final min = (gameState.elapsedSeconds ~/ 60).toString().padLeft(2, '0');
     final sec = (gameState.elapsedSeconds % 60).toString().padLeft(2, '0');
 
-    ref.listen(gameProvider.select((s) => s.isGameWon), (prev, isWon) {
-      if (isWon == true) _showVictoryDialog(context, ref, gameState.difficulty, gameState.elapsedSeconds);
-    });
-    ref.listen(gameProvider.select((s) => s.isGameOver), (prev, isOver) {
-      if (isOver == true) _showGameOverDialog(context, ref);
-    });
-
     return KeyboardListener(
       focusNode: _keyboardFocusNode, autofocus: true,
       onKeyEvent: (KeyEvent event) {
@@ -308,7 +368,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           if (lk == LogicalKeyboardKey.digit1 || lk == LogicalKeyboardKey.numpad1) n = 1;
           else if (lk == LogicalKeyboardKey.digit2 || lk == LogicalKeyboardKey.numpad2) n = 2;
           else if (lk == LogicalKeyboardKey.digit3 || lk == LogicalKeyboardKey.numpad3) n = 3;
-          else if (lk == LogicalKeyboardKey.digit4 || lk == LogicalKeyboardKey.numpad4) n = n = 4;
+          else if (lk == LogicalKeyboardKey.digit4 || lk == LogicalKeyboardKey.numpad4) n = 4;
           else if (lk == LogicalKeyboardKey.digit5 || lk == LogicalKeyboardKey.numpad5) n = 5;
           else if (lk == LogicalKeyboardKey.digit6 || lk == LogicalKeyboardKey.numpad6) n = 6;
           else if (lk == LogicalKeyboardKey.digit7 || lk == LogicalKeyboardKey.numpad7) n = 7;
@@ -332,10 +392,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               return Stack(
                 key: _stackKey,
                 children: [
-                  if (isDesktop)
-                    GameScreenDesktop(gameState: gameState, sudokuTheme: sudokuTheme, isDark: isDark, settings: settings, min: min, sec: sec, onAbilityUsed: () => ref.read(showFlashProvider.notifier).state = true)
-                  else
-                    GameScreenMobile(gameState: gameState, sudokuTheme: sudokuTheme, isDark: isDark, settings: settings, min: min, sec: sec, showFlash: showFlash, onAbilityUsed: () => ref.read(showFlashProvider.notifier).state = true),
+                  IgnorePointer(
+                    ignoring: _isTutorialRunning,
+                    child: isDesktop
+                      ? GameScreenDesktop(gameState: gameState, sudokuTheme: sudokuTheme, isDark: isDark, settings: settings, min: min, sec: sec, onAbilityUsed: () => ref.read(showFlashProvider.notifier).state = true)
+                      : GameScreenMobile(gameState: gameState, sudokuTheme: sudokuTheme, isDark: isDark, settings: settings, min: min, sec: sec, showFlash: showFlash, onAbilityUsed: () => ref.read(showFlashProvider.notifier).state = true),
+                  ),
                   if (gameState.isPaused) _buildPauseOverlay(context, ref, sudokuTheme, isDark),
                   if (showFlash) DivineFlashEffect(color: Colors.white, onComplete: () => ref.read(showFlashProvider.notifier).state = false),
                   TutorialHand(position: _handPosition, isPressing: _isHandPressing, color: sudokuTheme.primaryColor),

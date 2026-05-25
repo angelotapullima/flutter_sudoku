@@ -88,7 +88,15 @@ class GameScreenDesktop extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back_ios_rounded, size: 20)),
+          IconButton(
+            onPressed: () {
+              if (gameState.difficulty == 'Tutorial') {
+                ref.read(gameProvider.notifier).quitGame();
+              }
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
+          ),
           Column(
             children: [
               Text(

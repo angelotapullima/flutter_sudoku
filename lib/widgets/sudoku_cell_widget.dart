@@ -127,10 +127,28 @@ class SudokuCellWidget extends ConsumerWidget {
                   color: textColor,
                 ),
               )
-            : _buildNotesGrid(
-                cell.notes,
-                isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight,
-                isDark,
+            : Stack(
+                alignment: Alignment.center,
+                children: [
+                  // MODO VISIÓN VERDADERA: Mostrar "Número Fantasma" (Solución tenue)
+                  if (gameState.isShowingErrors)
+                    Text(
+                      '${cell.solutionValue}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: isDark 
+                          ? Colors.cyanAccent.withOpacity(0.2) 
+                          : Colors.indigo.withOpacity(0.15),
+                      ),
+                    ),
+                  
+                  _buildNotesGrid(
+                    cell.notes,
+                    isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight,
+                    isDark,
+                  ),
+                ],
               ),
       ),
     );

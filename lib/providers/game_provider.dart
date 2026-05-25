@@ -576,6 +576,48 @@ class GameNotifier extends StateNotifier<GameState> {
     return true;
   }
 
+  /// SIMULACIÓN DE PODERES PARA EL TUTORIAL (Sin costo de cargas)
+  void simulateFreezeTimer() {
+    state = state.copyWith(isTimerFrozen: true);
+    Timer(const Duration(seconds: 15), () {
+      if (mounted) state = state.copyWith(isTimerFrozen: false);
+    });
+  }
+
+  void simulateTrueVision() {
+    state = state.copyWith(isShowingErrors: true);
+    Timer(const Duration(seconds: 10), () {
+      if (mounted) state = state.copyWith(isShowingErrors: false);
+    });
+  }
+
+  void simulateDivineTouch() {
+    List<List<SudokuCell>> newGrid = List.generate(9, (r) {
+      return List.generate(9, (c) {
+        final cell = state.grid[r][c];
+        return cell.isError ? cell.copyWith(value: 0, isError: false, notes: {}) : cell;
+      });
+    });
+
+    List<SudokuCell> emptyCells = [];
+    for (int r = 0; r < 9; r++) {
+      for (int c = 0; c < 9; c++) {
+        if (newGrid[r][c].value == 0) emptyCells.add(newGrid[r][c]);
+      }
+    }
+    emptyCells.shuffle();
+    final cellsToFill = emptyCells.take(3).toList();
+
+    for (var targetCell in cellsToFill) {
+      newGrid[targetCell.row][targetCell.col] = targetCell.copyWith(
+        value: targetCell.solutionValue,
+        notes: {},
+        isError: false,
+      );
+    }
+    state = state.copyWith(grid: newGrid);
+  }
+
   // --- MÉTODOS DE APOYO INTERNOS ---
 
   /// HABILIDAD: RELOJ ESTELAR (Congela el cronómetro por 45 segundos)
@@ -847,6 +889,9 @@ class GameNotifier extends StateNotifier<GameState> {
   }
 
   void _saveGameToStorage() {
+    // NO GUARDAR PARTIDAS DE TUTORIAL (Evita que aparezcan en la Home)
+    if (state.difficulty == 'Tutorial') return;
+
     if (state.hasStarted && !state.isGameOver && !state.isGameWon) {
       final jsonStr = jsonEncode(state.toJson());
       _storageService.saveActiveGame(jsonStr);

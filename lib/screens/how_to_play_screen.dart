@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/theme_provider.dart';
 import '../providers/game_provider.dart';
 import '../widgets/responsive_content_wrapper.dart';
+import '../utils/enums.dart';
 import 'game_screen.dart';
 
 class HowToPlayScreen extends ConsumerStatefulWidget {
@@ -28,13 +29,13 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
     super.dispose();
   }
 
-  void _startGuidedLesson(String script) {
-    // TABLERO MAESTRO ESTÁTICO PARA EL TUTORIAL (Garantiza que los huecos coincidan con el guion)
+  void _startGuidedLesson(TutorialScript script) {
+    // TABLERO MAESTRO ESTÁTICO PARA EL TUTORIAL
     const String tutorialPuzzle =   '530070000600195000098000060800060003400803001700020006060000280000419005000080079';
     const String tutorialSolution = '534678912672195348198342567859761423426853791713924856961537284287419635345286179';
 
-    // Iniciar el juego con datos fijos (Modo Campaña ID 0 se usa como Tutorial)
-    ref.read(gameProvider.notifier).startCampaignGame(0, tutorialPuzzle, tutorialSolution, 'Tutorial');
+    // Iniciar el juego con datos fijos (Dificultad Tutorial)
+    ref.read(gameProvider.notifier).startCampaignGame(0, tutorialPuzzle, tutorialSolution, GameDifficulty.tutorial.label);
     
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -108,7 +109,7 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
               title: '1. LA LEY DEL HORIZONTE (FILAS)',
               desc: 'Ningún número puede repetirse en la misma línea horizontal.',
               icon: Icons.unfold_more_rounded,
-              onTap: () => _startGuidedLesson('law_row'),
+              onTap: () => _startGuidedLesson(TutorialScript.lawRow),
               theme: theme,
               isDark: isDark,
             ),
@@ -116,7 +117,7 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
               title: '2. EL PILAR DEL DESTINO (COLUMNAS)',
               desc: 'Ninguna esencia puede duplicarse en la misma línea vertical.',
               icon: Icons.unfold_less_rounded,
-              onTap: () => _startGuidedLesson('law_col'),
+              onTap: () => _startGuidedLesson(TutorialScript.lawCol),
               theme: theme,
               isDark: isDark,
             ),
@@ -124,7 +125,7 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
               title: '3. EL SECTOR GALÁCTICO (CAJAS)',
               desc: 'Cada cuadrante de 3x3 debe contener números del 1 al 9 sin repetir.',
               icon: Icons.grid_view_rounded,
-              onTap: () => _startGuidedLesson('law_box'),
+              onTap: () => _startGuidedLesson(TutorialScript.lawBox),
               theme: theme,
               isDark: isDark,
             ),
@@ -146,9 +147,9 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
             const SizedBox(height: 16),
             _buildLessonCard(
               title: 'EL MÉTODO DE EXCLUSIÓN',
-              desc: 'Aprende a descartar números mirando las intersecciones.',
+              desc: 'Aprende a descartar números mirando las intersecciones galácticas.',
               icon: Icons.biotech_rounded,
-              onTap: () => _startGuidedLesson('mastery_exclusion'),
+              onTap: () => _startGuidedLesson(TutorialScript.masteryExclusion),
               theme: theme,
               isDark: isDark,
             ),
@@ -172,7 +173,7 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
               title: 'VISIÓN VERDADERA',
               desc: 'Aprende a usar el cristal para revelar la verdad del grid.',
               icon: Icons.auto_awesome_rounded,
-              onTap: () => _startGuidedLesson('power_vision'),
+              onTap: () => _startGuidedLesson(TutorialScript.powerVision),
               theme: theme,
               isDark: isDark,
             ),
@@ -180,7 +181,7 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
               title: 'RELOJ ESTELAR',
               desc: 'Domina la manipulación del tiempo en torneos.',
               icon: Icons.hourglass_bottom_rounded,
-              onTap: () => _startGuidedLesson('power_clock'),
+              onTap: () => _startGuidedLesson(TutorialScript.powerClock),
               theme: theme,
               isDark: isDark,
             ),
@@ -188,7 +189,7 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
               title: 'TOQUE DIVINO',
               desc: 'La intervención definitiva para limpiar el tablero.',
               icon: Icons.psychology_rounded,
-              onTap: () => _startGuidedLesson('power_divine'),
+              onTap: () => _startGuidedLesson(TutorialScript.powerDivine),
               theme: theme,
               isDark: isDark,
             ),

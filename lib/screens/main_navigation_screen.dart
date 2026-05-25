@@ -538,7 +538,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              // ¿Cómo Jugar? (Tutorial)
+              // ¿Cómo Jugar? (Academia Cosmos)
               GestureDetector(
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const HowToPlayScreen()),
@@ -553,7 +553,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                     ),
                   ),
                   child: Icon(
-                    Icons.help_outline_rounded,
+                    Icons.school_outlined,
                     size: 18,
                     color: isDark ? Colors.white70 : const Color(0xFF2B2B36),
                   ),
