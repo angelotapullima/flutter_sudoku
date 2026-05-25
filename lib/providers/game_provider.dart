@@ -589,6 +589,27 @@ class GameNotifier extends StateNotifier<GameState> {
   }
 
   void simulateTrueVision() {
+    // Safeguard: Seleccionar la primera celda vacía si no hay ninguna seleccionada
+    int selR = state.selectedRow;
+    int selC = state.selectedCol;
+    if (selR == -1 || selC == -1) {
+      bool found = false;
+      for (int r = 0; r < 9 && !found; r++) {
+        for (int c = 0; c < 9 && !found; c++) {
+          if (state.grid[r][c].value == 0) {
+            selR = r;
+            selC = c;
+            found = true;
+          }
+        }
+      }
+      if (found) {
+        state = state.copyWith(selectedRow: selR, selectedCol: selC);
+      } else {
+        state = state.copyWith(selectedRow: 0, selectedCol: 0);
+      }
+    }
+
     state = state.copyWith(isShowingErrors: true);
     Timer(const Duration(seconds: 10), () {
       if (mounted) state = state.copyWith(isShowingErrors: false);
@@ -673,6 +694,27 @@ class GameNotifier extends StateNotifier<GameState> {
       // 2. Si no tiene cargas, comprar en caliente por 65 S-Coins (penalización)
       if (userProfile.coins < 65) return false;
       profileNotifier.deductCoins(65);
+    }
+
+    // Safeguard: Seleccionar la primera celda vacía si no hay ninguna seleccionada
+    int selR = state.selectedRow;
+    int selC = state.selectedCol;
+    if (selR == -1 || selC == -1) {
+      bool found = false;
+      for (int r = 0; r < 9 && !found; r++) {
+        for (int c = 0; c < 9 && !found; c++) {
+          if (state.grid[r][c].value == 0) {
+            selR = r;
+            selC = c;
+            found = true;
+          }
+        }
+      }
+      if (found) {
+        state = state.copyWith(selectedRow: selR, selectedCol: selC);
+      } else {
+        state = state.copyWith(selectedRow: 0, selectedCol: 0);
+      }
     }
 
     state = state.copyWith(isShowingErrors: true);

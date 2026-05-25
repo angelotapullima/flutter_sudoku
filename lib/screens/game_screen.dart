@@ -252,7 +252,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   Future<void> _executeVisionTutorial(TutorialKeys keys) async {
     _showTutorialMsg('TÁCTICA: "Visión Verdadera"', seconds: 4);
-    await Future.delayed(const Duration(seconds: 4));
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    ref.read(gameProvider.notifier).selectCell(0, 2);
+    await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
     await _moveHandToWidget(keys.visionKey);
     if (!mounted) return;
