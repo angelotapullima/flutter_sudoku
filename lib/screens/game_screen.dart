@@ -127,8 +127,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primaryColor),
-                  child: const Text('VOLVER')),
+                      backgroundColor: theme.primaryColor,
+                      foregroundColor: Colors.white, // Forzar texto blanco para visibilidad absoluta
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      elevation: 0),
+                  child: const Text('VOLVER',
+                      style: TextStyle(fontWeight: FontWeight.bold))),
             ],
           ),
         );
