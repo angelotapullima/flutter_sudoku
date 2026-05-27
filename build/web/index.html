@@ -144,6 +144,18 @@
   
   
   
+  <script>
+    // Si estamos en la página de política de privacidad, desactivamos el service worker
+    if (window.location.pathname.includes('privacy_policy.html')) {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+    }
+  </script>
   <script src="flutter_bootstrap.js" async=""></script>
 
 
