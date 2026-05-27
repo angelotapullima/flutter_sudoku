@@ -151,23 +151,22 @@
       console.log("Sudoku Arena: Detectada ruta de privacidad. Limpiando Service Workers...");
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          if (registrations.length === 0) {
-            console.log("Sudoku Arena: No hay Service Workers activos. Nginx debería servir el archivo.");
-          }
           for (let registration of registrations) {
             console.log("Sudoku Arena: Unregistering Service Worker:", registration.scope);
-            registration.unregister().then(function(success) {
-              if (success) {
-                console.log("Sudoku Arena: Service Worker eliminado con éxito. Recargando para bypass...");
-                window.location.reload();
-              }
-            });
+            registration.unregister();
           }
         });
       }
+      // BLOQUEO CRÍTICO: No cargar el script de Flutter en esta ruta
+      console.log("Sudoku Arena: BLOQUEANDO carga de Flutter para esta ruta.");
+    } else {
+      // Solo cargar Flutter si NO es la página de privacidad
+      var script = document.createElement('script');
+      script.src = "flutter_bootstrap.js";
+      script.async = true;
+      document.body.appendChild(script);
     }
   </script>
-  <script src="flutter_bootstrap.js" async=""></script>
 
 
 </body></html>
