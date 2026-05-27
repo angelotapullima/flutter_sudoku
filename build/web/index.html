@@ -145,28 +145,69 @@
   
   
   <script>
-    console.log("Sudoku Arena: Verificando ruta...", window.location.pathname);
-    // Si estamos en la página de política de privacidad, desactivamos el service worker
-    if (window.location.pathname.includes('privacy_policy.html')) {
-      console.log("Sudoku Arena: Detectada ruta de privacidad. Limpiando Service Workers...");
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for (let registration of registrations) {
-            console.log("Sudoku Arena: Unregistering Service Worker:", registration.scope);
-            registration.unregister();
-          }
-        });
+      console.log("Sudoku Arena: Verificando ruta...", window.location.pathname);
+      // Si estamos en la página de política de privacidad, desactivamos el service worker e inyectamos el HTML
+      if (window.location.pathname.includes('privacy_policy.html')) {
+        console.log("Sudoku Arena: Detectada ruta de privacidad. Limpiando Service Workers...");
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (let registration of registrations) {
+              registration.unregister();
+            }
+          });
+        }
+
+        // Inyectar el contenido de la política directamente
+        document.title = "Política de Privacidad - Sudoku Arena";
+        document.body.innerHTML = `
+          <style>
+            :root { --bg-color: #0B0B18; --card-bg: rgba(24, 25, 46, 0.6); --primary-color: #0F62FE; --accent-color: #78A9FF; --text-color: #E2E8F0; --text-muted: #94A3B8; --border-color: rgba(120, 169, 255, 0.15); }
+            body { font-family: 'Outfit', sans-serif; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; padding: 40px 20px; display: flex; justify-content: center; min-height: 100vh; background-image: radial-gradient(circle at 10% 20%, rgba(15, 98, 254, 0.08) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(120, 169, 255, 0.08) 0%, transparent 40%); margin: 0; }
+            .container { max-width: 800px; width: 100%; }
+            header { text-align: center; margin-bottom: 40px; }
+            .logo-container { display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 20px; background: var(--card-bg); border: 1px solid var(--border-color); margin-bottom: 16px; }
+            .logo-emoji { font-size: 40px; }
+            h1 { font-size: 36px; font-weight: 800; color: #FFFFFF; margin-bottom: 8px; }
+            .card { background: var(--card-bg); backdrop-filter: blur(16px); border-radius: 24px; border: 1px solid var(--border-color); padding: 40px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
+            h2 { font-size: 20px; font-weight: 600; color: #FFFFFF; margin-top: 32px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+            p, ul { margin-bottom: 16px; font-size: 15px; font-weight: 300; }
+            .contact-btn { display: inline-block; margin-top: 16px; padding: 12px 24px; background-color: var(--primary-color); color: #FFFFFF; text-decoration: none; border-radius: 12px; font-weight: 600; }
+            .footer { text-align: center; margin-top: 40px; font-size: 13px; color: var(--text-muted); }
+          </style>
+          <div class="container">
+            <header>
+              <div class="logo-container"><span class="logo-emoji">🪐</span></div>
+              <h1>Sudoku Arena</h1>
+              <p>Política de Privacidad • Odisea del Intelecto Estelar</p>
+            </header>
+            <main class="card">
+              <h2>1. Introducción</h2>
+              <p>Bienvenido a <strong>Sudoku Arena</strong>. Nos tomamos muy en serio tu privacidad. Esta Política describe cómo protegemos tus datos.</p>
+              <h2>2. Recopilación de Información</h2>
+              <ul>
+                <li><strong>Información del Perfil:</strong> Correo y nombre de usuario para sincronización.</li>
+                <li><strong>Progreso:</strong> Niveles, monedas y récords.</li>
+              </ul>
+              <h2>3. Uso de los Datos</h2>
+              <p>Usamos tus datos solo para sincronizar tu progreso y mejorar el juego. <strong>No vendemos tus datos.</strong></p>
+              <h2>8. Contacto</h2>
+              <div style="text-align: center;">
+                <a href="mailto:soporte.sudokuarena@gmail.com" class="contact-btn">Soporte</a>
+              </div>
+            </main>
+            <footer class="footer"><p>© 2026 Sudoku Arena. Todos los derechos reservados.</p></footer>
+          </div>
+        `;
+        // BLOQUEO CRÍTICO: No cargar el script de Flutter
+        console.log("Sudoku Arena: BLOQUEANDO carga de Flutter para esta ruta.");
+      } else {
+        // Solo cargar Flutter si NO es la página de privacidad
+        var script = document.createElement('script');
+        script.src = "flutter_bootstrap.js";
+        script.async = true;
+        document.body.appendChild(script);
       }
-      // BLOQUEO CRÍTICO: No cargar el script de Flutter en esta ruta
-      console.log("Sudoku Arena: BLOQUEANDO carga de Flutter para esta ruta.");
-    } else {
-      // Solo cargar Flutter si NO es la página de privacidad
-      var script = document.createElement('script');
-      script.src = "flutter_bootstrap.js";
-      script.async = true;
-      document.body.appendChild(script);
-    }
-  </script>
+    </script>
 
 
 </body></html>
