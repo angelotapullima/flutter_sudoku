@@ -145,12 +145,23 @@
   
   
   <script>
+    console.log("Sudoku Arena: Verificando ruta...", window.location.pathname);
     // Si estamos en la página de política de privacidad, desactivamos el service worker
     if (window.location.pathname.includes('privacy_policy.html')) {
+      console.log("Sudoku Arena: Detectada ruta de privacidad. Limpiando Service Workers...");
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          if (registrations.length === 0) {
+            console.log("Sudoku Arena: No hay Service Workers activos. Nginx debería servir el archivo.");
+          }
           for (let registration of registrations) {
-            registration.unregister();
+            console.log("Sudoku Arena: Unregistering Service Worker:", registration.scope);
+            registration.unregister().then(function(success) {
+              if (success) {
+                console.log("Sudoku Arena: Service Worker eliminado con éxito. Recargando para bypass...");
+                window.location.reload();
+              }
+            });
           }
         });
       }
