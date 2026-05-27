@@ -9,7 +9,7 @@ class TutorialHand extends StatelessWidget {
     super.key,
     required this.position,
     this.isPressing = false,
-    this.color = const Color(0xFF00E5FF), // Cian Numbra
+    this.color = const Color(0xFF00E5FF), // Cian Sudoku Arena
   });
 
   @override

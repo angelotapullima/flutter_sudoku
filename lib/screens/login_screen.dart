@@ -41,7 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (result['success']) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('¡Bienvenido a Numbra de nuevo!')),
+          const SnackBar(content: Text('¡Bienvenido a Sudoku Arena de nuevo!')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

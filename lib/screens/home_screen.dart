@@ -369,7 +369,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('ACADEMIA COSMOS', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: isLandscape ? 13 : 15, color: isDark ? Colors.white : const Color(0xFF2B2B36))),
-                      if (!isLandscape) Text('Domina las leyes de Numbra.', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                      if (!isLandscape) Text('Domina las leyes de Sudoku Arena.', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                     ],
                   ),
                 ),

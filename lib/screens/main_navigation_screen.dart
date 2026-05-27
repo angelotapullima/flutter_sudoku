@@ -183,7 +183,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         child: Column(
           children: [
             const SizedBox(height: 32),
-            Text('NUMBRA', style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 2, color: sudokuTheme.primaryColor)),
+            Text('SUDOKU ARENA', style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 2, color: sudokuTheme.primaryColor)),
             Text('SUDOKU ADVENTURE RPG', style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 3, color: Colors.grey)),
             const SizedBox(height: 36),
             Container(

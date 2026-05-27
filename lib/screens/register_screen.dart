@@ -44,7 +44,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (result['success']) {
         Navigator.of(context).pop(); // Volver al home
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('¡Cuenta creada! Bienvenido a Numbra.')),
+          const SnackBar(content: Text('¡Cuenta creada! Bienvenido a Sudoku Arena.')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'services/local_storage_service.dart';
 import 'providers/storage_provider.dart';
 import 'providers/theme_provider.dart';
@@ -9,7 +10,8 @@ import 'widgets/responsive_app_shell.dart';
 
 void main() async {
   // Asegurar que los canales nativos de Flutter están listos antes de SharedPreferences
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   // Inicializar almacenamiento local de forma asíncrona antes de arrancar
   final localStorage = LocalStorageService();
@@ -41,7 +43,7 @@ class MyApp extends ConsumerWidget {
     final baseTheme = isDark ? ThemeData.dark() : ThemeData.light();
 
     return MaterialApp(
-      title: 'Numbra',
+      title: 'Sudoku Arena',
       debugShowCheckedModeBanner: false,
       theme: baseTheme.copyWith(
         colorScheme: ColorScheme.fromSeed(
