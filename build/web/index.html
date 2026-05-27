@@ -155,65 +155,53 @@
           });
         }
 
-        // Inyectar el contenido de la política directamente con diseño profesional
-        document.title = "Política de Privacidad Integral - Sudoku Arena";
+        // Inyectar el contenido de la política de estándar industrial
+        document.title = "Política de Privacidad - Sudoku Arena";
         document.body.innerHTML = `
           <style>
-            :root { --bg-color: #0B0B18; --card-bg: rgba(24, 25, 46, 0.7); --primary-color: #0F62FE; --accent-color: #78A9FF; --text-color: #E2E8F0; --text-muted: #94A3B8; --border-color: rgba(120, 169, 255, 0.2); }
-            body { font-family: 'Outfit', sans-serif; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; padding: 60px 20px; display: flex; justify-content: center; min-height: 100vh; background-image: radial-gradient(circle at 5% 5%, rgba(15, 98, 254, 0.1) 0%, transparent 35%), radial-gradient(circle at 95% 95%, rgba(120, 169, 255, 0.1) 0%, transparent 35%); margin: 0; }
-            .container { max-width: 900px; width: 100%; }
-            header { text-align: center; margin-bottom: 50px; }
-            .logo-container { display: inline-flex; align-items: center; justify-content: center; width: 90px; height: 90px; border-radius: 24px; background: var(--card-bg); border: 1px solid var(--border-color); margin-bottom: 20px; box-shadow: 0 10px 40px 0 rgba(15, 98, 254, 0.15); }
-            .logo-emoji { font-size: 45px; }
-            h1 { font-size: 42px; font-weight: 800; color: #FFFFFF; letter-spacing: -1px; margin-bottom: 10px; }
-            .subtitle { font-size: 18px; color: var(--text-muted); font-weight: 300; }
-            .card { background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 32px; border: 1px solid var(--border-color); padding: 50px; box-shadow: 0 15px 50px 0 rgba(0, 0, 0, 0.5); }
-            section { margin-bottom: 40px; }
-            h2 { font-size: 24px; font-weight: 600; color: #FFFFFF; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
-            p { margin-bottom: 20px; font-size: 16px; font-weight: 300; color: var(--text-color); text-align: justify; }
-            ul { margin-bottom: 24px; margin-left: 25px; font-size: 16px; font-weight: 300; }
-            li { margin-bottom: 12px; }
-            strong { color: var(--accent-color); font-weight: 600; }
+            :root { --bg-color: #0B0B18; --card-bg: rgba(24, 25, 46, 0.8); --primary-color: #0F62FE; --accent-color: #78A9FF; --text-color: #E2E8F0; --text-muted: #94A3B8; --border-color: rgba(120, 169, 255, 0.2); }
+            body { font-family: 'Outfit', sans-serif; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; padding: 60px 20px; display: flex; justify-content: center; background-image: radial-gradient(circle at 5% 5%, rgba(15, 98, 254, 0.1) 0%, transparent 35%), radial-gradient(circle at 95% 95%, rgba(120, 169, 255, 0.1) 0%, transparent 35%); margin: 0; }
+            .container { max-width: 1000px; width: 100%; }
+            .card { background: var(--card-bg); backdrop-filter: blur(20px); border-radius: 32px; border: 1px solid var(--border-color); padding: 60px; box-shadow: 0 15px 50px 0 rgba(0, 0, 0, 0.5); }
+            h1 { font-size: 36px; font-weight: 800; color: #FFFFFF; margin-bottom: 20px; text-align: center; }
+            h2 { font-size: 22px; font-weight: 600; color: var(--accent-color); margin-top: 40px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+            p { margin-bottom: 15px; font-weight: 300; text-align: justify; }
+            ul { margin-bottom: 20px; margin-left: 20px; font-weight: 300; }
+            li { margin-bottom: 10px; }
             .footer { text-align: center; margin-top: 50px; font-size: 14px; color: var(--text-muted); }
-            .contact-box { margin-top: 40px; padding: 30px; background: rgba(15, 98, 254, 0.05); border-radius: 20px; border: 1px solid var(--border-color); text-align: center; }
-            .contact-btn { display: inline-block; margin-top: 15px; padding: 14px 32px; background-color: var(--primary-color); color: #FFFFFF; text-decoration: none; border-radius: 14px; font-weight: 600; transition: all 0.3s ease; }
-            .contact-btn:hover { background-color: var(--accent-color); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(15, 98, 254, 0.4); }
           </style>
           <div class="container">
-            <header>
-              <div class="logo-container"><span class="logo-emoji">🪐</span></div>
-              <h1>Sudoku Arena</h1>
-              <p class="subtitle">Política de Privacidad Integral • v1.2</p>
-            </header>
-            <main class="card">
-              <section>
-                <h2>1. Compromiso de Privacidad</h2>
-                <p>En <strong>Sudoku Arena</strong>, entendemos que tu privacidad es fundamental. Esta política detalla nuestro compromiso de proteger tus datos personales de acuerdo con los estándares globales de protección de datos.</p>
-              </section>
-              <section>
-                <h2>2. Información que Recopilamos</h2>
-                <ul>
-                  <li><strong>Identificación:</strong> Nombre de usuario y correo (opcional).</li>
-                  <li><strong>Progreso:</strong> Niveles, estadísticas, monedas y Logias.</li>
-                  <li><strong>Técnicos:</strong> Datos anónimos del dispositivo para corregir fallos.</li>
-                </ul>
-              </section>
-              <section>
-                <h2>3. Finalidad y Seguridad</h2>
-                <p>Usamos tus datos para sincronizar tu progreso y mejorar el juego. <strong>No vendemos tus datos.</strong> Utilizamos protocolos SSL/TLS para asegurar todas las comunicaciones.</p>
-              </section>
-              <section>
-                <h2>4. Tus Derechos (ARCO)</h2>
-                <p>Tienes derecho a acceder, rectificar y eliminar tus datos en cualquier momento. Puedes solicitar el borrado definitivo de tu cuenta desde el soporte.</p>
-              </section>
-              <div class="contact-box">
-                <h2>Oficial de Protección de Datos</h2>
-                <a href="mailto:soporte.sudokuarena@gmail.com" class="contact-btn">soporte.sudokuarena@gmail.com</a>
-              </div>
-            </main>
-            <footer class="footer">
+            <div class="card">
+              <h1>Política de Privacidad de Sudoku Arena</h1>
+              <p>En Sudoku Arena, una de nuestras principales prioridades es la privacidad de nuestros visitantes. Este documento contiene tipos de información que recopilamos y cómo la utilizamos.</p>
+              
+              <h2>Consentimiento</h2>
+              <p>Al utilizar nuestra aplicación, usted acepta nuestra Política de Privacidad y sus términos.</p>
+
+              <h2>Información que recopilamos</h2>
+              <p>La información personal que se le solicita, y las razones por las que se le solicita, se le aclararán en el momento en que se la pidamos.</p>
+              
+              <h2>Cómo utilizamos su información</h2>
+              <ul>
+                <li>Proporcionar, operar y mantener nuestra aplicación.</li>
+                <li>Mejorar, personalizar y expandir nuestra aplicación.</li>
+                <li>Desarrollar nuevos productos, servicios y funcionalidades.</li>
+                <li>Comunicarnos con usted para servicio al cliente y actualizaciones.</li>
+                <li>Prevenir el fraude.</li>
+              </ul>
+
+              <h2>Archivos de registro y Cookies</h2>
+              <p>Seguimos procedimientos estándar de archivos de registro y utilizamos cookies para optimizar la experiencia del usuario basándonos en sus preferencias.</p>
+
+              <h2>Derechos CCPA y RGPD</h2>
+              <p>Bajo la CCPA y el RGPD, usted tiene derechos para solicitar el acceso, la rectificación o el borrado de sus datos personales. Si desea ejercer estos derechos, contáctenos.</p>
+
+              <h2>Protección de menores</h2>
+              <p>Sudoku Arena no recopila a sabiendas información de niños menores de 13 años. Alentamos a los padres a supervisar la actividad en línea de sus hijos.</p>
+            </div>
+            <div class="footer">
               <p>© 2026 Sudoku Arena by Anked. Todos los derechos reservados.</p>
-            </footer>
+            </div>
           </div>
         `;
         // BLOQUEO CRÍTICO: No cargar el script de Flutter

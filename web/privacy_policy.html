@@ -3,183 +3,85 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Política de Privacidad oficial de Sudoku Arena. Conoce cómo protegemos tus datos y garantizamos una experiencia de juego segura y transparente.">
   <title>Política de Privacidad - Sudoku Arena</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg-color: #0B0B18;
-      --card-bg: rgba(24, 25, 46, 0.7);
-      --primary-color: #0F62FE;
-      --accent-color: #78A9FF;
-      --text-color: #E2E8F0;
-      --text-muted: #94A3B8;
-      --border-color: rgba(120, 169, 255, 0.2);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Outfit', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      line-height: 1.6;
-      padding: 60px 20px;
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-      background-image: 
-        radial-gradient(circle at 5% 5%, rgba(15, 98, 254, 0.1) 0%, transparent 35%),
-        radial-gradient(circle at 95% 95%, rgba(120, 169, 255, 0.1) 0%, transparent 35%);
-    }
-    .container { max-width: 900px; width: 100%; }
-    header { text-align: center; margin-bottom: 50px; }
-    .logo-container {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 90px; height: 90px;
-      border-radius: 24px;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      margin-bottom: 20px;
-      box-shadow: 0 10px 40px 0 rgba(15, 98, 254, 0.15);
-    }
-    .logo-emoji { font-size: 45px; }
-    h1 { font-size: 42px; font-weight: 800; color: #FFFFFF; letter-spacing: -1px; margin-bottom: 10px; }
-    .subtitle { font-size: 18px; color: var(--text-muted); font-weight: 300; }
-    .card {
-      background: var(--card-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 32px;
-      border: 1px solid var(--border-color);
-      padding: 50px;
-      box-shadow: 0 15px 50px 0 rgba(0, 0, 0, 0.5);
-    }
-    section { margin-bottom: 40px; }
-    h2 {
-      font-size: 24px;
-      font-weight: 600;
-      color: #FFFFFF;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px dashed var(--border-color);
-      padding-bottom: 10px;
-    }
-    p { margin-bottom: 20px; font-size: 16px; font-weight: 300; color: var(--text-color); text-align: justify; }
-    ul { margin-bottom: 24px; margin-left: 25px; font-size: 16px; font-weight: 300; }
-    li { margin-bottom: 12px; }
-    strong { color: var(--accent-color); font-weight: 600; }
+    :root { --bg-color: #0B0B18; --card-bg: rgba(24, 25, 46, 0.8); --primary-color: #0F62FE; --accent-color: #78A9FF; --text-color: #E2E8F0; --text-muted: #94A3B8; --border-color: rgba(120, 169, 255, 0.2); }
+    body { font-family: 'Outfit', sans-serif; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; padding: 60px 20px; display: flex; justify-content: center; background-image: radial-gradient(circle at 5% 5%, rgba(15, 98, 254, 0.1) 0%, transparent 35%), radial-gradient(circle at 95% 95%, rgba(120, 169, 255, 0.1) 0%, transparent 35%); margin: 0; }
+    .container { max-width: 1000px; width: 100%; }
+    .card { background: var(--card-bg); backdrop-filter: blur(20px); border-radius: 32px; border: 1px solid var(--border-color); padding: 60px; box-shadow: 0 15px 50px 0 rgba(0, 0, 0, 0.5); }
+    h1 { font-size: 36px; font-weight: 800; color: #FFFFFF; margin-bottom: 20px; text-align: center; }
+    h2 { font-size: 22px; font-weight: 600; color: var(--accent-color); margin-top: 40px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+    p { margin-bottom: 15px; font-weight: 300; text-align: justify; }
+    ul { margin-bottom: 20px; margin-left: 20px; font-weight: 300; }
+    li { margin-bottom: 10px; }
+    a { color: var(--primary-color); text-decoration: none; }
+    a:hover { text-decoration: underline; }
     .footer { text-align: center; margin-top: 50px; font-size: 14px; color: var(--text-muted); }
-    .contact-box {
-      margin-top: 40px;
-      padding: 30px;
-      background: rgba(15, 98, 254, 0.05);
-      border-radius: 20px;
-      border: 1px solid var(--border-color);
-      text-align: center;
-    }
-    .contact-btn {
-      display: inline-block;
-      margin-top: 15px;
-      padding: 14px 32px;
-      background-color: var(--primary-color);
-      color: #FFFFFF;
-      text-decoration: none;
-      border-radius: 14px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-    .contact-btn:hover { background-color: var(--accent-color); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(15, 98, 254, 0.4); }
-    @media (max-width: 600px) {
-      body { padding: 30px 15px; }
-      .card { padding: 30px 20px; }
-      h1 { font-size: 32px; }
-      h2 { font-size: 20px; }
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
-      <div class="logo-container"><span class="logo-emoji">🪐</span></div>
-      <h1>Sudoku Arena</h1>
-      <p class="subtitle">Política de Privacidad Integral • v1.2</p>
-    </header>
+    <div class="card">
+      <h1>Política de Privacidad de Sudoku Arena</h1>
+      <p>En Sudoku Arena, accesible desde https://sudokudev.anked.dev, una de nuestras principales prioridades es la privacidad de nuestros visitantes. Este documento de Política de Privacidad contiene tipos de información que son recopilados y registrados por Sudoku Arena y cómo la utilizamos.</p>
+      <p>Si tiene preguntas adicionales o requiere más información sobre nuestra Política de Privacidad, no dude en contactarnos.</p>
+      <p>Esta Política de Privacidad se aplica únicamente a nuestras actividades en línea y es válida para los visitantes de nuestro sitio web y usuarios de nuestra aplicación con respecto a la información que compartieron y/o recopilaron en Sudoku Arena. Esta política no es aplicable a ninguna información recopilada fuera de línea o a través de canales distintos a este sitio web/aplicación.</p>
 
-    <main class="card">
-      <section>
-        <h2>1. Compromiso de Privacidad</h2>
-        <p>En <strong>Sudoku Arena</strong>, operado por el equipo de desarrollo de Anked, entendemos que tu privacidad es fundamental. Esta política detalla nuestro compromiso de proteger tus datos personales de acuerdo con los estándares globales de protección de datos (incluyendo principios del RGPD y leyes locales aplicables).</p>
-      </section>
+      <h2>Consentimiento</h2>
+      <p>Al utilizar nuestro sitio web o aplicación, usted acepta nuestra Política de Privacidad y acepta sus términos.</p>
 
-      <section>
-        <h2>2. Información que Recopilamos</h2>
-        <p>Recopilamos información para proporcionar una experiencia de juego personalizada, segura y sincronizada:</p>
-        <ul>
-          <li><strong>Datos de Identificación:</strong> Nombre de usuario y correo electrónico (solo si decides registrar una cuenta).</li>
-          <li><strong>Datos de Progresión:</strong> Niveles completados, estadísticas de tiempo, monedas (S-Coins), gemas, logros y pertenencia a Logias (clanes).</li>
-          <li><strong>Datos de Uso:</strong> Registro de actividad técnica anónima para identificar fallos y mejorar el balance del juego.</li>
-          <li><strong>Identificadores de Dispositivo:</strong> Identificadores únicos anónimos para prevenir fraudes en torneos y asegurar la integridad de las ligas.</li>
-        </ul>
-      </section>
+      <h2>Información que recopilamos</h2>
+      <p>La información personal que se le solicita que proporcione, y las razones por las que se le solicita que la proporcione, se le aclararán en el momento en que le solicitemos que proporcione su información personal.</p>
+      <p>Si se comunica con nosotros directamente, es posible que recibamos información adicional sobre usted, como su nombre, dirección de correo electrónico, número de teléfono, el contenido del mensaje y/o los archivos adjuntos que pueda enviarnos, y cualquier otra información que decida proporcionar.</p>
+      <p>Cuando se registra para una Cuenta, es posible que le pidamos su información de contacto, incluidos elementos como nombre de usuario, nombre de la empresa, dirección, dirección de correo electrónico y número de teléfono.</p>
 
-      <section>
-        <h2>3. Finalidad del Tratamiento</h2>
-        <p>Tus datos son tratados exclusivamente para:</p>
-        <ul>
-          <li><strong>Sincronización Multiplataforma:</strong> Permitir que recuperes tu progreso en cualquier dispositivo.</li>
-          <li><strong>Funciones Sociales:</strong> Gestionar las interacciones en Logias y mostrar tu posición en las tablas de clasificación globales.</li>
-          <li><strong>Soporte Técnico:</strong> Responder a tus solicitudes de ayuda y solucionar errores en el software.</li>
-          <li><strong>Mejora Continua:</strong> Analizar qué niveles son demasiado difíciles o fáciles para ajustar la experiencia.</li>
-        </ul>
-      </section>
+      <h2>Cómo utilizamos su información</h2>
+      <p>Utilizamos la información que recopilamos de varias maneras, que incluyen:</p>
+      <ul>
+        <li>Proporcionar, operar y mantener nuestro sitio web/aplicación.</li>
+        <li>Mejorar, personalizar y expandir nuestro sitio web/aplicación.</li>
+        <li>Comprender y analizar cómo utiliza nuestro sitio web/aplicación.</li>
+        <li>Desarrollar nuevos productos, servicios, características y funcionalidades.</li>
+        <li>Comunicarnos con usted, ya sea directamente o a través de uno de nuestros socios, incluso para el servicio al cliente, para proporcionarle actualizaciones y otra información relacionada con el sitio web/aplicación, y para fines de marketing y promoción.</li>
+        <li>Enviarle correos electrónicos.</li>
+        <li>Encontrar y prevenir el fraude.</li>
+      </ul>
 
-      <section>
-        <h2>4. Base Legal</h2>
-        <p>Procesamos tus datos bajo las siguientes bases legales:</p>
-        <ul>
-          <li><strong>Ejecución de un Contrato:</strong> Para proporcionarte el servicio de juego y las funciones en la nube que solicitas al registrarte.</li>
-          <li><strong>Consentimiento:</strong> Al aceptar esta política durante el uso de la aplicación.</li>
-          <li><strong>Interés Legítimo:</strong> Para asegurar la seguridad de nuestra infraestructura y prevenir trampas en el modo competitivo.</li>
-        </ul>
-      </section>
+      <h2>Archivos de registro (Log Files)</h2>
+      <p>Sudoku Arena sigue un procedimiento estándar de uso de archivos de registro. Estos archivos registran a los visitantes cuando visitan sitios web. Todas las empresas de hosting hacen esto y una parte del análisis de los servicios de hosting. La información recopilada por los archivos de registro incluye direcciones de protocolo de Internet (IP), tipo de navegador, proveedor de servicios de Internet (ISP), marca de fecha y hora, páginas de referencia/salida y posiblemente el número de clics. Estos no están vinculados a ninguna información que sea personalmente identificable. El propósito de la información es analizar tendencias, administrar el sitio, rastrear el movimiento de los usuarios en el sitio web y recopilar información demográfica.</p>
 
-      <section>
-        <h2>5. Almacenamiento y Seguridad</h2>
-        <p>Tus datos se almacenan en servidores seguros con encriptación de última generación. Utilizamos protocolos <strong>SSL/TLS</strong> para todas las comunicaciones entre la aplicación y el servidor. Los datos locales en tu dispositivo se guardan en contenedores aislados proporcionados por Android e iOS.</p>
-      </section>
+      <h2>Cookies y Web Beacons</h2>
+      <p>Al igual que cualquier otro sitio web, Sudoku Arena utiliza "cookies". Estas cookies se utilizan para almacenar información, incluidas las preferencias de los visitantes y las páginas del sitio web a las que el visitante accedió o visitó. La información se utiliza para optimizar la experiencia de los usuarios al personalizar el contenido de nuestra página web según el tipo de navegador de los visitantes y/u otra información.</p>
 
-      <section>
-        <h2>6. Tus Derechos (ARCO)</h2>
-        <p>Como usuario, tienes derecho a:</p>
-        <ul>
-          <li><strong>Acceso:</strong> Solicitar una copia de todos tus datos almacenados en nuestra nube.</li>
-          <li><strong>Rectificación:</strong> Corregir información inexacta de tu perfil.</li>
-          <li><strong>Cancelación/Eliminación:</strong> Solicitar el borrado definitivo de tu cuenta y progreso (Derecho al olvido).</li>
-          <li><strong>Oposición:</strong> Oponerte al tratamiento de ciertos datos para fines estadísticos.</li>
-        </ul>
-      </section>
+      <h2>Políticas de privacidad de socios publicitarios</h2>
+      <p>Puede consultar esta lista para encontrar la Política de Privacidad de cada uno de los socios publicitarios de Sudoku Arena.</p>
+      <p>Los servidores de anuncios de terceros o las redes de anuncios utilizan tecnologías como cookies, JavaScript o Web Beacons que se utilizan en sus respectivos anuncios y enlaces que aparecen en Sudoku Arena, los cuales se envían directamente al navegador de los usuarios. Reciben automáticamente su dirección IP cuando esto ocurre. Estas tecnologías se utilizan para medir la efectividad de sus campañas publicitarias y/o para personalizar el contenido publicitario que ve en los sitios web que visita.</p>
+      <p>Tenga en cuenta que Sudoku Arena no tiene acceso ni control sobre estas cookies que son utilizadas por anunciantes de terceros.</p>
 
-      <section>
-        <h2>7. Terceros y Transferencias</h2>
-        <p><strong>No vendemos ni comercializamos tus datos con terceros.</strong> Solo compartimos información con proveedores de infraestructura esenciales (como servicios de hosting) que cumplen con estrictos estándares de seguridad y privacidad.</p>
-      </section>
+      <h2>Derechos de Privacidad de la CCPA (No vender mi información personal)</h2>
+      <p>Bajo la CCPA, entre otros derechos, los consumidores de California tienen derecho a:</p>
+      <ul>
+        <li>Solicitar que una empresa que recopila datos personales de un consumidor divulgue las categorías y piezas específicas de datos personales que una empresa ha recopilado sobre los consumidores.</li>
+        <li>Solicitar que una empresa elimine cualquier dato personal sobre el consumidor que una empresa haya recopilado.</li>
+        <li>Solicitar que una empresa que vende datos personales de un consumidor, no venda los datos personales del consumidor.</li>
+      </ul>
 
-      <div class="contact-box">
-        <h2>Contacto de Soporte y Privacidad</h2>
-        <p>Para ejercer cualquiera de tus derechos o reportar una inquietud, contacta a nuestro Oficial de Protección de Datos:</p>
-        <a href="mailto:soporte.sudokuarena@gmail.com" class="contact-btn">soporte.sudokuarena@gmail.com</a>
-      </div>
-    </main>
+      <h2>Derechos de protección de datos del RGPD</h2>
+      <p>Nos gustaría asegurarnos de que conoce todos sus derechos de protección de datos. Todo usuario tiene derecho a lo siguiente:</p>
+      <ul>
+        <li><strong>El derecho de acceso:</strong> Tiene derecho a solicitar copias de sus datos personales. Es posible que le cobremos una pequeña tarifa por este servicio.</li>
+        <li><strong>El derecho de rectificación:</strong> Tiene derecho a solicitar que corrijamos cualquier información que considere inexacta. También tiene derecho a solicitar que completemos la información que considere incompleta.</li>
+        <li><strong>El derecho al borrado:</strong> Tiene derecho a solicitar que eliminemos sus datos personales, bajo ciertas condiciones.</li>
+      </ul>
 
-    <footer class="footer">
+      <h2>Información para niños</h2>
+      <p>Otra parte de nuestra prioridad es añadir protección para los niños mientras usan internet. Alentamos a los padres y tutores a observar, participar y/o monitorear y guiar su actividad en línea.</p>
+      <p>Sudoku Arena no recopila a sabiendas ninguna información de identificación personal de niños menores de 13 años. Si cree que su hijo proporcionó este tipo de información en nuestro sitio web, le recomendamos encarecidamente que se comunique con nosotros de inmediato y haremos todo lo posible para eliminar dicha información de nuestros registros.</p>
+    </div>
+    <div class="footer">
       <p>© 2026 Sudoku Arena by Anked. Todos los derechos reservados.</p>
-      <p style="margin-top: 10px; opacity: 0.6;">Última actualización: 27 de mayo de 2026</p>
-    </footer>
+    </div>
   </div>
 </body>
 </html>
