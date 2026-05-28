@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_provider.dart';
+import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/tutorial_keys_provider.dart';
@@ -376,6 +377,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Escuchar el estado del juego para activar diálogos de fin de partida (Victoria o Derrota)
+    ref.listen<GameState>(gameProvider, (previous, next) {
+      if (next.isGameWon && !(previous?.isGameWon ?? false)) {
+        _showVictoryDialog(context, ref, next.difficulty, next.elapsedSeconds);
+      }
+      if (next.isGameOver && !(previous?.isGameOver ?? false)) {
+        _showGameOverDialog(context, ref);
+      }
+    });
+
     final gs = ref.watch(gameProvider);
     final isDark = ref.watch(themeProvider).isDarkMode;
     final theme = ref.read(themeProvider.notifier).currentSudokuTheme;
@@ -588,6 +599,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ElevatedButton(
                     onPressed: () {
                       ref.read(gameProvider.notifier).quitGame();
+                      // Refrescar el perfil y récords desde el servidor API (o almacenamiento local) al finalizar
+                      ref.read(profileProvider.notifier).refreshProfileFromServer();
                       Navigator.pop(context);
                       Navigator.pop(context);
                     },
