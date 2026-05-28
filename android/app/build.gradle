@@ -12,7 +12,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.anked.sudoku_arena"
+    namespace = "com.anked.dev.sudoku_arena"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -26,12 +26,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.anked.sudoku_arena"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        applicationId = "com.anked.dev.sudoku_arena"
+        minSdk = 21
+        targetSdkVersion = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -40,16 +37,28 @@ android {
         release {
             keyAlias = keystoreProperties['keyAlias']
             keyPassword = keystoreProperties['keyPassword']
-            storeFile = keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            
+            def keystorePath = keystoreProperties['storeFile']
+            if (keystorePath == null) {
+                throw new GradleException("Error: 'storeFile' no está definido en el archivo key.properties de Android.")
+            }
+            
+            def keystoreFile = file(keystorePath)
+            if (!keystoreFile.exists()) {
+                throw new GradleException("Error: El archivo Keystore de producción no se encontró en la ruta: " + keystoreFile.absolutePath + "\nPor favor, verifica que esté colocado en la raíz del proyecto de Flutter.")
+            }
+            
+            storeFile = keystoreFile
             storePassword = keystoreProperties['storePassword']
         }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.release
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
