@@ -19,6 +19,7 @@ class LocalStorageService implements StorageService {
   static const String _keyIsRegistered = 'sudoku_is_registered';
   static const String _keyUsername = 'sudoku_username';
   static const String _keyEmail = 'sudoku_email';
+  static const String _keySyncBannerDismissed = 'sudoku_sync_banner_dismissed';
 
   // Claves para el sistema RPG e Inventario (Fase 4)
   static const String _keyCampaignLevel = 'sudoku_campaign_level';
@@ -315,5 +316,15 @@ class LocalStorageService implements StorageService {
   @override
   String getEmail() {
     return _prefs.getString(_keyEmail) ?? '';
+  }
+
+  @override
+  Future<void> saveSyncBannerDismissed(bool dismissed) async {
+    await _prefs.setBool(_keySyncBannerDismissed, dismissed);
+  }
+
+  @override
+  bool getSyncBannerDismissed() {
+    return _prefs.getBool(_keySyncBannerDismissed) ?? false;
   }
 }

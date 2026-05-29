@@ -10,61 +10,82 @@ enum TutorialScript {
 }
 
 /// TIPOS DE LAYOUT SEGÚN DISPOSITIVO Y ORIENTACIÓN
-enum DeviceLayoutType { 
-  portraitMobile, 
-  landscapeMobile, 
-  desktop 
-}
+enum DeviceLayoutType { portraitMobile, landscapeMobile, desktop }
 
 /// DIFICULTADES DEL JUEGO (8 Niveles Graduales RPG + Tutorial)
 enum GameDifficulty {
   apprentice, // Iniciado
-  cadet,      // Cadete
-  explorer,   // Explorador
-  traveler,   // Viajero
+  cadet, // Cadete
+  explorer, // Explorador
+  traveler, // Viajero
   strategist, // Estratega
-  expert,     // Experto
-  master,     // Maestro
-  legend,     // Leyenda del Cosmos
-  tutorial,   // Tutorial guiado
+  expert, // Experto
+  master, // Maestro
+  legend, // Leyenda del Cosmos
+  tutorial, // Tutorial guiado
 }
 
 extension GameDifficultyExtension on GameDifficulty {
+  // Retorna únicamente las dificultades jugables en partida estándar (excluyendo el tutorial)
+  static List<GameDifficulty> get playable =>
+      GameDifficulty.values.where((d) => d != GameDifficulty.tutorial).toList();
+
+  // Retorna las etiquetas legibles de las dificultades jugables
+  static List<String> get playableLabels =>
+      playable.map((d) => d.label).toList();
+
   String get label {
     switch (this) {
-      case GameDifficulty.apprentice: return 'Iniciado';
-      case GameDifficulty.cadet: return 'Cadete';
-      case GameDifficulty.explorer: return 'Explorador';
-      case GameDifficulty.traveler: return 'Viajero';
-      case GameDifficulty.strategist: return 'Estratega';
-      case GameDifficulty.expert: return 'Experto';
-      case GameDifficulty.master: return 'Maestro';
-      case GameDifficulty.legend: return 'Leyenda del Cosmos';
-      case GameDifficulty.tutorial: return 'Tutorial';
+      case GameDifficulty.apprentice:
+        return 'Iniciado';
+      case GameDifficulty.cadet:
+        return 'Cadete';
+      case GameDifficulty.explorer:
+        return 'Explorador';
+      case GameDifficulty.traveler:
+        return 'Viajero';
+      case GameDifficulty.strategist:
+        return 'Estratega';
+      case GameDifficulty.expert:
+        return 'Experto';
+      case GameDifficulty.master:
+        return 'Maestro';
+      case GameDifficulty.legend:
+        return 'Leyenda del Cosmos';
+      case GameDifficulty.tutorial:
+        return 'Tutorial';
     }
   }
-  
 
   static GameDifficulty fromString(String value) {
     switch (value.toLowerCase()) {
       case 'iniciado':
-      case 'apprentice': return GameDifficulty.apprentice;
+      case 'apprentice':
+        return GameDifficulty.apprentice;
       case 'cadete':
-      case 'cadet': return GameDifficulty.cadet;
+      case 'cadet':
+        return GameDifficulty.cadet;
       case 'explorador':
-      case 'explorer': return GameDifficulty.explorer;
+      case 'explorer':
+        return GameDifficulty.explorer;
       case 'viajero':
-      case 'traveler': return GameDifficulty.traveler;
+      case 'traveler':
+        return GameDifficulty.traveler;
       case 'estratega':
-      case 'strategist': return GameDifficulty.strategist;
+      case 'strategist':
+        return GameDifficulty.strategist;
       case 'experto':
-      case 'expert': return GameDifficulty.expert;
+      case 'expert':
+        return GameDifficulty.expert;
       case 'maestro':
-      case 'master': return GameDifficulty.master;
+      case 'master':
+        return GameDifficulty.master;
       case 'leyenda del cosmos':
       case 'leyenda':
-      case 'legend': return GameDifficulty.legend;
-      default: return GameDifficulty.tutorial;
+      case 'legend':
+        return GameDifficulty.legend;
+      default:
+        return GameDifficulty.tutorial;
     }
   }
 }

@@ -3,6 +3,7 @@ import '../models/user_profile.dart';
 import '../services/storage_service.dart';
 import '../services/api_service.dart';
 import 'storage_provider.dart';
+import '../utils/enums.dart';
 
 class ProfileNotifier extends StateNotifier<UserProfile> {
   final StorageService _storageService;
@@ -63,16 +64,7 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
 
   /// Construye un mapa con el progreso local completo para sincronizar con la nube
   Map<String, dynamic> getLocalProgressMap() {
-    const difficulties = [
-      'Iniciado',
-      'Cadete',
-      'Explorador',
-      'Viajero',
-      'Estratega',
-      'Experto',
-      'Maestro',
-      'Leyenda del Cosmos'
-    ];
+    final difficulties = GameDifficultyExtension.playableLabels;
     final recordsList = difficulties.map((diff) {
       return {
         'difficulty': diff,
@@ -103,25 +95,30 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
   }
 
   /// Guarda una respuesta del perfil del servidor en SharedPreferences locales
-  Future<void> _saveServerProfileLocally(Map<String, dynamic> serverProfile) async {
+  Future<void> _saveServerProfileLocally(
+      Map<String, dynamic> serverProfile) async {
     final coins = serverProfile['coins'] as int? ?? 100;
     final xp = serverProfile['xp'] as int? ?? 0;
     final level = serverProfile['level'] as int? ?? 1;
     final campaignLevel = serverProfile['campaignLevel'] as int? ?? 1;
     final dailyStreak = serverProfile['dailyStreak'] as int? ?? 0;
     final lastDailyDate = serverProfile['lastDailyPlayedDate'] as String? ?? '';
-    
+
     // RPG Fields (Fase 4)
     final visionCharges = serverProfile['visionCharges'] as int? ?? 3;
     final timeFreezeCharges = serverProfile['timeFreezeCharges'] as int? ?? 2;
     final divineTouchCharges = serverProfile['divineTouchCharges'] as int? ?? 1;
     final xpBoostUntil = serverProfile['xpBoostUntil'] as String?;
-    final activeAvatarBorder = serverProfile['activeAvatarBorder'] as String? ?? 'none';
+    final activeAvatarBorder =
+        serverProfile['activeAvatarBorder'] as String? ?? 'none';
     final activeTitle = serverProfile['activeTitle'] as String? ?? '';
 
-    final achievements = List<String>.from(serverProfile['unlockedAchievements'] ?? []);
-    final themes = List<String>.from(serverProfile['purchasedThemes'] ?? ['azul']);
-    final dailyDates = List<String>.from(serverProfile['completedDailyDates'] ?? []);
+    final achievements =
+        List<String>.from(serverProfile['unlockedAchievements'] ?? []);
+    final themes =
+        List<String>.from(serverProfile['purchasedThemes'] ?? ['azul']);
+    final dailyDates =
+        List<String>.from(serverProfile['completedDailyDates'] ?? []);
 
     // Persistir en almacenamiento local
     await _storageService.saveCoins(coins);
@@ -133,7 +130,7 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
     await _storageService.saveUnlockedAchievements(achievements);
     await _storageService.savePurchasedThemes(themes);
     await _storageService.saveCompletedDailyDates(dailyDates);
-    
+
     // Persistir RPG
     await _storageService.saveVisionCharges(visionCharges);
     await _storageService.saveTimeFreezeCharges(timeFreezeCharges);
@@ -286,7 +283,7 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
   /// Actualiza el perfil de forma granular y lo persiste localmente.
   Future<void> updateProfile(UserProfile updatedProfile) async {
     state = updatedProfile;
-    
+
     await _storageService.saveCoins(state.coins);
     await _storageService.saveXp(state.xp);
     await _storageService.saveLevel(state.level);
@@ -322,7 +319,7 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
   /// Añade XP y maneja subida de nivel.
   void addXp(int amount) {
     final int finalAmount = state.hasActiveXpBoost ? amount * 2 : amount;
-    
+
     int currentXp = state.xp + finalAmount;
     int currentLevel = state.level;
     bool leveledUp = false;
@@ -338,7 +335,7 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
     _storageService.saveLevel(currentLevel);
 
     if (leveledUp) {
-      final reward = currentLevel * 50; 
+      final reward = currentLevel * 50;
       addCoins(reward);
       onLevelUp?.call(currentLevel, reward);
     } else {
@@ -371,7 +368,7 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
 
     final updatedCompletedDates = [...state.completedDailyDates, dateStr];
     _storageService.saveCompletedDailyDates(updatedCompletedDates);
-    
+
     final lastPlayStr = state.lastDailyPlayedDate;
     int newStreak = state.dailyStreak;
 
@@ -419,7 +416,7 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
   /// Comprueba y gestiona las rachas de juego clásicas.
   void checkDailyStreak() {
     final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-    
+
     if (state.lastDailyPlayedDate == todayStr) return;
 
     if (state.lastDailyPlayedDate.isEmpty) {
@@ -450,9 +447,18 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
     _storageService.saveLastDailyPlayedDate(dateStr);
     syncWithServer();
   }
+
+  /// Actualiza el nivel de campaña (viaje) desbloqueado y lo sincroniza.
+  void updateCampaignLevel(int newCampaignLevel) {
+    if (newCampaignLevel <= state.campaignLevel) return;
+    state = state.copyWith(campaignLevel: newCampaignLevel);
+    _storageService.saveCampaignLevel(newCampaignLevel);
+    syncWithServer();
+  }
 }
 
-final profileProvider = StateNotifierProvider<ProfileNotifier, UserProfile>((ref) {
+final profileProvider =
+    StateNotifierProvider<ProfileNotifier, UserProfile>((ref) {
   final storage = ref.watch(storageServiceProvider);
   return ProfileNotifier(storage);
 });

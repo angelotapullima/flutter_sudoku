@@ -10,8 +10,11 @@ class ApiService {
   static const String _keyToken = 'sudoku_jwt_token';
 
   /// Helper privado para registrar logs legibles en la consola de debug
-  static void _log(String type, String method, String path, {int? statusCode, String? error, String? responseBody}) {
-    final emoji = type == 'REQ' ? '📡 ──> [REQ]' : (error != null ? '❌ ──> [ERR]' : '📥 <── [RES]');
+  static void _log(String type, String method, String path,
+      {int? statusCode, String? error, String? responseBody}) {
+    final emoji = type == 'REQ'
+        ? '📡 ──> [REQ]'
+        : (error != null ? '❌ ──> [ERR]' : '📥 <── [RES]');
     final statusStr = statusCode != null ? ' | Código: $statusCode' : '';
     final errorStr = error != null ? ' | Detalle: $error' : '';
     // Imprimimos la URL completa para facilitar el debug
@@ -70,16 +73,19 @@ class ApiService {
     _log('REQ', 'POST', '/auth/register');
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: body,
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: body,
+          )
+          .timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(response.body);
-      _log('RES', 'POST', '/auth/register', statusCode: response.statusCode, responseBody: response.body);
+      _log('RES', 'POST', '/auth/register',
+          statusCode: response.statusCode, responseBody: response.body);
 
       if (response.statusCode == 201) {
         if (data['token'] != null) {
@@ -87,11 +93,19 @@ class ApiService {
         }
         return {'success': true, 'data': data, 'status': response.statusCode};
       } else {
-        return {'success': false, 'message': data['error'] ?? 'Error desconocido al registrar.', 'status': response.statusCode};
+        return {
+          'success': false,
+          'message': data['error'] ?? 'Error desconocido al registrar.',
+          'status': response.statusCode
+        };
       }
     } catch (e) {
       _log('ERR', 'POST', '/auth/register', error: e.toString());
-      return {'success': false, 'message': 'No se pudo conectar con el servidor backend. Verifica tu conexión de red.'};
+      return {
+        'success': false,
+        'message':
+            'No se pudo conectar con el servidor backend. Verifica tu conexión de red.'
+      };
     }
   }
 
@@ -109,16 +123,19 @@ class ApiService {
     _log('REQ', 'POST', '/auth/login');
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: body,
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: body,
+          )
+          .timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(response.body);
-      _log('RES', 'POST', '/auth/login', statusCode: response.statusCode, responseBody: response.body);
+      _log('RES', 'POST', '/auth/login',
+          statusCode: response.statusCode, responseBody: response.body);
 
       if (response.statusCode == 200) {
         if (data['token'] != null) {
@@ -126,11 +143,18 @@ class ApiService {
         }
         return {'success': true, 'data': data, 'status': response.statusCode};
       } else {
-        return {'success': false, 'message': data['error'] ?? 'Credenciales incorrectas.', 'status': response.statusCode};
+        return {
+          'success': false,
+          'message': data['error'] ?? 'Credenciales incorrectas.',
+          'status': response.statusCode
+        };
       }
     } catch (e) {
       _log('ERR', 'POST', '/auth/login', error: e.toString());
-      return {'success': false, 'message': 'No se pudo conectar con el servidor backend.'};
+      return {
+        'success': false,
+        'message': 'No se pudo conectar con el servidor backend.'
+      };
     }
   }
 
@@ -142,18 +166,25 @@ class ApiService {
     _log('REQ', 'GET', '/profile');
 
     try {
-      final response = await http.get(
-        url,
-        headers: headers,
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(
+            url,
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(response.body);
-      _log('RES', 'GET', '/profile', statusCode: response.statusCode, responseBody: response.body);
+      _log('RES', 'GET', '/profile',
+          statusCode: response.statusCode, responseBody: response.body);
 
       if (response.statusCode == 200) {
         return {'success': true, 'data': data['profile'], 'status': 200};
       } else {
-        return {'success': false, 'message': data['error'] ?? 'Error al obtener perfil.', 'status': response.statusCode};
+        return {
+          'success': false,
+          'message': data['error'] ?? 'Error al obtener perfil.',
+          'status': response.statusCode
+        };
       }
     } catch (e) {
       _log('ERR', 'GET', '/profile', error: e.toString());
@@ -172,53 +203,79 @@ class ApiService {
     _log('REQ', 'POST', '/profile/sync');
 
     try {
-      final response = await http.post(
-        url,
-        headers: headers,
-        body: body,
-      ).timeout(const Duration(seconds: 12));
+      final response = await http
+          .post(
+            url,
+            headers: headers,
+            body: body,
+          )
+          .timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(response.body);
-      _log('RES', 'POST', '/profile/sync', statusCode: response.statusCode, responseBody: response.body);
+      _log('RES', 'POST', '/profile/sync',
+          statusCode: response.statusCode, responseBody: response.body);
 
       if (response.statusCode == 200) {
         if (data['profile'] != null) {
           final p = data['profile'];
-          print('   📥 Perfil Recibido: Coins=${p['coins']}, Level=${p['level']}, XP=${p['xp']}');
+          print(
+              '   📥 Perfil Recibido: Coins=${p['coins']}, Level=${p['level']}, XP=${p['xp']}');
         }
         return {'success': true, 'data': data['profile'], 'status': 200};
       } else {
-        return {'success': false, 'message': data['error'] ?? 'Error al sincronizar.', 'status': response.statusCode};
+        return {
+          'success': false,
+          'message': data['error'] ?? 'Error al sincronizar.',
+          'status': response.statusCode
+        };
       }
     } catch (e) {
       _log('ERR', 'POST', '/profile/sync', error: e.toString());
-      return {'success': false, 'message': 'Error de red al sincronizar progreso.'};
+      return {
+        'success': false,
+        'message': 'Error de red al sincronizar progreso.'
+      };
     }
   }
 
   /// OBTENER CLASIFICACIÓN GLOBAL (LEADERBOARD)
   static Future<Map<String, dynamic>> getLeaderboard({
     String type = 'level',
-    String difficulty = 'Fácil',
+    String difficulty = 'Iniciado',
+    int page = 1,
+    int limit = 15,
   }) async {
-    final url = Uri.parse('$baseUrl/leaderboard?type=$type&difficulty=$difficulty');
+    final url = Uri.parse(
+        '$baseUrl/leaderboard?type=$type&difficulty=$difficulty&page=$page&limit=$limit');
     final headers = await _getHeaders();
-    
-    _log('REQ', 'GET', '/leaderboard?type=$type&difficulty=$difficulty');
+
+    _log('REQ', 'GET',
+        '/leaderboard?type=$type&difficulty=$difficulty&page=$page&limit=$limit');
 
     try {
-      final response = await http.get(
-        url,
-        headers: headers,
-      ).timeout(const Duration(seconds: 8));
+      final response = await http
+          .get(
+            url,
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 8));
 
       final data = jsonDecode(response.body);
-      _log('RES', 'GET', '/leaderboard?type=$type&difficulty=$difficulty', statusCode: response.statusCode, responseBody: response.body);
+      _log('RES', 'GET', '/leaderboard?type=$type&difficulty=$difficulty',
+          statusCode: response.statusCode, responseBody: response.body);
 
       if (response.statusCode == 200) {
-        return {'success': true, 'leaderboard': data['leaderboard'], 'status': 200};
+        return {
+          'success': true,
+          'leaderboard': data['leaderboard'],
+          'status': 200
+        };
       } else {
-        return {'success': false, 'message': data['error'] ?? 'Error al cargar clasificación.', 'status': response.statusCode};
+        return {
+          'success': false,
+          'message': data['error'] ?? 'Error al cargar clasificación.',
+          'status': response.statusCode
+        };
       }
     } catch (e) {
       _log('ERR', 'GET', '/leaderboard', error: e.toString());
@@ -247,11 +304,18 @@ class ApiService {
     _log('REQ', 'POST', '/gamification/tournament/create');
 
     try {
-      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 10));
       final data = jsonDecode(response.body);
-      _log('RES', 'POST', '/gamification/tournament/create', statusCode: response.statusCode, responseBody: response.body);
-      if (response.statusCode == 201) return {'success': true, 'tournament': data['tournament']};
-      return {'success': false, 'message': data['error'] ?? 'Error al crear torneo.'};
+      _log('RES', 'POST', '/gamification/tournament/create',
+          statusCode: response.statusCode, responseBody: response.body);
+      if (response.statusCode == 201)
+        return {'success': true, 'tournament': data['tournament']};
+      return {
+        'success': false,
+        'message': data['error'] ?? 'Error al crear torneo.'
+      };
     } catch (e) {
       return {'success': false, 'message': 'Sin conexión.'};
     }
@@ -264,26 +328,40 @@ class ApiService {
     _log('REQ', 'GET', '/gamification/tournament');
 
     try {
-      final response = await http.get(url, headers: headers).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(url, headers: headers)
+          .timeout(const Duration(seconds: 10));
       final data = jsonDecode(response.body);
-      _log('RES', 'GET', '/gamification/tournament', statusCode: response.statusCode, responseBody: response.body);
+      _log('RES', 'GET', '/gamification/tournament',
+          statusCode: response.statusCode, responseBody: response.body);
       if (response.statusCode == 200) return {'success': true, 'data': data};
-      return {'success': false, 'message': data['message'] ?? 'No hay torneos.'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'No hay torneos.'
+      };
     } catch (e) {
       return {'success': false, 'message': 'Error de conexión.'};
     }
   }
 
   /// Enviar resultado de participación en torneo
-  static Future<Map<String, dynamic>> submitTournamentResult(int tournamentId, int time, int errors) async {
+  static Future<Map<String, dynamic>> submitTournamentResult(
+      int tournamentId, int time, int errors) async {
     final url = Uri.parse('$baseUrl/gamification/tournament/submit');
     final headers = await _getHeaders();
-    final body = jsonEncode({'tournamentId': tournamentId, 'timeInSeconds': time, 'errors': errors});
+    final body = jsonEncode({
+      'tournamentId': tournamentId,
+      'timeInSeconds': time,
+      'errors': errors
+    });
     _log('REQ', 'POST', '/gamification/tournament/submit');
 
     try {
-      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 10));
-      _log('RES', 'POST', '/gamification/tournament/submit', statusCode: response.statusCode, responseBody: response.body);
+      final response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 10));
+      _log('RES', 'POST', '/gamification/tournament/submit',
+          statusCode: response.statusCode, responseBody: response.body);
       return {'success': response.statusCode == 200};
     } catch (e) {
       return {'success': false};
@@ -297,10 +375,14 @@ class ApiService {
     _log('REQ', 'GET', '/gamification/missions');
 
     try {
-      final response = await http.get(url, headers: headers).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(url, headers: headers)
+          .timeout(const Duration(seconds: 10));
       final data = jsonDecode(response.body);
-      _log('RES', 'GET', '/gamification/missions', statusCode: response.statusCode, responseBody: response.body);
-      if (response.statusCode == 200) return {'success': true, 'missions': data['missions']};
+      _log('RES', 'GET', '/gamification/missions',
+          statusCode: response.statusCode, responseBody: response.body);
+      if (response.statusCode == 200)
+        return {'success': true, 'missions': data['missions']};
       return {'success': false};
     } catch (e) {
       return {'success': false};
@@ -308,15 +390,19 @@ class ApiService {
   }
 
   /// Actualizar progreso de una misión específica
-  static Future<Map<String, dynamic>> updateMissionProgress(int missionId, int increment) async {
+  static Future<Map<String, dynamic>> updateMissionProgress(
+      int missionId, int increment) async {
     final url = Uri.parse('$baseUrl/gamification/missions/update');
     final headers = await _getHeaders();
     final body = jsonEncode({'missionId': missionId, 'increment': increment});
     _log('REQ', 'POST', '/gamification/missions/update');
 
     try {
-      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 10));
-      _log('RES', 'POST', '/gamification/missions/update', statusCode: response.statusCode, responseBody: response.body);
+      final response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 10));
+      _log('RES', 'POST', '/gamification/missions/update',
+          statusCode: response.statusCode, responseBody: response.body);
       return {'success': response.statusCode == 200};
     } catch (e) {
       return {'success': false};
@@ -331,8 +417,10 @@ class ApiService {
     try {
       final response = await http.get(url).timeout(const Duration(seconds: 10));
       final data = jsonDecode(response.body);
-      _log('RES', 'GET', '/profile/campaign/levels', statusCode: response.statusCode, responseBody: response.body);
-      if (response.statusCode == 200) return {'success': true, 'levels': data['levels']};
+      _log('RES', 'GET', '/profile/campaign/levels',
+          statusCode: response.statusCode, responseBody: response.body);
+      if (response.statusCode == 200)
+        return {'success': true, 'levels': data['levels']};
       return {'success': false};
     } catch (e) {
       return {'success': false};
@@ -340,16 +428,20 @@ class ApiService {
   }
 
   /// Marcar nivel de campaña como completado
-  static Future<Map<String, dynamic>> completeCampaignLevel(int levelNumber) async {
+  static Future<Map<String, dynamic>> completeCampaignLevel(
+      int levelNumber) async {
     final url = Uri.parse('$baseUrl/profile/campaign/complete');
     final headers = await _getHeaders();
     final body = jsonEncode({'levelCompleted': levelNumber});
     _log('REQ', 'POST', '/profile/campaign/complete');
 
     try {
-      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 10));
       final data = jsonDecode(response.body);
-      _log('RES', 'POST', '/profile/campaign/complete', statusCode: response.statusCode, responseBody: response.body);
+      _log('RES', 'POST', '/profile/campaign/complete',
+          statusCode: response.statusCode, responseBody: response.body);
       return {'success': response.statusCode == 200, 'data': data};
     } catch (e) {
       return {'success': false};
@@ -358,17 +450,22 @@ class ApiService {
 
   // --- SERVICIOS DE CLANES (Fase 4) ---
 
-  static Future<Map<String, dynamic>> createClan(String name, String tag, String description) async {
+  static Future<Map<String, dynamic>> createClan(
+      String name, String tag, String description) async {
     final url = Uri.parse('$baseUrl/clans/create');
     final headers = await _getHeaders();
-    final body = jsonEncode({'name': name, 'tag': tag, 'description': description});
+    final body =
+        jsonEncode({'name': name, 'tag': tag, 'description': description});
     _log('REQ', 'POST', '/clans/create');
 
     try {
-      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 10));
-      _log('RES', 'POST', '/clans/create', statusCode: response.statusCode, responseBody: response.body);
+      final response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 10));
+      _log('RES', 'POST', '/clans/create',
+          statusCode: response.statusCode, responseBody: response.body);
       return {
-        'success': response.statusCode == 201, 
+        'success': response.statusCode == 201,
         'error': jsonDecode(response.body)['error'],
         'status': response.statusCode
       };
@@ -383,10 +480,13 @@ class ApiService {
     _log('REQ', 'GET', '/clans/list');
 
     try {
-      final response = await http.get(url, headers: headers).timeout(const Duration(seconds: 10));
-      _log('RES', 'GET', '/clans/list', statusCode: response.statusCode, responseBody: response.body);
+      final response = await http
+          .get(url, headers: headers)
+          .timeout(const Duration(seconds: 10));
+      _log('RES', 'GET', '/clans/list',
+          statusCode: response.statusCode, responseBody: response.body);
       return {
-        'success': response.statusCode == 200, 
+        'success': response.statusCode == 200,
         'clans': jsonDecode(response.body)['clans'],
         'status': response.statusCode
       };
@@ -401,10 +501,13 @@ class ApiService {
     _log('REQ', 'POST', '/clans/join/$clanId');
 
     try {
-      final response = await http.post(url, headers: headers).timeout(const Duration(seconds: 10));
-      _log('RES', 'POST', '/clans/join/$clanId', statusCode: response.statusCode, responseBody: response.body);
+      final response = await http
+          .post(url, headers: headers)
+          .timeout(const Duration(seconds: 10));
+      _log('RES', 'POST', '/clans/join/$clanId',
+          statusCode: response.statusCode, responseBody: response.body);
       return {
-        'success': response.statusCode == 200, 
+        'success': response.statusCode == 200,
         'error': jsonDecode(response.body)['error'],
         'status': response.statusCode
       };
@@ -419,13 +522,13 @@ class ApiService {
     _log('REQ', 'GET', '/clans/my-clan');
 
     try {
-      final response = await http.get(url, headers: headers).timeout(const Duration(seconds: 10));
-      _log('RES', 'GET', '/clans/my-clan', statusCode: response.statusCode, responseBody: response.body);
+      final response = await http
+          .get(url, headers: headers)
+          .timeout(const Duration(seconds: 10));
+      _log('RES', 'GET', '/clans/my-clan',
+          statusCode: response.statusCode, responseBody: response.body);
       final data = jsonDecode(response.body);
-      return {
-        ...data,
-        'status': response.statusCode
-      };
+      return {...data, 'status': response.statusCode};
     } catch (e) {
       return {'inClan': false, 'status': 500};
     }
@@ -437,10 +540,13 @@ class ApiService {
     _log('REQ', 'POST', '/clans/leave');
 
     try {
-      final response = await http.post(url, headers: headers).timeout(const Duration(seconds: 10));
-      _log('RES', 'POST', '/clans/leave', statusCode: response.statusCode, responseBody: response.body);
+      final response = await http
+          .post(url, headers: headers)
+          .timeout(const Duration(seconds: 10));
+      _log('RES', 'POST', '/clans/leave',
+          statusCode: response.statusCode, responseBody: response.body);
       return {
-        'success': response.statusCode == 200, 
+        'success': response.statusCode == 200,
         'status': response.statusCode
       };
     } catch (e) {
@@ -455,8 +561,11 @@ class ApiService {
     _log('REQ', 'POST', '/clans/messages/send');
 
     try {
-      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 8));
-      _log('RES', 'POST', '/clans/messages/send', statusCode: response.statusCode, responseBody: response.body);
+      final response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 8));
+      _log('RES', 'POST', '/clans/messages/send',
+          statusCode: response.statusCode, responseBody: response.body);
       return response.statusCode == 201;
     } catch (e) {
       return false;
@@ -475,17 +584,24 @@ class ApiService {
     _log('REQ', 'POST', '/profile/purchase');
 
     try {
-      final response = await http.post(url, headers: headers, body: body).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 10));
       final data = jsonDecode(response.body);
-      _log('RES', 'POST', '/profile/purchase', statusCode: response.statusCode, responseBody: response.body);
-      
+      _log('RES', 'POST', '/profile/purchase',
+          statusCode: response.statusCode, responseBody: response.body);
+
       return {
         'success': response.statusCode == 200,
-        'message': data['message'] ?? data['error'] ?? 'Fallo en la transacción.',
+        'message':
+            data['message'] ?? data['error'] ?? 'Fallo en la transacción.',
         'status': response.statusCode
       };
     } catch (e) {
-      return {'success': false, 'message': 'Sin conexión con el banco estelar.'};
+      return {
+        'success': false,
+        'message': 'Sin conexión con el banco estelar.'
+      };
     }
   }
 }

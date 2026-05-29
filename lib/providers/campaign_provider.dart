@@ -73,19 +73,23 @@ class CampaignNotifier extends StateNotifier<CampaignState> {
   Future<void> fetchLevels() async {
     state = state.copyWith(isLoading: true);
     try {
-      await ApiService.getActiveTournament(); // Llamada mantenida por efectos secundarios si los hay, pero sin asignar variable
+      await ApiService
+          .getActiveTournament(); // Llamada mantenida por efectos secundarios si los hay, pero sin asignar variable
       // Pero para no romper nada, crearé un nuevo método en ApiService en el siguiente paso
       // Por ahora simulamos carga exitosa si el backend ya responde campaign/levels
       final response = await ApiService.getCampaignLevels();
-      
+
       if (response['success']) {
         final List<dynamic> levelsData = response['levels'];
         state = state.copyWith(
-          levels: levelsData.map((l) => CampaignLevel.fromJson(lvlMapping(l))).toList(),
+          levels: levelsData
+              .map((l) => CampaignLevel.fromJson(lvlMapping(l)))
+              .toList(),
           isLoading: false,
         );
       } else {
-        state = state.copyWith(isLoading: false, error: 'No se pudo cargar el mapa.');
+        state = state.copyWith(
+            isLoading: false, error: 'No se pudo cargar el mapa.');
       }
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -98,16 +102,29 @@ class CampaignNotifier extends StateNotifier<CampaignState> {
   }
 
   Future<bool> completeLevel(int levelNumber) async {
-    final result = await ApiService.completeCampaignLevel(levelNumber);
-    if (result['success']) {
-      // Actualizar el perfil local para reflejar el nuevo campaignLevel
-      _ref.read(profileProvider.notifier).syncWithServer();
-      return true;
+    final profileNotifier = _ref.read(profileProvider.notifier);
+    final currentCampaignLevel = _ref.read(profileProvider).campaignLevel;
+
+    // 1. Si completamos el nivel actual o uno superior, desbloquear el siguiente nivel localmente
+    if (levelNumber >= currentCampaignLevel) {
+      profileNotifier.updateCampaignLevel(levelNumber + 1);
     }
-    return false;
+
+    // 2. Si está registrado, enviar la completitud al servidor y sincronizar
+    final isRegistered = _ref.read(profileProvider).isRegistered;
+    if (isRegistered) {
+      try {
+        await ApiService.completeCampaignLevel(levelNumber);
+        await profileNotifier.syncWithServer();
+      } catch (_) {
+        // Silenciar errores de red
+      }
+    }
+    return true;
   }
 }
 
-final campaignProvider = StateNotifierProvider<CampaignNotifier, CampaignState>((ref) {
+final campaignProvider =
+    StateNotifierProvider<CampaignNotifier, CampaignState>((ref) {
   return CampaignNotifier(ref);
 });
