@@ -96016,7 +96016,7 @@ A.ajU.prototype={
 $1(a){return this.a.a0($.d7().gah(),t.J).a1G()},
 $S:11}
 A.ajV.prototype={
-$2(a,b){var s=null,r=b.b,q=r!=null?"Sudoku Arena v"+r.c+" ("+r.d+")":"Sudoku Arena"
+$2(a,b){var s=null,r=b.b,q=r!=null?"Sudoku Arena v"+r.c+" (v"+r.d+")":"Sudoku Arena"
 return A.c2(A.D(q,s,s,s,s,A.ad(s,s,B.cm,s,s,s,s,s,s,s,s,12,s,s,B.p,s,s,!0,s,s,s,s,s,s,s,s),s,s),s,s)},
 $S:222}
 A.ajL.prototype={
