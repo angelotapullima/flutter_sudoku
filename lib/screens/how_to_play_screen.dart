@@ -14,7 +14,8 @@ class HowToPlayScreen extends ConsumerStatefulWidget {
   ConsumerState<HowToPlayScreen> createState() => _HowToPlayScreenState();
 }
 
-class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTickerProviderStateMixin {
+class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -31,12 +32,15 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
 
   void _startGuidedLesson(TutorialScript script) {
     // TABLERO MAESTRO ESTÁTICO PARA EL TUTORIAL
-    const String tutorialPuzzle =   '530070000600195000098000060800060003400803001700020006060000280000419005000080079';
-    const String tutorialSolution = '534678912672195348198342567859761423426853791713924856961537284287419635345286179';
+    const String tutorialPuzzle =
+        '530070000600195000098000060800060003400803001700020006060000280000419005000080079';
+    const String tutorialSolution =
+        '534678912672195348198342567859761423426853791713924856961537284287419635345286179';
 
     // Iniciar el juego con datos fijos (Dificultad Tutorial)
-    ref.read(gameProvider.notifier).startCampaignGame(0, tutorialPuzzle, tutorialSolution, GameDifficulty.tutorial.label);
-    
+    ref.read(gameProvider.notifier).startCampaignGame(0, tutorialPuzzle,
+        tutorialSolution, GameDifficulty.tutorial.label, null, {});
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => GameScreen(tutorialScript: script),
@@ -52,7 +56,8 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
     final isDark = themeState.isDarkMode;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
+      backgroundColor:
+          isDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
       appBar: AppBar(
         title: Text(
           'ACADEMIA COSMOS',
@@ -70,11 +75,18 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
           indicatorColor: sudokuTheme.primaryColor,
           labelColor: sudokuTheme.primaryColor,
           unselectedLabelColor: isDark ? Colors.white60 : Colors.black54,
-          labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+          labelStyle: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
           tabs: const [
-            Tab(text: 'LAS TRES LEYES', icon: Icon(Icons.gavel_rounded, size: 20)),
-            Tab(text: 'MAESTRÍA (TIPS)', icon: Icon(Icons.psychology_rounded, size: 20)),
-            Tab(text: 'PODER RPG', icon: Icon(Icons.auto_awesome_rounded, size: 20)),
+            Tab(
+                text: 'LAS TRES LEYES',
+                icon: Icon(Icons.gavel_rounded, size: 20)),
+            Tab(
+                text: 'MAESTRÍA (TIPS)',
+                icon: Icon(Icons.psychology_rounded, size: 20)),
+            Tab(
+                text: 'PODER RPG',
+                icon: Icon(Icons.auto_awesome_rounded, size: 20)),
           ],
         ),
       ),
@@ -98,7 +110,7 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildIntroductionCard(
-              'EL CÓDIGO DE NUBRA',
+              'EL CÓDIGO DEL SUDOKU',
               'El Sudoku se rige por tres leyes absolutas. Selecciona una ley para que el Maestro te enseñe su ejecución en el campo de batalla.',
               '⚖️',
               theme,
@@ -107,7 +119,8 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
             const SizedBox(height: 32),
             _buildLessonCard(
               title: '1. LA LEY DEL HORIZONTE (FILAS)',
-              desc: 'Ningún número puede repetirse en la misma línea horizontal.',
+              desc:
+                  'Ningún número puede repetirse en la misma línea horizontal.',
               icon: Icons.unfold_more_rounded,
               onTap: () => _startGuidedLesson(TutorialScript.lawRow),
               theme: theme,
@@ -115,7 +128,8 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
             ),
             _buildLessonCard(
               title: '2. EL PILAR DEL DESTINO (COLUMNAS)',
-              desc: 'Ninguna esencia puede duplicarse en la misma línea vertical.',
+              desc:
+                  'Ninguna esencia puede duplicarse en la misma línea vertical.',
               icon: Icons.unfold_less_rounded,
               onTap: () => _startGuidedLesson(TutorialScript.lawCol),
               theme: theme,
@@ -123,7 +137,8 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
             ),
             _buildLessonCard(
               title: '3. EL SECTOR GALÁCTICO (CAJAS)',
-              desc: 'Cada cuadrante de 3x3 debe contener números del 1 al 9 sin repetir.',
+              desc:
+                  'Cada cuadrante de 3x3 debe contener números del 1 al 9 sin repetir.',
               icon: Icons.grid_view_rounded,
               onTap: () => _startGuidedLesson(TutorialScript.lawBox),
               theme: theme,
@@ -147,7 +162,8 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
             const SizedBox(height: 16),
             _buildLessonCard(
               title: 'EL MÉTODO DE EXCLUSIÓN',
-              desc: 'Aprende a descartar números mirando las intersecciones galácticas.',
+              desc:
+                  'Aprende a descartar números mirando las intersecciones galácticas.',
               icon: Icons.biotech_rounded,
               onTap: () => _startGuidedLesson(TutorialScript.masteryExclusion),
               theme: theme,
@@ -171,7 +187,8 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
             const SizedBox(height: 16),
             _buildLessonCard(
               title: 'VISIÓN VERDADERA',
-              desc: 'Aprende a usar el cristal para revelar la verdad del grid.',
+              desc:
+                  'Aprende a usar el cristal para revelar la verdad del grid.',
               icon: Icons.auto_awesome_rounded,
               onTap: () => _startGuidedLesson(TutorialScript.powerVision),
               theme: theme,
@@ -199,12 +216,15 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
     );
   }
 
-  Widget _buildIntroductionCard(String title, String desc, String icon, dynamic theme, bool isDark) {
+  Widget _buildIntroductionCard(
+      String title, String desc, String icon, dynamic theme, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isDark ? [theme.primaryColor.withOpacity(0.15), Colors.black] : [Colors.white, Colors.grey[50]!],
+          colors: isDark
+              ? [theme.primaryColor.withOpacity(0.15), Colors.black]
+              : [Colors.white, Colors.grey[50]!],
         ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: theme.primaryColor.withOpacity(0.3)),
@@ -217,9 +237,18 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1, color: theme.primaryColor)),
+                Text(title,
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        letterSpacing: 1,
+                        color: theme.primaryColor)),
                 const SizedBox(height: 4),
-                Text(desc, style: TextStyle(fontSize: 12.5, height: 1.5, color: isDark ? Colors.grey[300] : Colors.grey[700])),
+                Text(desc,
+                    style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.5,
+                        color: isDark ? Colors.grey[300] : Colors.grey[700])),
               ],
             ),
           ),
@@ -229,7 +258,9 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.2));
+    return Text(title,
+        style: GoogleFonts.outfit(
+            fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.2));
   }
 
   Widget _buildLessonCard({
@@ -245,22 +276,29 @@ class _HowToPlayScreenState extends ConsumerState<HowToPlayScreen> with SingleTi
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+        border: Border.all(
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
       ),
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.all(20),
         leading: Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: theme.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
+          decoration: BoxDecoration(
+              color: theme.primaryColor.withOpacity(0.1),
+              shape: BoxShape.circle),
           child: Icon(icon, color: theme.primaryColor),
         ),
-        title: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
+        title: Text(title,
+            style:
+                GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 8.0),
-          child: Text(desc, style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+          child: Text(desc,
+              style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
         ),
-        trailing: Icon(Icons.play_circle_fill_rounded, color: theme.primaryColor, size: 32),
+        trailing: Icon(Icons.play_circle_fill_rounded,
+            color: theme.primaryColor, size: 32),
       ),
     );
   }

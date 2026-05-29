@@ -67,6 +67,9 @@ class GameScreenMobile extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
+    final bool isBoss = gameState.bossName != null;
+    final bool hasTimerLimit = gameState.modifiers.containsKey('timer_limit');
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
@@ -81,39 +84,57 @@ class GameScreenMobile extends ConsumerWidget {
             },
             icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
           ),
-          Column(
-            children: [
-              Text(
-                gameState.isCampaign
-                    ? 'VIAJE NIVEL ${gameState.campaignLevelNumber}'
-                    : gameState.difficulty.toUpperCase(),
-                style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: sudokuTheme.primaryColor),
-              ),
-              Text(
-                'Errores: ${gameState.errorsCount}/3',
-                style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: gameState.errorsCount > 0
-                        ? Colors.redAccent
-                        : Colors.grey),
-              ),
-            ],
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  isBoss
+                      ? 'GUARDIÁN: ${gameState.bossName!.toUpperCase()}'
+                      : (gameState.isCampaign
+                          ? 'VIAJE NIVEL ${gameState.campaignLevelNumber}'
+                          : gameState.difficulty.toUpperCase()),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      letterSpacing: isBoss ? 1.0 : 0,
+                      color:
+                          isBoss ? Colors.redAccent : sudokuTheme.primaryColor),
+                ),
+                Text(
+                  'Errores: ${gameState.errorsCount}/3',
+                  style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: gameState.errorsCount > 0
+                          ? Colors.redAccent
+                          : Colors.grey),
+                ),
+              ],
+            ),
           ),
           Row(
             children: [
               if (settings.showTimer)
                 Text(
-                  '$min:$sec',
+                  hasTimerLimit
+                      ? _formatRemainingTime(
+                          gameState.modifiers['timer_limit'] as int,
+                          gameState.elapsedSeconds)
+                      : '$min:$sec',
                   style: GoogleFonts.shareTechMono(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: gameState.isTimerFrozen
-                          ? Colors.amber
-                          : (isDark ? Colors.white : Colors.black)),
+                      color: (hasTimerLimit &&
+                              (gameState.modifiers['timer_limit'] as int) -
+                                      gameState.elapsedSeconds <
+                                  30)
+                          ? Colors.redAccent
+                          : (gameState.isTimerFrozen
+                              ? Colors.amber
+                              : (isDark ? Colors.white : Colors.black))),
                 ),
               const SizedBox(width: 8),
               IconButton(
@@ -135,5 +156,12 @@ class GameScreenMobile extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _formatRemainingTime(int limit, int elapsed) {
+    final remaining = (limit - elapsed).clamp(0, limit);
+    final m = (remaining ~/ 60).toString().padLeft(2, '0');
+    final s = (remaining % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 }

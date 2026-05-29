@@ -43,6 +43,8 @@ class GameState {
   final int tournamentPlacement;
   final bool isDailyChallenge;
   final int? tournamentId;
+  final String? bossName;
+  final Map<String, dynamic> modifiers;
 
   const GameState({
     this.grid = const [],
@@ -68,6 +70,8 @@ class GameState {
     this.tournamentPlacement = 0,
     this.isDailyChallenge = false,
     this.tournamentId,
+    this.bossName,
+    this.modifiers = const {},
   });
 
   GameState copyWith({
@@ -94,6 +98,8 @@ class GameState {
     int? tournamentPlacement,
     bool? isDailyChallenge,
     int? tournamentId,
+    String? bossName,
+    Map<String, dynamic>? modifiers,
   }) {
     return GameState(
       grid: grid ?? this.grid,
@@ -120,6 +126,8 @@ class GameState {
       tournamentPlacement: tournamentPlacement ?? this.tournamentPlacement,
       isDailyChallenge: isDailyChallenge ?? this.isDailyChallenge,
       tournamentId: tournamentId ?? this.tournamentId,
+      bossName: bossName ?? this.bossName,
+      modifiers: modifiers ?? this.modifiers,
     );
   }
 
@@ -149,6 +157,8 @@ class GameState {
       'tournamentPlacement': tournamentPlacement,
       'isDailyChallenge': isDailyChallenge,
       'tournamentId': tournamentId,
+      'bossName': bossName,
+      'modifiers': modifiers,
     };
   }
 
@@ -186,6 +196,8 @@ class GameState {
       tournamentPlacement: json['tournamentPlacement'] as int? ?? 0,
       isDailyChallenge: json['isDailyChallenge'] as bool? ?? false,
       tournamentId: json['tournamentId'] as int?,
+      bossName: json['bossName'] as String?,
+      modifiers: Map<String, dynamic>.from(json['modifiers'] ?? {}),
     );
   }
 }
@@ -530,6 +542,9 @@ class GameNotifier extends StateNotifier<GameState> {
   bool useDivineTouch() {
     if (!state.hasStarted || state.isGameOver || state.isGameWon) return false;
 
+    // Bloqueo por modificador de Jefe
+    if (state.modifiers['no_powers'] == true) return false;
+
     final profileNotifier = _ref.read(profileProvider.notifier);
     final userProfile = _ref.read(profileProvider);
 
@@ -659,6 +674,9 @@ class GameNotifier extends StateNotifier<GameState> {
         state.isGameOver ||
         state.isGameWon) return false;
 
+    // Bloqueo por modificador de Jefe
+    if (state.modifiers['no_powers'] == true) return false;
+
     final profileNotifier = _ref.read(profileProvider.notifier);
     final userProfile = _ref.read(profileProvider);
 
@@ -692,6 +710,9 @@ class GameNotifier extends StateNotifier<GameState> {
         !state.hasStarted ||
         state.isGameOver ||
         state.isGameWon) return false;
+
+    // Bloqueo por modificador de Jefe
+    if (state.modifiers['no_powers'] == true) return false;
 
     final profileNotifier = _ref.read(profileProvider.notifier);
     final userProfile = _ref.read(profileProvider);
@@ -742,8 +763,8 @@ class GameNotifier extends StateNotifier<GameState> {
   }
 
   /// Genera una nueva partida de campaña (Fase 3 - Mapa Estelar)
-  void startCampaignGame(
-      int levelNumber, String puzzle, String solution, String difficulty) {
+  void startCampaignGame(int levelNumber, String puzzle, String solution,
+      String difficulty, String? bossName, Map<String, dynamic> modifiers) {
     _timer?.cancel();
     _undoStack.clear();
 
@@ -774,6 +795,8 @@ class GameNotifier extends StateNotifier<GameState> {
       hasStarted: true,
       isCampaign: true,
       campaignLevelNumber: levelNumber,
+      bossName: bossName,
+      modifiers: modifiers,
     );
 
     _startTimer();
@@ -784,7 +807,20 @@ class GameNotifier extends StateNotifier<GameState> {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!state.isTimerFrozen) {
-        state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
+        if (state.modifiers.containsKey('timer_limit')) {
+          // Lógica de cuenta regresiva para Jefes
+          final limit = state.modifiers['timer_limit'] as int;
+          if (state.elapsedSeconds < limit) {
+            state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
+          } else {
+            // Se acabó el tiempo
+            _timer?.cancel();
+            state = state.copyWith(isGameOver: true);
+          }
+        } else {
+          // Lógica normal de cuenta progresiva
+          state = state.copyWith(elapsedSeconds: state.elapsedSeconds + 1);
+        }
         _saveGameToStorage();
       }
     });

@@ -86,6 +86,13 @@ class GameScreenDesktop extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
+    final bool isBoss = gameState.bossName != null;
+    final bool hasTimerLimit = gameState.modifiers.containsKey('timer_limit');
+    final String timeStr = hasTimerLimit
+        ? _formatRemainingTime(
+            gameState.modifiers['timer_limit'] as int, gameState.elapsedSeconds)
+        : '$min:$sec';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -103,13 +110,17 @@ class GameScreenDesktop extends ConsumerWidget {
           Column(
             children: [
               Text(
-                gameState.isCampaign
-                    ? 'VIAJE NIVEL ${gameState.campaignLevelNumber}'
-                    : gameState.difficulty.toUpperCase(),
+                isBoss
+                    ? 'DESAFÍO DEL GUARDIÁN: ${gameState.bossName!.toUpperCase()}'
+                    : (gameState.isCampaign
+                        ? 'VIAJE NIVEL ${gameState.campaignLevelNumber}'
+                        : gameState.difficulty.toUpperCase()),
                 style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w900,
                     fontSize: 18,
-                    color: sudokuTheme.primaryColor),
+                    letterSpacing: isBoss ? 1.5 : 0,
+                    color:
+                        isBoss ? Colors.redAccent : sudokuTheme.primaryColor),
               ),
               Text(
                 'Errores: ${gameState.errorsCount}/3',
@@ -126,13 +137,18 @@ class GameScreenDesktop extends ConsumerWidget {
             children: [
               if (settings.showTimer)
                 Text(
-                  '$min:$sec',
+                  timeStr,
                   style: GoogleFonts.shareTechMono(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: gameState.isTimerFrozen
-                          ? Colors.amber
-                          : (isDark ? Colors.white : Colors.black)),
+                      color: (hasTimerLimit &&
+                              (gameState.modifiers['timer_limit'] as int) -
+                                      gameState.elapsedSeconds <
+                                  30)
+                          ? Colors.redAccent
+                          : (gameState.isTimerFrozen
+                              ? Colors.amber
+                              : (isDark ? Colors.white : Colors.black))),
                 ),
               const SizedBox(width: 8),
               IconButton(
@@ -157,6 +173,12 @@ class GameScreenDesktop extends ConsumerWidget {
   }
 
   Widget _buildDesktopStats(bool isDark) {
+    final bool hasTimerLimit = gameState.modifiers.containsKey('timer_limit');
+    final String timeStr = hasTimerLimit
+        ? _formatRemainingTime(
+            gameState.modifiers['timer_limit'] as int, gameState.elapsedSeconds)
+        : '$min:$sec';
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -164,13 +186,23 @@ class GameScreenDesktop extends ConsumerWidget {
           borderRadius: BorderRadius.circular(20)),
       child: Column(
         children: [
-          _buildStatRow('Tiempo Transcurrido', '$min:$sec', isDark),
+          _buildStatRow(
+              hasTimerLimit ? 'Tiempo Restante' : 'Tiempo Transcurrido',
+              timeStr,
+              isDark),
           const SizedBox(height: 12),
           _buildStatRow(
               'Errores Cometidos', '${gameState.errorsCount}/3', isDark),
         ],
       ),
     );
+  }
+
+  String _formatRemainingTime(int limit, int elapsed) {
+    final remaining = (limit - elapsed).clamp(0, limit);
+    final m = (remaining ~/ 60).toString().padLeft(2, '0');
+    final s = (remaining % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   Widget _buildStatRow(String label, String value, bool isDark) {

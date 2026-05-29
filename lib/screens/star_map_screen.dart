@@ -132,12 +132,148 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
   }
 
   void _startLevel(CampaignLevel level) {
+    if (level.isBoss()) {
+      _showBossBriefing(level);
+    } else {
+      _actuallyStartLevel(level);
+    }
+  }
+
+  void _actuallyStartLevel(CampaignLevel level) {
     // Iniciar el juego con los datos fijos del nivel de campaña (Fase 3 Fix)
-    ref.read(gameProvider.notifier).startCampaignGame(level.levelNumber,
-        level.puzzleData, level.solutionData, level.difficulty);
+    ref.read(gameProvider.notifier).startCampaignGame(
+        level.levelNumber,
+        level.puzzleData,
+        level.solutionData,
+        level.difficulty,
+        level.bossName,
+        level.modifiers);
 
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const GameScreen()),
+    );
+  }
+
+  void _showBossBriefing(CampaignLevel level) {
+    final theme = ref.read(themeProvider.notifier).currentSudokuTheme;
+    final isDark = ref.read(themeProvider).isDarkMode;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1A1A24) : Colors.white,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: Colors.redAccent, width: 2)),
+        title: Column(
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: Colors.redAccent, size: 48),
+            const SizedBox(height: 12),
+            Text(
+              '¡ALERTA DE GUARDIÁN!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w900,
+                  color: Colors.redAccent,
+                  letterSpacing: 2),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Estás entrando en el dominio de:',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: isDark ? Colors.white70 : Colors.black54),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              level.bossName!.toUpperCase(),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  if (level.modifiers.containsKey('timer_limit'))
+                    _buildModInfo(
+                        Icons.timer_off_outlined,
+                        'TIEMPO LÍMITE: ${level.modifiers['timer_limit']}s',
+                        'El núcleo colapsará si el tiempo llega a cero.'),
+                  if (level.modifiers['no_powers'] == true)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: _buildModInfo(
+                          Icons.block_flipped,
+                          'SUPRESIÓN TÁCTICA',
+                          'Tus habilidades especiales han sido bloqueadas.'),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _actuallyStartLevel(level);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('ACEPTAR DESAFÍO',
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildModInfo(IconData icon, String title, String desc) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.redAccent, size: 24),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      color: Colors.redAccent)),
+              Text(desc,
+                  style: const TextStyle(fontSize: 10, color: Colors.white60)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

@@ -91,6 +91,13 @@ class GameScreenLandscape extends ConsumerWidget {
   }
 
   Widget _buildUltraCompactHeader(BuildContext context, WidgetRef ref) {
+    final bool isBoss = gameState.bossName != null;
+    final bool hasTimerLimit = gameState.modifiers.containsKey('timer_limit');
+    final String timeStr = hasTimerLimit
+        ? _formatRemainingTime(
+            gameState.modifiers['timer_limit'] as int, gameState.elapsedSeconds)
+        : '$min:$sec';
+
     return Container(
       height: 30, // Máxima reducción
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -115,11 +122,13 @@ class GameScreenLandscape extends ConsumerWidget {
             constraints: const BoxConstraints(),
           ),
           Text(
-            '${gameState.difficulty.toUpperCase()} • $min:$sec',
+            isBoss
+                ? 'GUARDIÁN: ${gameState.bossName!.toUpperCase()} • $timeStr'
+                : '${gameState.difficulty.toUpperCase()} • $timeStr',
             style: GoogleFonts.outfit(
                 fontWeight: FontWeight.bold,
                 fontSize: 11,
-                color: sudokuTheme.primaryColor),
+                color: isBoss ? Colors.redAccent : sudokuTheme.primaryColor),
           ),
           IconButton(
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
@@ -131,5 +140,12 @@ class GameScreenLandscape extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _formatRemainingTime(int limit, int elapsed) {
+    final remaining = (limit - elapsed).clamp(0, limit);
+    final m = (remaining ~/ 60).toString().padLeft(2, '0');
+    final s = (remaining % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 }
