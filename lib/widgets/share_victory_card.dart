@@ -21,7 +21,8 @@ class ShareVictoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 350), // Un poco más estrecho para asegurar que quepa
+      constraints: const BoxConstraints(
+          maxWidth: 350), // Un poco más estrecho para asegurar que quepa
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
@@ -63,12 +64,13 @@ class ShareVictoryCard extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(18),
-                  child: Image.asset('assets/images/logo.png', fit: BoxFit.cover),
+                  child:
+                      Image.asset('assets/images/logo.png', fit: BoxFit.cover),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
-                'NUMBRA',
+                'SUDOKU ARENA',
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -84,7 +86,7 @@ class ShareVictoryCard extends StatelessWidget {
                   color: isDark ? Colors.white54 : Colors.black54,
                 ),
               ),
-              
+
               const SizedBox(height: 30),
 
               // Título de Victoria
@@ -102,19 +104,23 @@ class ShareVictoryCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildStat('TIEMPO', time, Icons.timer_outlined, theme, isDark),
-                  _buildStat('NIVEL', '$level', Icons.auto_awesome_rounded, theme, isDark),
+                  _buildStat(
+                      'TIEMPO', time, Icons.timer_outlined, theme, isDark),
+                  _buildStat('NIVEL', '$level', Icons.auto_awesome_rounded,
+                      theme, isDark),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: theme.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.primaryColor.withOpacity(0.2)),
+                  border:
+                      Border.all(color: theme.primaryColor.withOpacity(0.2)),
                 ),
                 child: Text(
                   difficulty.toUpperCase(),
@@ -132,12 +138,13 @@ class ShareVictoryCard extends StatelessWidget {
               // Footer
               Column(
                 children: [
-                  Icon(Icons.qr_code_2_rounded, size: 30, color: Colors.grey.withOpacity(0.4)),
+                  Icon(Icons.qr_code_2_rounded,
+                      size: 30, color: Colors.grey.withOpacity(0.4)),
                   const SizedBox(height: 4),
                   const Text(
                     'DESCÁRGALO EN GOOGLE PLAY',
                     style: TextStyle(
-                      fontSize: 7, 
+                      fontSize: 7,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey,
                       letterSpacing: 0.8,
@@ -152,7 +159,8 @@ class ShareVictoryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStat(String label, String value, IconData icon, SudokuTheme theme, bool isDark) {
+  Widget _buildStat(String label, String value, IconData icon,
+      SudokuTheme theme, bool isDark) {
     return Column(
       children: [
         Icon(icon, color: theme.primaryColor, size: 28),

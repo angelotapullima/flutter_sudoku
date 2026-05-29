@@ -183,7 +183,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Numbra',
+          Text('Sudoku Arena',
               style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold, color: theme.primaryColor)),
           Row(

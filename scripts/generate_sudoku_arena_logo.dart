@@ -2,10 +2,10 @@ import 'dart:io';
 import 'package:image/image.dart' as img;
 
 void main() {
-  print('🌌 Generando el LOGO DEFINITIVO para Numbra (Neo-Cyber)...');
-  
+  print('🌌 Generando el LOGO DEFINITIVO para Sudoku Arena (Neo-Cyber)...');
+
   final image = img.Image(width: 1024, height: 1024);
-  
+
   // 1. Fondo Gradiente Púrpura/Azul (Llenado rápido)
   img.fill(image, color: img.ColorRgb8(10, 10, 25));
 
@@ -21,8 +21,10 @@ void main() {
     int pos = 362 + (i * 100);
     // Grosor de 15px para que se vea a kilómetros
     for (int t = -7; t <= 7; t++) {
-      img.drawLine(image, x1: pos + t, y1: 300, x2: pos + t, y2: 724, color: white);
-      img.drawLine(image, x1: 300, y1: pos + t, x2: 724, y2: pos + t, color: white);
+      img.drawLine(image,
+          x1: pos + t, y1: 300, x2: pos + t, y2: 724, color: white);
+      img.drawLine(image,
+          x1: 300, y1: pos + t, x2: 724, y2: pos + t, color: white);
     }
   }
 
@@ -34,6 +36,6 @@ void main() {
 
   final png = img.encodePng(image);
   File('assets/images/logo.png').writeAsBytesSync(png);
-  
+
   print('✅ LOGO VIBRANTE generado con éxito.');
 }

@@ -1,7 +1,7 @@
-# 🌌 Numbra: Chronicles of Logic — Documento Funcional
+# 🌌 Sudoku Arena: Chronicles of Logic — Documento Funcional
 
 # 1. Visión General
-Numbra no es solo una aplicación de Sudoku; es una **Aventura RPG de Lógica** diseñada para 2026. Combina la pureza del Sudoku clásico con mecánicas de progresión profunda, habilidades tácticas y una capa social competitiva asíncrona.
+Sudoku Arena no es solo una aplicación de Sudoku; es una **Aventura RPG de Lógica** diseñada para 2026. Combina la pureza del Sudoku clásico con mecánicas de progresión profunda, habilidades tácticas y una capa social competitiva asíncrona.
 
 - **Identidad:** Neo-Cyber / Dark Zen.
 - **Núcleo:** Sudoku generado por Backtracking en tiempo real.
@@ -20,7 +20,7 @@ Numbra no es solo una aplicación de Sudoku; es una **Aventura RPG de Lógica** 
 ---
 
 # 3. Identidad de Marca y Visual (Branding)
-- **Nombre:** Numbra
+- **Nombre:** Sudoku Arena
 - **Paleta de Colores:** 
   - Fondo: `#0B0B12` (Espacio Profundo / Dark Zen).
   - Acento Primario: `#00E5FF` (Cian Eléctrico).
