@@ -590,10 +590,28 @@ class GameNotifier extends StateNotifier<GameState> {
         value: targetCell.solutionValue,
         notes: {},
         isError: false,
+        isDivineRevealed: true,
       );
     }
 
     state = state.copyWith(grid: newGrid);
+
+    // Limpiar el resaltado celestial de las celdas en 5 segundos
+    Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        List<List<SudokuCell>> clearedGrid = List.generate(9, (r) {
+          return List.generate(9, (c) {
+            final cell = state.grid[r][c];
+            if (cell.isDivineRevealed) {
+              return cell.copyWith(isDivineRevealed: false);
+            }
+            return cell;
+          });
+        });
+        state = state.copyWith(grid: clearedGrid);
+        _saveGameToStorage();
+      }
+    });
 
     _checkVictory();
     _saveGameToStorage();
@@ -660,9 +678,26 @@ class GameNotifier extends StateNotifier<GameState> {
         value: targetCell.solutionValue,
         notes: {},
         isError: false,
+        isDivineRevealed: true,
       );
     }
     state = state.copyWith(grid: newGrid);
+
+    // Limpiar el resaltado celestial simulado en 5 segundos
+    Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        List<List<SudokuCell>> clearedGrid = List.generate(9, (r) {
+          return List.generate(9, (c) {
+            final cell = state.grid[r][c];
+            if (cell.isDivineRevealed) {
+              return cell.copyWith(isDivineRevealed: false);
+            }
+            return cell;
+          });
+        });
+        state = state.copyWith(grid: clearedGrid);
+      }
+    });
   }
 
   // --- MÉTODOS DE APOYO INTERNOS ---

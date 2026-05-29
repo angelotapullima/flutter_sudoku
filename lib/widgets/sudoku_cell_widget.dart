@@ -23,12 +23,15 @@ class SudokuCellWidget extends ConsumerWidget {
     final sudokuTheme = themeNotifier.currentSudokuTheme;
 
     // VALIDACIÓN DE SEGURIDAD (Hotfix para RangeError al cerrar partida)
-    if (gameState.grid.isEmpty || gameState.grid.length <= row || gameState.grid[row].length <= col) {
+    if (gameState.grid.isEmpty ||
+        gameState.grid.length <= row ||
+        gameState.grid[row].length <= col) {
       return const SizedBox();
     }
 
     final SudokuCell cell = gameState.grid[row][col];
-    final isSelected = gameState.selectedRow == row && gameState.selectedCol == col;
+    final isSelected =
+        gameState.selectedRow == row && gameState.selectedCol == col;
 
     // Resaltado inteligente
     bool isHighlighted = false;
@@ -59,22 +62,30 @@ class SudokuCellWidget extends ConsumerWidget {
 
     // LÓGICA DE VISIÓN VERDADERA (Habilidad Roguelike)
     bool isMarkedAsErrorByAbility = false;
-    if (gameState.isShowingErrors && cell.value != 0 && cell.value != cell.solutionValue) {
+    if (gameState.isShowingErrors &&
+        cell.value != 0 &&
+        cell.value != cell.solutionValue) {
       isMarkedAsErrorByAbility = true;
     }
-    
+
     if (isSelected) {
       cellBgColor = isDark
           ? sudokuTheme.textColorDark.withOpacity(0.25)
           : sudokuTheme.textColorLight.withOpacity(0.18);
+    } else if (cell.isDivineRevealed) {
+      cellBgColor =
+          isDark ? Colors.cyan.withOpacity(0.3) : Colors.cyan.withOpacity(0.18);
     } else if (isMarkedAsErrorByAbility) {
-      cellBgColor = Colors.redAccent.withOpacity(0.2); // Resaltado de la habilidad
+      cellBgColor =
+          Colors.redAccent.withOpacity(0.2); // Resaltado de la habilidad
     } else if (settings.enableHighlighting && isSameNumber) {
       cellBgColor = isDark
           ? sudokuTheme.textColorDark.withOpacity(0.15)
           : sudokuTheme.textColorLight.withOpacity(0.10);
     } else if (settings.enableHighlighting && isHighlighted) {
-      cellBgColor = isDark ? sudokuTheme.highlightColorDark : sudokuTheme.highlightColorLight;
+      cellBgColor = isDark
+          ? sudokuTheme.highlightColorDark
+          : sudokuTheme.highlightColorLight;
     } else {
       cellBgColor = isDark ? const Color(0xFF1E1E2E) : Colors.white;
     }
@@ -83,14 +94,18 @@ class SudokuCellWidget extends ConsumerWidget {
     Color textColor;
     FontWeight fontWeight = FontWeight.normal;
 
-    if (cell.isOriginal) {
+    if (cell.isDivineRevealed) {
+      textColor = isDark ? Colors.cyanAccent : const Color(0xFF00838F);
+      fontWeight = FontWeight.bold;
+    } else if (cell.isOriginal) {
       textColor = isDark ? Colors.white70 : const Color(0xFF2B2B36);
       fontWeight = FontWeight.bold;
     } else if (cell.isError) {
       textColor = Colors.redAccent;
       fontWeight = FontWeight.bold;
     } else {
-      textColor = isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight;
+      textColor =
+          isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight;
       fontWeight = FontWeight.w600;
     }
 
@@ -139,15 +154,17 @@ class SudokuCellWidget extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
-                        color: isDark 
-                          ? Colors.cyanAccent.withOpacity(0.2) 
-                          : Colors.indigo.withOpacity(0.15),
+                        color: isDark
+                            ? Colors.cyanAccent.withOpacity(0.2)
+                            : Colors.indigo.withOpacity(0.15),
                       ),
                     ),
-                  
+
                   _buildNotesGrid(
                     cell.notes,
-                    isDark ? sudokuTheme.textColorDark : sudokuTheme.textColorLight,
+                    isDark
+                        ? sudokuTheme.textColorDark
+                        : sudokuTheme.textColorLight,
                     isDark,
                   ),
                 ],
@@ -181,7 +198,9 @@ class SudokuCellWidget extends ConsumerWidget {
                 fontSize: 8.5,
                 fontWeight: FontWeight.w500,
                 color: hasNote
-                    ? (isDark ? noteColor.withOpacity(0.8) : noteColor.withOpacity(0.75))
+                    ? (isDark
+                        ? noteColor.withOpacity(0.8)
+                        : noteColor.withOpacity(0.75))
                     : Colors.transparent,
               ),
             ),

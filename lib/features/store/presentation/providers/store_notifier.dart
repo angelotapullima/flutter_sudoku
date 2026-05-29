@@ -104,16 +104,65 @@ class StoreNotifier extends StateNotifier<StoreState> {
       return;
     }
 
-    // 3. Ejecutar transacción de compra remota
+    // Calcular el perfil actualizado
+    int newCoins = profile.coins - cost;
+    int newVision = profile.visionCharges;
+    int newFreeze = profile.timeFreezeCharges;
+    int newDivine = profile.divineTouchCharges;
+    String? newXpBoost = profile.xpBoostUntil;
+    String newBorder = profile.activeAvatarBorder;
+
+    if (itemId == 'vision_pack') {
+      newVision += 5;
+    } else if (itemId == 'time_pack') {
+      newFreeze += 3;
+    } else if (itemId == 'divine_pack') {
+      newDivine += 1;
+    } else if (itemId == 'xp_boost_24h') {
+      final now = DateTime.now();
+      DateTime baseDate = now;
+      if (profile.xpBoostUntil != null) {
+        final currentBoostDate = DateTime.tryParse(profile.xpBoostUntil!);
+        if (currentBoostDate != null && currentBoostDate.isAfter(now)) {
+          baseDate = currentBoostDate;
+        }
+      }
+      newXpBoost = baseDate.add(const Duration(hours: 24)).toIso8601String();
+    } else if (type == 'border') {
+      newBorder = itemId;
+    }
+
+    final updatedProfile = profile.copyWith(
+      coins: newCoins,
+      visionCharges: newVision,
+      timeFreezeCharges: newFreeze,
+      divineTouchCharges: newDivine,
+      xpBoostUntil: newXpBoost,
+      activeAvatarBorder: newBorder,
+    );
+
+    // 3. Si el usuario no está registrado (invitado), procesar de manera 100% offline
+    if (!profile.isRegistered) {
+      await _ref.read(profileProvider.notifier).updateProfile(updatedProfile);
+      state = state.copyWith(
+        isLoading: false,
+        successMessage: '¡Has adquirido: $name! 🚀',
+      );
+      return;
+    }
+
+    // 4. Si está registrado, ejecutar transacción de compra remota
     final result = await _purchaseItemUseCase(
       itemId: itemId,
       cost: cost,
       type: type,
     );
 
-    result.fold(
+    await result.fold(
       (_) async {
-        // En caso de éxito, forzar la descarga del perfil fresco desde el servidor
+        // Guardar localmente y sincronizar reactivamente con el backend
+        await _ref.read(profileProvider.notifier).updateProfile(updatedProfile);
+        // Forzar la descarga fresca del perfil desde el servidor para reconfirmar
         await _ref.read(profileProvider.notifier).refreshProfileFromServer();
 
         state = state.copyWith(
@@ -121,7 +170,7 @@ class StoreNotifier extends StateNotifier<StoreState> {
           successMessage: '¡Has adquirido: $name! 🚀',
         );
       },
-      (failure) {
+      (failure) async {
         state = state.copyWith(
           isLoading: false,
           errorMessage: failure.message,

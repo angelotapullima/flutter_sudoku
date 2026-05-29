@@ -6,6 +6,7 @@ class SudokuCell {
   final bool isOriginal;
   final Set<int> notes;
   final bool isError;
+  final bool isDivineRevealed;
 
   const SudokuCell({
     required this.row,
@@ -15,6 +16,7 @@ class SudokuCell {
     this.isOriginal = false,
     this.notes = const {},
     this.isError = false,
+    this.isDivineRevealed = false,
   });
 
   /// Retorna si la celda está vacía.
@@ -29,6 +31,7 @@ class SudokuCell {
     bool? isOriginal,
     Set<int>? notes,
     bool? isError,
+    bool? isDivineRevealed,
   }) {
     return SudokuCell(
       row: row,
@@ -38,6 +41,7 @@ class SudokuCell {
       isOriginal: isOriginal ?? this.isOriginal,
       notes: notes ?? this.notes,
       isError: isError ?? this.isError,
+      isDivineRevealed: isDivineRevealed ?? this.isDivineRevealed,
     );
   }
 
@@ -50,18 +54,22 @@ class SudokuCell {
       'isOriginal': isOriginal,
       'notes': notes.toList(),
       'isError': isError,
+      'isDivineRevealed': isDivineRevealed,
     };
   }
 
   factory SudokuCell.fromJson(Map<String, dynamic> json) {
     return SudokuCell(
-      row: json['row'] as int,
-      col: json['col'] as int,
-      value: json['value'] as int,
-      solutionValue: json['solutionValue'] as int,
-      isOriginal: json['isOriginal'] as bool,
-      notes: (json['notes'] as List<dynamic>).map((e) => e as int).toSet(),
+      row: json['row'] as int? ?? 0,
+      col: json['col'] as int? ?? 0,
+      value: json['value'] as int? ?? 0,
+      solutionValue: json['solutionValue'] as int? ?? 0,
+      isOriginal: json['isOriginal'] as bool? ?? false,
+      notes: ((json['notes'] as List<dynamic>?) ?? [])
+          .map((e) => e as int)
+          .toSet(),
       isError: json['isError'] as bool? ?? false,
+      isDivineRevealed: json['isDivineRevealed'] as bool? ?? false,
     );
   }
 }

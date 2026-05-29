@@ -135,6 +135,19 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                   type: 'boost',
                   theme: theme,
                   isDark: isDark,
+                  currentStock: () {
+                    if (user.xpBoostUntil != null) {
+                      final boostDate = DateTime.tryParse(user.xpBoostUntil!);
+                      if (boostDate != null &&
+                          boostDate.isAfter(DateTime.now())) {
+                        final diff = boostDate.difference(DateTime.now());
+                        final hours = diff.inHours;
+                        final mins = diff.inMinutes % 60;
+                        return 'Habilitado (restan ${hours}h ${mins}m)';
+                      }
+                    }
+                    return 'Inactivo';
+                  }(),
                 ),
 
                 const SizedBox(height: 32),
@@ -150,6 +163,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                   type: 'border',
                   theme: theme,
                   isDark: isDark,
+                  currentStock: user.activeAvatarBorder == 'border_neon_blue'
+                      ? 'Equipado actualmente'
+                      : 'No equipado',
                 ),
                 _buildStoreItem(
                   id: 'border_golden_king',
@@ -160,6 +176,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                   type: 'border',
                   theme: theme,
                   isDark: isDark,
+                  currentStock: user.activeAvatarBorder == 'border_golden_king'
+                      ? 'Equipado actualmente'
+                      : 'No equipado',
                 ),
                 const SizedBox(height: 100), // Espacio para el navbar
               ],
@@ -303,20 +322,27 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
             ],
           ],
         ),
-        trailing: ElevatedButton(
-          onPressed: () =>
-              _handlePurchase(itemId: id, cost: cost, type: type, name: name),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: theme.primaryColor,
-            foregroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 0,
-          ),
-          child: Text('🪙 $cost',
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-        ),
+        trailing: () {
+          final bool isEquipped = currentStock == 'Equipado actualmente';
+          return ElevatedButton(
+            onPressed: isEquipped
+                ? null
+                : () => _handlePurchase(
+                    itemId: id, cost: cost, type: type, name: name),
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  isEquipped ? Colors.grey[700] : theme.primaryColor,
+              foregroundColor: isEquipped ? Colors.white70 : Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
+            child: Text(
+              isEquipped ? 'Equipado' : '🪙 $cost',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          );
+        }(),
       ),
     );
   }

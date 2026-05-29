@@ -15,6 +15,7 @@ import 'login_screen.dart';
 import 'how_to_play_screen.dart';
 import 'daily_challenge_screen.dart';
 import '../widgets/responsive_content_wrapper.dart';
+import '../widgets/pre_game_modal.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -693,9 +694,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            ref.read(gameProvider.notifier).startNewGame(title);
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const GameScreen()));
+            PreGameModal.show(
+              context,
+              title: title,
+              modeType: 'normal',
+            );
           },
           borderRadius: BorderRadius.circular(24),
           child: Padding(

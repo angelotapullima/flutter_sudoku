@@ -47,6 +47,7 @@ class AbilityBar extends ConsumerWidget {
               icon: Icons.auto_awesome_rounded,
               label: 'VISIÓN',
               cost: 65,
+              charges: userProfile.visionCharges,
               isActive: gameState.isShowingErrors,
               onTap: () {
                 final success = ref.read(gameProvider.notifier).useTrueVision();
@@ -65,6 +66,7 @@ class AbilityBar extends ConsumerWidget {
               icon: Icons.hourglass_bottom_rounded,
               label: 'RELOJ',
               cost: 45,
+              charges: userProfile.timeFreezeCharges,
               isActive: gameState.isTimerFrozen,
               onTap: () {
                 final success =
@@ -84,6 +86,7 @@ class AbilityBar extends ConsumerWidget {
               icon: Icons.psychology_rounded,
               label: 'DIVINO',
               cost: 130,
+              charges: userProfile.divineTouchCharges,
               isActive: false,
               onTap: () {
                 final success =
@@ -109,6 +112,7 @@ class AbilityBar extends ConsumerWidget {
     required IconData icon,
     required String label,
     required int cost,
+    required int charges,
     required bool isActive,
     required VoidCallback onTap,
     required dynamic theme,
@@ -117,9 +121,16 @@ class AbilityBar extends ConsumerWidget {
     required bool isCompact,
     bool isBlocked = false,
   }) {
-    final bool disabled = (!canAfford && !isActive) || isBlocked;
+    final bool hasCharges = charges > 0;
+    final bool disabled = (!hasCharges && !canAfford && !isActive) || isBlocked;
     final double iconSize = isCompact ? 18 : 22;
     final double circleSize = isCompact ? 32 : 44;
+
+    final String? badgeText =
+        isBlocked ? null : (hasCharges ? '$charges' : '🪙$cost');
+    final Color badgeColor = hasCharges
+        ? const Color(0xFF2E7D32) // Un verde bosque estelar premium
+        : Colors.amber[800]!;
 
     return Expanded(
       child: GestureDetector(
@@ -134,41 +145,80 @@ class AbilityBar extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: circleSize,
-                height: circleSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isBlocked
-                      ? Colors.redAccent.withOpacity(0.05)
-                      : (isActive
-                          ? Colors.amber.withOpacity(0.2)
-                          : (disabled
-                              ? Colors.grey.withOpacity(0.1)
-                              : theme.primaryColor.withOpacity(0.1))),
-                  border: Border.all(
-                    color: isBlocked
-                        ? Colors.redAccent.withOpacity(0.3)
-                        : (isActive
-                            ? Colors.amber
-                            : (disabled
-                                ? Colors.grey.withOpacity(0.3)
-                                : theme.primaryColor.withOpacity(0.3))),
-                    width: isCompact ? 1 : 2,
+              Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: circleSize,
+                    height: circleSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isBlocked
+                          ? Colors.redAccent.withOpacity(0.05)
+                          : (isActive
+                              ? Colors.amber.withOpacity(0.2)
+                              : (disabled
+                                  ? Colors.grey.withOpacity(0.1)
+                                  : theme.primaryColor.withOpacity(0.1))),
+                      border: Border.all(
+                        color: isBlocked
+                            ? Colors.redAccent.withOpacity(0.3)
+                            : (isActive
+                                ? Colors.amber
+                                : (disabled
+                                    ? Colors.grey.withOpacity(0.3)
+                                    : theme.primaryColor.withOpacity(0.3))),
+                        width: isCompact ? 1 : 2,
+                      ),
+                    ),
+                    child: Icon(
+                      isBlocked ? Icons.lock_outline_rounded : icon,
+                      color: isBlocked
+                          ? Colors.redAccent.withOpacity(0.5)
+                          : (isActive
+                              ? Colors.amber
+                              : (disabled ? Colors.grey : theme.primaryColor)),
+                      size: iconSize,
+                    ),
                   ),
-                ),
-                child: Icon(
-                  isBlocked ? Icons.lock_outline_rounded : icon,
-                  color: isBlocked
-                      ? Colors.redAccent.withOpacity(0.5)
-                      : (isActive
-                          ? Colors.amber
-                          : (disabled ? Colors.grey : theme.primaryColor)),
-                  size: iconSize,
-                ),
+                  if (badgeText != null)
+                    Positioned(
+                      top: isCompact ? -4 : -6,
+                      right: isCompact ? -4 : -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: badgeColor,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color:
+                                isDark ? const Color(0xFF151522) : Colors.white,
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 3,
+                              offset: const Offset(0, 1.5),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          badgeText,
+                          style: GoogleFonts.outfit(
+                            fontSize: isCompact ? 7.5 : 8.5,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               if (!isCompact) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 5),
                 Text(
                   isBlocked ? 'BLOQUEO' : label,
                   style: GoogleFonts.outfit(
@@ -183,27 +233,6 @@ class AbilityBar extends ConsumerWidget {
                   ),
                 ),
               ],
-              // Costo (Pequeño)
-              if (!isBlocked)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('🪙',
-                        style: TextStyle(
-                            fontSize: 7,
-                            color: disabled ? Colors.grey : Colors.amber)),
-                    Text(
-                      '$cost',
-                      style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                        color: disabled
-                            ? Colors.grey
-                            : (isDark ? Colors.white38 : Colors.black38),
-                      ),
-                    ),
-                  ],
-                ),
             ],
           ),
         ),
