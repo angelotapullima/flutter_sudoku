@@ -47,6 +47,10 @@ class PreGameModal extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       barrierColor: Colors.black.withOpacity(0.7),
+      constraints: BoxConstraints(
+        maxWidth: 550,
+        maxHeight: MediaQuery.of(context).size.height * 0.88,
+      ),
       builder: (context) => PreGameModal(
         title: title,
         modeType: modeType,
