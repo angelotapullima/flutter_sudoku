@@ -3,17 +3,16 @@ import '../models/gamification_models.dart';
 import '../services/api_service.dart';
 import '../utils/sudoku_generator.dart';
 
+/// Estado de presentación exclusivo de Torneos Comunitarios Globales.
 class GamificationState {
   final GlobalTournament? activeTournament;
   final List<dynamic> tournamentRanking;
-  final List<DailyMission> missions;
   final bool isLoading;
   final String? error;
 
   GamificationState({
     this.activeTournament,
     this.tournamentRanking = const [],
-    this.missions = const [],
     this.isLoading = false,
     this.error,
   });
@@ -21,70 +20,56 @@ class GamificationState {
   GamificationState copyWith({
     GlobalTournament? activeTournament,
     List<dynamic>? tournamentRanking,
-    List<DailyMission>? missions,
     bool? isLoading,
     String? error,
   }) {
     return GamificationState(
       activeTournament: activeTournament ?? this.activeTournament,
       tournamentRanking: tournamentRanking ?? this.tournamentRanking,
-      missions: missions ?? this.missions,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
   }
 }
 
+/// Administrador de estado encargado de coordinar la participación y rankings de torneos.
 class GamificationNotifier extends StateNotifier<GamificationState> {
-
   GamificationNotifier() : super(GamificationState()) {
-    // Cargar datos iniciales siempre para dar visibilidad de misiones/torneos incluso a invitados
     refreshAll();
   }
 
   Future<void> refreshAll() async {
     state = state.copyWith(isLoading: true, error: null);
-    await Future.wait([
-      fetchActiveTournament(),
-      fetchDailyMissions(),
-    ]);
+    await fetchActiveTournament();
     state = state.copyWith(isLoading: false);
   }
 
   Future<void> fetchActiveTournament() async {
     final result = await ApiService.getActiveTournament();
     if (result['success']) {
-      final tournament = GlobalTournament.fromJson(result['data']['tournament']);
+      final tournament =
+          GlobalTournament.fromJson(result['data']['tournament']);
       final ranking = result['data']['ranking'] as List<dynamic>;
-      state = state.copyWith(activeTournament: tournament, tournamentRanking: ranking);
+      state = state.copyWith(
+          activeTournament: tournament, tournamentRanking: ranking);
     } else {
       state = state.copyWith(error: result['message']);
     }
   }
 
-  Future<void> fetchDailyMissions() async {
-    final result = await ApiService.getDailyMissions();
-    if (result['success']) {
-      final missions = (result['missions'] as List).map((m) => DailyMission.fromJson(m)).toList();
-      state = state.copyWith(missions: missions);
-    }
-  }
-
   Future<void> submitTournamentResult(int time, int errors) async {
     if (state.activeTournament == null) return;
-    
+
     final result = await ApiService.submitTournamentResult(
-      state.activeTournament!.id, 
-      time, 
-      errors
-    );
-    
+        state.activeTournament!.id, time, errors);
+
     if (result['success']) {
       await fetchActiveTournament(); // Refrescar ranking
     }
   }
 
-  Future<Map<String, dynamic>> createTournament(String title, String difficulty) async {
+  Future<Map<String, dynamic>> createTournament(
+      String title, String difficulty) async {
     // 1. Generar un Sudoku real para el torneo
     final sudokuData = SudokuGenerator.generate(difficulty: difficulty);
     final board = sudokuData['board']!;
@@ -115,15 +100,10 @@ class GamificationNotifier extends StateNotifier<GamificationState> {
       return {'success': false, 'message': result['message']};
     }
   }
-
-  Future<void> updateMissionProgress(int missionId, {int increment = 1}) async {
-    final result = await ApiService.updateMissionProgress(missionId, increment);
-    if (result['success']) {
-      await fetchDailyMissions();
-    }
-  }
 }
 
-final gamificationProvider = StateNotifierProvider<GamificationNotifier, GamificationState>((ref) {
+/// Proveedor de estado de torneos expuesto al sistema.
+final gamificationProvider =
+    StateNotifierProvider<GamificationNotifier, GamificationState>((ref) {
   return GamificationNotifier();
 });

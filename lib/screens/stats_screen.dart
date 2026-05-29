@@ -7,10 +7,10 @@ import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
 import '../models/user_profile.dart';
 import '../providers/storage_provider.dart';
-import '../services/api_service.dart';
 import '../utils/enums.dart';
 import 'login_screen.dart';
 import '../widgets/responsive_content_wrapper.dart';
+import '../features/leaderboards/presentation/providers/leaderboard_notifier.dart';
 
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
@@ -948,88 +948,31 @@ class LeaderboardView extends ConsumerStatefulWidget {
 class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
   String _activeTab = 'level';
   String _activeDifficulty = 'General';
-  List<dynamic> _leaderboardList = [];
-  bool _isLoading = false;
-  String? _errorMessage;
-
-  // Variables para desplazamiento infinito y paginación
-  int _currentPage = 1;
-  bool _hasMore = true;
-  bool _isLoadMoreRunning = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchLeaderboard();
-  }
-
-  Future<void> _fetchLeaderboard() async {
-    if (!mounted) return;
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-      _currentPage = 1;
-      _hasMore = true;
-      _leaderboardList = [];
-    });
-
-    final result = await ApiService.getLeaderboard(
-      type: _activeTab,
-      difficulty: _activeDifficulty,
-      page: 1,
-      limit: 15,
-    );
-
-    if (!mounted) return;
-    setState(() {
-      _isLoading = false;
-      if (result['success']) {
-        final List<dynamic> items = result['leaderboard'] ?? [];
-        _leaderboardList = items;
-        if (items.length < 15) {
-          _hasMore = false;
-        }
-      } else {
-        _errorMessage = result['message'];
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchLeaderboard();
     });
   }
 
-  Future<void> _loadMore() async {
-    if (_isLoading || _isLoadMoreRunning || !_hasMore) return;
+  void _fetchLeaderboard() {
+    ref.read(leaderboardStateProvider.notifier).fetchLeaderboard(
+          type: _activeTab,
+          difficulty: _activeDifficulty,
+        );
+  }
 
-    setState(() {
-      _isLoadMoreRunning = true;
-    });
-
-    final nextPage = _currentPage + 1;
-    final result = await ApiService.getLeaderboard(
-      type: _activeTab,
-      difficulty: _activeDifficulty,
-      page: nextPage,
-      limit: 15,
-    );
-
-    if (!mounted) return;
-    setState(() {
-      _isLoadMoreRunning = false;
-      if (result['success']) {
-        final List<dynamic> items = result['leaderboard'] ?? [];
-        if (items.isNotEmpty) {
-          _currentPage = nextPage;
-          _leaderboardList.addAll(items);
-        }
-        if (items.length < 15) {
-          _hasMore = false;
-        }
-      }
-    });
+  void _loadMore() {
+    ref.read(leaderboardStateProvider.notifier).loadMore();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final theme = ref.read(themeProvider.notifier).currentSudokuTheme;
+    final leaderboardState = ref.watch(leaderboardStateProvider);
 
     Widget layoutBody;
     if (widget.isDesktop || widget.isLandscape) {
@@ -1095,17 +1038,20 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _isLoading
+                  leaderboardState.isLoading
                       ? SizedBox(
                           height: 250,
                           child: Center(
                               child: CircularProgressIndicator(
                                   color: theme.primaryColor)),
                         )
-                      : _errorMessage != null
+                      : leaderboardState.errorMessage != null
                           ? SizedBox(
-                              height: 250, child: _buildErrorPlaceholder())
-                          : _leaderboardList.isEmpty
+                              height: 250,
+                              child: _buildErrorPlaceholder(
+                                  leaderboardState.errorMessage),
+                            )
+                          : leaderboardState.players.isEmpty
                               ? SizedBox(
                                   height: 250, child: _buildEmptyPlaceholder())
                               : _buildLeaderboardList(
@@ -1236,16 +1182,19 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
               ),
               const SizedBox(height: 14),
             ],
-            _isLoading
+            leaderboardState.isLoading
                 ? SizedBox(
                     height: 250,
                     child: Center(
                         child: CircularProgressIndicator(
                             color: theme.primaryColor)),
                   )
-                : _errorMessage != null
-                    ? SizedBox(height: 250, child: _buildErrorPlaceholder())
-                    : _leaderboardList.isEmpty
+                : leaderboardState.errorMessage != null
+                    ? SizedBox(
+                        height: 250,
+                        child: _buildErrorPlaceholder(
+                            leaderboardState.errorMessage))
+                    : leaderboardState.players.isEmpty
                         ? SizedBox(height: 250, child: _buildEmptyPlaceholder())
                         : _buildLeaderboardList(isDark, theme.primaryColor),
           ],
@@ -1255,9 +1204,9 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
 
     return NotificationListener<ScrollNotification>(
       onNotification: (ScrollNotification scrollInfo) {
-        if (!_isLoading &&
-            !_isLoadMoreRunning &&
-            _hasMore &&
+        if (!leaderboardState.isLoading &&
+            !leaderboardState.isLoadMoreRunning &&
+            leaderboardState.hasMore &&
             scrollInfo.metrics.pixels >=
                 scrollInfo.metrics.maxScrollExtent - 200) {
           _loadMore();
@@ -1298,7 +1247,7 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
                         : (isDark ? Colors.grey[400] : Colors.grey[700])))));
   }
 
-  Widget _buildErrorPlaceholder() {
+  Widget _buildErrorPlaceholder(String? errorMessage) {
     return Center(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       const Text('📡', style: TextStyle(fontSize: 44)),
@@ -1306,7 +1255,7 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
       const Text('Sin conexión con el ranking global',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
       const SizedBox(height: 6),
-      Text(_errorMessage ?? 'Verifica tu conexión de red o servidor.',
+      Text(errorMessage ?? 'Verifica tu conexión de red o servidor.',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 11, color: Colors.grey)),
       const SizedBox(height: 16),
@@ -1335,20 +1284,24 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
   }
 
   Widget _buildLeaderboardList(bool isDark, Color accentColor) {
+    final leaderboardState = ref.watch(leaderboardStateProvider);
+    final players = leaderboardState.players;
+    final isLoadMoreRunning = leaderboardState.isLoadMoreRunning;
+
     return Column(
       children: [
         ListView.builder(
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
-          itemCount: _leaderboardList.length,
+          itemCount: players.length,
           itemBuilder: (context, index) {
-            final player = _leaderboardList[index];
+            final player = players[index];
             final rank = index + 1;
-            final username = player['username'] as String? ?? 'Desconocido';
-            final level = player['level'] as int? ?? 1;
+            final username = player.username;
+            final level = player.level;
             String recordStr = _activeTab == 'speed'
-                ? '${(player['best_time'] as int? ?? 0) ~/ 60}:${((player['best_time'] as int? ?? 0) % 60).toString().padLeft(2, '0')} min'
-                : '⭐ ${player['xp'] as int? ?? 0} XP';
+                ? '${(player.bestTime ?? 0) ~/ 60}:${((player.bestTime ?? 0) % 60).toString().padLeft(2, '0')} min'
+                : '⭐ ${player.xp ?? 0} XP';
 
             Color? rankBgColor;
             Widget rankWidget;
@@ -1431,7 +1384,7 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
                         Text(
                           _activeTab == 'speed' &&
                                   _activeDifficulty == 'General'
-                              ? 'Nivel $level • ${player['difficulty'] ?? ''}'
+                              ? 'Nivel $level • ${player.difficulty ?? ''}'
                               : 'Nivel $level',
                           style: TextStyle(
                             fontSize: 10.5,
@@ -1455,7 +1408,7 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
             );
           },
         ),
-        if (_isLoadMoreRunning)
+        if (isLoadMoreRunning)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Center(

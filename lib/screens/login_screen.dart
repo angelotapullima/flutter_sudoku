@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import 'register_screen.dart';
+import '../features/auth/presentation/providers/auth_notifier.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -17,7 +18,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
@@ -30,34 +30,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-    final result = await ref.read(profileProvider.notifier).loginUserInCloud(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
+    final result = await ref.read(authStateProvider.notifier).login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      if (result['success']) {
+    if (!mounted) return;
+
+    result.fold(
+      (session) async {
+        // Descargamos el perfil actualizado y sincronizamos el progreso
+        await ref
+            .read(profileProvider.notifier)
+            .refreshProfileFromServerAfterAuth();
+        if (!mounted) return;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('¡Bienvenido a Sudoku Arena de nuevo!')),
         );
-      } else {
+      },
+      (failure) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Error al iniciar sesión.')),
+          SnackBar(content: Text(failure.message)),
         );
-      }
-    }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = ref.watch(themeProvider).isDarkMode;
     final sudokuTheme = ref.read(themeProvider.notifier).currentSudokuTheme;
+    final authState = ref.watch(authStateProvider);
+    final isLoading = authState.isLoading;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+      backgroundColor:
+          isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -131,7 +140,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: 32),
                 // Botón de Acción Principal
-                _buildLoginButton(sudokuTheme),
+                _buildLoginButton(sudokuTheme, isLoading),
 
                 const SizedBox(height: 40),
                 // Link a Registro
@@ -141,11 +150,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     children: [
                       Text(
                         '¿No tienes una cuenta? ',
-                        style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                        style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54),
                       ),
                       GestureDetector(
                         onTap: () => Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                          MaterialPageRoute(
+                              builder: (context) => const RegisterScreen()),
                         ),
                         child: Text(
                           'Regístrate',
@@ -195,39 +206,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             prefixIcon: Icon(icon, color: theme.primaryColor, size: 20),
             suffixIcon: isPassword
                 ? IconButton(
-                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    icon: Icon(_obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                     color: isDark ? Colors.white38 : Colors.black38,
                   )
                 : null,
             filled: true,
-            fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+            fillColor:
+                isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 18),
           ),
-          validator: (val) => val == null || val.isEmpty ? 'Este campo es obligatorio' : null,
+          validator: (val) =>
+              val == null || val.isEmpty ? 'Este campo es obligatorio' : null,
         ),
       ],
     );
   }
 
-  Widget _buildLoginButton(dynamic theme) {
+  Widget _buildLoginButton(dynamic theme, bool isLoading) {
     return SizedBox(
       width: double.infinity,
       height: 60,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleLogin,
+        onPressed: isLoading ? null : _handleLogin,
         style: ElevatedButton.styleFrom(
           backgroundColor: theme.primaryColor,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           elevation: 4,
           shadowColor: theme.primaryColor.withOpacity(0.3),
         ),
-        child: _isLoading
+        child: isLoading
             ? const CircularProgressIndicator(color: Colors.white)
             : Text(
                 'INICIAR SESIÓN',

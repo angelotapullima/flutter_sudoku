@@ -10,6 +10,7 @@ import 'storage_provider.dart';
 import 'profile_provider.dart';
 import 'gamification_provider.dart';
 import 'settings_provider.dart';
+import '../features/missions/presentation/providers/mission_notifier.dart';
 import 'campaign_provider.dart';
 
 class GameState {
@@ -265,7 +266,8 @@ class GameNotifier extends StateNotifier<GameState> {
     _timer?.cancel();
     _undoStack.clear();
 
-    final sudokuData = SudokuGenerator.generate(difficulty: difficulty, seed: seed);
+    final sudokuData =
+        SudokuGenerator.generate(difficulty: difficulty, seed: seed);
     final board = sudokuData['board']!;
     final solution = sudokuData['solution']!;
 
@@ -302,15 +304,17 @@ class GameNotifier extends StateNotifier<GameState> {
     // Validación de seguridad para evitar RangeError (Fase 3 Fix)
     // El puzzle y la solución deben tener exactamente 81 caracteres.
     final String cleanPuzzle = puzzle.padRight(81, '0').substring(0, 81);
-    final String decryptedSolution = SudokuCrypto.decryptSolutionResilient(solution);
-    final String cleanSolution = decryptedSolution.padRight(81, '1').substring(0, 81);
+    final String decryptedSolution =
+        SudokuCrypto.decryptSolutionResilient(solution);
+    final String cleanSolution =
+        decryptedSolution.padRight(81, '1').substring(0, 81);
 
     List<List<SudokuCell>> newGrid = List.generate(9, (r) {
       return List.generate(9, (c) {
         final index = r * 9 + c;
         final val = int.tryParse(cleanPuzzle[index]) ?? 0;
         final sol = int.tryParse(cleanSolution[index]) ?? 1;
-        
+
         return SudokuCell(
           row: r,
           col: c,
@@ -533,8 +537,7 @@ class GameNotifier extends StateNotifier<GameState> {
     if (userProfile.divineTouchCharges > 0) {
       // 1. Consumir carga del inventario si tiene
       profileNotifier.updateProfile(userProfile.copyWith(
-        divineTouchCharges: userProfile.divineTouchCharges - 1
-      ));
+          divineTouchCharges: userProfile.divineTouchCharges - 1));
     } else {
       // 2. Si no tiene cargas, comprar en caliente por 130 S-Coins (penalización)
       if (userProfile.coins < 130) return false;
@@ -576,7 +579,7 @@ class GameNotifier extends StateNotifier<GameState> {
     }
 
     state = state.copyWith(grid: newGrid);
-    
+
     _checkVictory();
     _saveGameToStorage();
     return true;
@@ -622,7 +625,9 @@ class GameNotifier extends StateNotifier<GameState> {
     List<List<SudokuCell>> newGrid = List.generate(9, (r) {
       return List.generate(9, (c) {
         final cell = state.grid[r][c];
-        return cell.isError ? cell.copyWith(value: 0, isError: false, notes: {}) : cell;
+        return cell.isError
+            ? cell.copyWith(value: 0, isError: false, notes: {})
+            : cell;
       });
     });
 
@@ -649,7 +654,10 @@ class GameNotifier extends StateNotifier<GameState> {
 
   /// HABILIDAD: RELOJ ESTELAR (Congela el cronómetro por 45 segundos)
   bool useFreezeTimer() {
-    if (state.isTimerFrozen || !state.hasStarted || state.isGameOver || state.isGameWon) return false;
+    if (state.isTimerFrozen ||
+        !state.hasStarted ||
+        state.isGameOver ||
+        state.isGameWon) return false;
 
     final profileNotifier = _ref.read(profileProvider.notifier);
     final userProfile = _ref.read(profileProvider);
@@ -658,8 +666,7 @@ class GameNotifier extends StateNotifier<GameState> {
     if (userProfile.timeFreezeCharges > 0) {
       // 1. Consumir carga del inventario si tiene
       profileNotifier.updateProfile(userProfile.copyWith(
-        timeFreezeCharges: userProfile.timeFreezeCharges - 1
-      ));
+          timeFreezeCharges: userProfile.timeFreezeCharges - 1));
     } else {
       // 2. Si no tiene cargas, comprar en caliente por 45 S-Coins (penalización)
       if (userProfile.coins < 45) return false;
@@ -681,7 +688,10 @@ class GameNotifier extends StateNotifier<GameState> {
 
   /// HABILIDAD: VISIÓN VERDADERA (Resalta errores actuales por 10 segundos)
   bool useTrueVision() {
-    if (state.isShowingErrors || !state.hasStarted || state.isGameOver || state.isGameWon) return false;
+    if (state.isShowingErrors ||
+        !state.hasStarted ||
+        state.isGameOver ||
+        state.isGameWon) return false;
 
     final profileNotifier = _ref.read(profileProvider.notifier);
     final userProfile = _ref.read(profileProvider);
@@ -689,9 +699,8 @@ class GameNotifier extends StateNotifier<GameState> {
     // Verificar e implementar la lógica híbrida F2P (Cargas vs. Monedas en caliente)
     if (userProfile.visionCharges > 0) {
       // 1. Consumir carga del inventario si tiene
-      profileNotifier.updateProfile(userProfile.copyWith(
-        visionCharges: userProfile.visionCharges - 1
-      ));
+      profileNotifier.updateProfile(
+          userProfile.copyWith(visionCharges: userProfile.visionCharges - 1));
     } else {
       // 2. Si no tiene cargas, comprar en caliente por 65 S-Coins (penalización)
       if (userProfile.coins < 65) return false;
@@ -731,6 +740,7 @@ class GameNotifier extends StateNotifier<GameState> {
     _saveGameToStorage();
     return true;
   }
+
   /// Genera una nueva partida de campaña (Fase 3 - Mapa Estelar)
   void startCampaignGame(
       int levelNumber, String puzzle, String solution, String difficulty) {
@@ -738,8 +748,10 @@ class GameNotifier extends StateNotifier<GameState> {
     _undoStack.clear();
 
     final String cleanPuzzle = puzzle.padRight(81, '0').substring(0, 81);
-    final String decryptedSolution = SudokuCrypto.decryptSolutionResilient(solution);
-    final String cleanSolution = decryptedSolution.padRight(81, '1').substring(0, 81);
+    final String decryptedSolution =
+        SudokuCrypto.decryptSolutionResilient(solution);
+    final String cleanSolution =
+        decryptedSolution.padRight(81, '1').substring(0, 81);
 
     List<List<SudokuCell>> newGrid = List.generate(9, (r) {
       return List.generate(9, (c) {
@@ -862,8 +874,9 @@ class GameNotifier extends StateNotifier<GameState> {
       if (state.isTournament && state.tournamentId != null) {
         // Enviar resultado real al servidor
         final gamification = _ref.read(gamificationProvider.notifier);
-        gamification.submitTournamentResult(state.elapsedSeconds, state.errorsCount);
-        
+        gamification.submitTournamentResult(
+            state.elapsedSeconds, state.errorsCount);
+
         // El ranking se actualizará automáticamente al volver a la pantalla de torneo
       }
 
@@ -875,15 +888,15 @@ class GameNotifier extends StateNotifier<GameState> {
       }
 
       // --- ACTUALIZAR MISIONES DIARIAS ---
-      final gamification = _ref.read(gamificationProvider.notifier);
-      
+      final missionsNotifier = _ref.read(missionsStateProvider.notifier);
+
       // Misión: Ganar partidas
       if (!state.isDailyChallenge) {
-        // Buscar si hay misión de "win_games"
-        final missions = _ref.read(gamificationProvider).missions;
+        // Buscar si hay misiones vigentes incompletas
+        final missions = _ref.read(missionsStateProvider).missionsList;
         for (var m in missions) {
           if (!m.isCompleted) {
-             gamification.updateMissionProgress(m.id);
+            missionsNotifier.updateMissionProgress(m.id);
           }
         }
       }
@@ -916,7 +929,9 @@ class GameNotifier extends StateNotifier<GameState> {
 
       // --- LÓGICA DE CAMPAÑA (Fase 3 - Desbloqueo de Niveles) ---
       if (state.isCampaign && state.campaignLevelNumber != null) {
-        _ref.read(campaignProvider.notifier).completeLevel(state.campaignLevelNumber!);
+        _ref
+            .read(campaignProvider.notifier)
+            .completeLevel(state.campaignLevelNumber!);
       }
 
       profileNotifier.unlockAchievement('primera_victoria');

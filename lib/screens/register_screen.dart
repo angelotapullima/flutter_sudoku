@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import 'login_screen.dart';
+import '../features/auth/presentation/providers/auth_notifier.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -18,7 +19,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
@@ -32,35 +32,49 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-    final result = await ref.read(profileProvider.notifier).registerUserInCloud(
-      username: _usernameController.text.trim(),
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
+    final localProgress =
+        ref.read(profileProvider.notifier).getLocalProgressMap();
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      if (result['success']) {
+    final result = await ref.read(authStateProvider.notifier).register(
+          username: _usernameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          localProgress: localProgress,
+        );
+
+    if (!mounted) return;
+
+    result.fold(
+      (session) async {
+        // Descargamos el perfil stelar unificado e inicializado desde la nube
+        await ref
+            .read(profileProvider.notifier)
+            .refreshProfileFromServerAfterAuth();
+        if (!mounted) return;
         Navigator.of(context).pop(); // Volver al home
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('¡Cuenta creada! Bienvenido a Sudoku Arena.')),
+          const SnackBar(
+              content: Text('¡Cuenta creada! Bienvenido a Sudoku Arena.')),
         );
-      } else {
+      },
+      (failure) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Error al crear la cuenta.')),
+          SnackBar(content: Text(failure.message)),
         );
-      }
-    }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = ref.watch(themeProvider).isDarkMode;
     final sudokuTheme = ref.read(themeProvider.notifier).currentSudokuTheme;
+    final authState = ref.watch(authStateProvider);
+    final isLoading = authState.isLoading;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+      backgroundColor:
+          isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -94,7 +108,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-
                 _buildTextField(
                   controller: _usernameController,
                   label: 'Nombre de Usuario',
@@ -119,10 +132,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   theme: sudokuTheme,
                   isPassword: true,
                 ),
-
                 const SizedBox(height: 40),
-                _buildRegisterButton(sudokuTheme),
-
+                _buildRegisterButton(sudokuTheme, isLoading),
                 const SizedBox(height: 32),
                 Center(
                   child: Row(
@@ -130,11 +141,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     children: [
                       Text(
                         '¿Ya tienes una cuenta? ',
-                        style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                        style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54),
                       ),
                       GestureDetector(
                         onTap: () => Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                          MaterialPageRoute(
+                              builder: (context) => const LoginScreen()),
                         ),
                         child: Text(
                           'Inicia Sesión',
@@ -185,13 +198,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             prefixIcon: Icon(icon, color: theme.primaryColor, size: 20),
             suffixIcon: isPassword
                 ? IconButton(
-                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    icon: Icon(_obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                     color: isDark ? Colors.white38 : Colors.black38,
                   )
                 : null,
             filled: true,
-            fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+            fillColor:
+                isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -200,8 +217,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
           validator: (val) {
             if (val == null || val.isEmpty) return 'Campo obligatorio';
-            if (label.contains('Usuario') && val.length < 3) return 'Mínimo 3 caracteres';
-            if (label.contains('Contraseña') && val.length < 6) return 'Mínimo 6 caracteres';
+            if (label.contains('Usuario') && val.length < 3)
+              return 'Mínimo 3 caracteres';
+            if (label.contains('Contraseña') && val.length < 6)
+              return 'Mínimo 6 caracteres';
             return null;
           },
         ),
@@ -209,20 +228,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Widget _buildRegisterButton(dynamic theme) {
+  Widget _buildRegisterButton(dynamic theme, bool isLoading) {
     return SizedBox(
       width: double.infinity,
       height: 60,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleRegister,
+        onPressed: isLoading ? null : _handleRegister,
         style: ElevatedButton.styleFrom(
           backgroundColor: theme.primaryColor,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           elevation: 4,
           shadowColor: theme.primaryColor.withOpacity(0.3),
         ),
-        child: _isLoading
+        child: isLoading
             ? const CircularProgressIndicator(color: Colors.white)
             : Text(
                 'CREAR CUENTA',

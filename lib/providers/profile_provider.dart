@@ -4,15 +4,17 @@ import '../services/storage_service.dart';
 import '../services/api_service.dart';
 import 'storage_provider.dart';
 import '../utils/enums.dart';
+import '../features/auth/presentation/providers/auth_notifier.dart';
 
 class ProfileNotifier extends StateNotifier<UserProfile> {
   final StorageService _storageService;
+  final Ref ref;
 
   // Canal/callback para alertar a la interfaz sobre eventos especiales de gamificación
   Function(String achievementTitle)? onAchievementUnlocked;
   Function(int newLevel, int rewardCoins)? onLevelUp;
 
-  ProfileNotifier(this._storageService) : super(const UserProfile()) {
+  ProfileNotifier(this._storageService, this.ref) : super(const UserProfile()) {
     _loadProfile();
     // Intentar obtener el perfil más reciente de la nube inmediatamente
     if (state.isRegistered) {
@@ -185,47 +187,17 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
     );
   }
 
-  /// REGISTRAR CUENTA EN EL SERVIDOR
-  Future<Map<String, dynamic>> registerUserInCloud({
-    required String username,
-    required String email,
-    required String password,
-  }) async {
-    final localProgress = getLocalProgressMap();
-
-    final result = await ApiService.register(
-      username: username,
-      email: email,
-      password: password,
-      localProgress: localProgress,
-    );
+  /// Descarga el perfil del servidor inmediatamente después de iniciar sesión o registrarse,
+  /// forzando la sincronización de sesión e inicialización del perfil stelar.
+  Future<bool> refreshProfileFromServerAfterAuth() async {
+    final result = await ApiService.getUserProfile();
 
     if (result['success']) {
-      final serverProfile = result['data']['profile'];
+      final serverProfile = result['data'];
       await _saveServerProfileLocally(serverProfile);
-      return {'success': true};
-    } else {
-      return {'success': false, 'message': result['message']};
+      return true;
     }
-  }
-
-  /// INICIAR SESIÓN EN EL SERVIDOR
-  Future<Map<String, dynamic>> loginUserInCloud({
-    required String email,
-    required String password,
-  }) async {
-    final result = await ApiService.login(
-      email: email,
-      password: password,
-    );
-
-    if (result['success']) {
-      final serverProfile = result['data']['profile'];
-      await _saveServerProfileLocally(serverProfile);
-      return {'success': true};
-    } else {
-      return {'success': false, 'message': result['message']};
-    }
+    return false;
   }
 
   /// SINCRONIZAR PROGRESO CON EL SERVIDOR
@@ -267,7 +239,7 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
 
   /// CERRAR SESIÓN
   Future<void> logout() async {
-    await ApiService.clearToken();
+    await ref.read(authStateProvider.notifier).logout();
     await _storageService.saveRegistrationDetails(
       isRegistered: false,
       username: 'Invitado',
@@ -460,5 +432,5 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
 final profileProvider =
     StateNotifierProvider<ProfileNotifier, UserProfile>((ref) {
   final storage = ref.watch(storageServiceProvider);
-  return ProfileNotifier(storage);
+  return ProfileNotifier(storage, ref);
 });

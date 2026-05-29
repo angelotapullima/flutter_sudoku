@@ -238,50 +238,7 @@ class ApiService {
     }
   }
 
-  /// OBTENER CLASIFICACIÓN GLOBAL (LEADERBOARD)
-  static Future<Map<String, dynamic>> getLeaderboard({
-    String type = 'level',
-    String difficulty = 'Iniciado',
-    int page = 1,
-    int limit = 15,
-  }) async {
-    final url = Uri.parse(
-        '$baseUrl/leaderboard?type=$type&difficulty=$difficulty&page=$page&limit=$limit');
-    final headers = await _getHeaders();
 
-    _log('REQ', 'GET',
-        '/leaderboard?type=$type&difficulty=$difficulty&page=$page&limit=$limit');
-
-    try {
-      final response = await http
-          .get(
-            url,
-            headers: headers,
-          )
-          .timeout(const Duration(seconds: 8));
-
-      final data = jsonDecode(response.body);
-      _log('RES', 'GET', '/leaderboard?type=$type&difficulty=$difficulty',
-          statusCode: response.statusCode, responseBody: response.body);
-
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'leaderboard': data['leaderboard'],
-          'status': 200
-        };
-      } else {
-        return {
-          'success': false,
-          'message': data['error'] ?? 'Error al cargar clasificación.',
-          'status': response.statusCode
-        };
-      }
-    } catch (e) {
-      _log('ERR', 'GET', '/leaderboard', error: e.toString());
-      return {'success': false, 'message': 'Sin conexión al servidor.'};
-    }
-  }
 
   // --- NUEVOS MÉTODOS DE GAMIFICACIÓN ---
 
