@@ -49,11 +49,13 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         final double width = constraints.maxWidth;
         final double height = constraints.maxHeight;
 
-        // Lógica de detección de Layout Trifecta
+        // Lógica de detección de Layout Trifecta inmune al teclado usando la orientación física del dispositivo
+        final bool isPhysicalLandscape =
+            MediaQuery.of(context).orientation == Orientation.landscape;
         DeviceLayoutType layoutType;
         if (width > 1100) {
           layoutType = DeviceLayoutType.desktop;
-        } else if (width > height && height < 600) {
+        } else if (isPhysicalLandscape && width < 950) {
           layoutType = DeviceLayoutType.landscapeMobile;
         } else {
           layoutType = DeviceLayoutType.portraitMobile;
@@ -88,8 +90,9 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                 Expanded(
                   child: Column(
                     children: [
-                      _buildCompactLandscapeHeader(
-                          context, userProfile, sudokuTheme, isCurrentTabDark),
+                      if (_selectedIndex != 2 && _selectedIndex != 4)
+                        _buildCompactLandscapeHeader(context, userProfile,
+                            sudokuTheme, isCurrentTabDark),
                       Expanded(
                           child: IndexedStack(
                               index: _selectedIndex, children: _screens)),
@@ -111,8 +114,9 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               children: [
                 Column(
                   children: [
-                    _buildUnifiedHeader(
-                        context, userProfile, sudokuTheme, isCurrentTabDark),
+                    if (_selectedIndex != 2 && _selectedIndex != 4)
+                      _buildUnifiedHeader(
+                          context, userProfile, sudokuTheme, isCurrentTabDark),
                     Expanded(
                         child: IndexedStack(
                             index: _selectedIndex, children: _screens)),

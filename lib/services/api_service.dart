@@ -238,8 +238,6 @@ class ApiService {
     }
   }
 
-
-
   // --- NUEVOS MÉTODOS DE GAMIFICACIÓN ---
 
   /// Crear un nuevo torneo comunitario
@@ -526,6 +524,28 @@ class ApiService {
       return response.statusCode == 201;
     } catch (e) {
       return false;
+    }
+  }
+
+  static Future<Map<String, dynamic>> kickMember(String usernameToKick) async {
+    final url = Uri.parse('$baseUrl/clans/kick');
+    final headers = await _getHeaders();
+    final body = jsonEncode({'usernameToKick': usernameToKick});
+    _log('REQ', 'POST', '/clans/kick');
+
+    try {
+      final response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 10));
+      _log('RES', 'POST', '/clans/kick',
+          statusCode: response.statusCode, responseBody: response.body);
+      return {
+        'success': response.statusCode == 200,
+        'error': jsonDecode(response.body)['error'],
+        'status': response.statusCode
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Sin conexión.', 'status': 500};
     }
   }
 

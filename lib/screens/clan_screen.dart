@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/clan_provider.dart';
+import '../features/clans/domain/entities/clan_details.dart';
+import '../features/clans/domain/entities/clan_member.dart';
+import '../features/clans/domain/entities/clan_message.dart';
+import '../features/clans/presentation/providers/clan_notifier.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
+import '../widgets/pre_game_modal.dart';
 import 'login_screen.dart';
 
 class ClanScreen extends ConsumerStatefulWidget {
@@ -15,6 +19,7 @@ class ClanScreen extends ConsumerStatefulWidget {
 
 class _ClanScreenState extends ConsumerState<ClanScreen> {
   final _messageController = TextEditingController();
+  int _activeTab = 0;
 
   @override
   void dispose() {
@@ -33,192 +38,32 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
       return _buildLoginRequired(context, isDark, sudokuTheme);
     }
 
-    if (clanState.isLoading) {
+    if (clanState.isLoading &&
+        clanState.details == null &&
+        clanState.availableClans.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
     return Scaffold(
       backgroundColor:
           isDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // Detectar Landscape Mobile (Ancho > Alto y Alto < 500)
-          final bool isLandscape =
-              constraints.maxWidth > constraints.maxHeight &&
-                  constraints.maxHeight < 500;
-
-          if (clanState.inClan) {
-            return isLandscape
-                ? _buildLandscapeMyClanView(clanState, isDark, sudokuTheme)
-                : _buildMyClanView(clanState, isDark, sudokuTheme);
-          }
-
-          return clanState.inClan
+      body: Stack(
+        children: [
+          clanState.inClan
               ? _buildMyClanView(clanState, isDark, sudokuTheme)
-              : _buildClanSelectionView(clanState, isDark, sudokuTheme);
-        },
-      ),
-    );
-  }
-
-  // --- NUEVA VISTA LANDSCAPE PARA EL CLAN (SIDE-BY-SIDE) ---
-  Widget _buildLandscapeMyClanView(
-      ClanState state, bool isDark, dynamic theme) {
-    final details = state.details!;
-
-    return Row(
-      children: [
-        // Lado Izquierdo: Información del Clan y Barra de Daño (Scrollable)
-        Expanded(
-          flex: 4,
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF13131A) : Colors.white,
-              border: Border(
-                  right: BorderSide(
-                      color: isDark ? Colors.white10 : Colors.black12)),
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _buildLandscapeClanInfo(details, theme, isDark),
-                  const SizedBox(height: 16),
-                  _buildLandscapeWarBotin(isDark),
-                  const SizedBox(height: 16),
-                  _buildLandscapeMonsterDamage(details, theme),
-                ],
+              : _buildClanSelectionView(clanState, isDark, sudokuTheme),
+          if (clanState.isLoading)
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: LinearProgressIndicator(
+                minHeight: 2,
+                backgroundColor: Colors.transparent,
               ),
             ),
-          ),
-        ),
-
-        // Lado Derecho: Chat y Miembros
-        Expanded(
-          flex: 6,
-          child: DefaultTabController(
-            length: 2,
-            child: Column(
-              children: [
-                TabBar(
-                  labelColor: theme.primaryColor,
-                  unselectedLabelColor: Colors.grey,
-                  indicatorColor: theme.primaryColor,
-                  labelStyle: const TextStyle(
-                      fontSize: 10, fontWeight: FontWeight.bold),
-                  tabs: const [
-                    Tab(text: 'CHAT'),
-                    Tab(text: 'MIEMBROS'),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      _buildChatView(state, isDark, theme),
-                      _buildMembersList(state, isDark, theme),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLandscapeClanInfo(
-      ClanDetails details, dynamic theme, bool isDark) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
-              shape: BoxShape.circle),
-          child: Text(details.tag,
-              style: TextStyle(
-                  color: theme.primaryColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(details.name,
-                  style: GoogleFonts.outfit(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
-              Text(details.description,
-                  style: const TextStyle(fontSize: 10, color: Colors.grey),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
-            ],
-          ),
-        ),
-        IconButton(
-          onPressed: () => _showLeaveClanDialog(context, theme),
-          icon: const Icon(Icons.logout_rounded,
-              color: Colors.redAccent, size: 16),
-          constraints: const BoxConstraints(),
-          padding: EdgeInsets.zero,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLandscapeWarBotin(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-          color: Colors.amber.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.amber.withOpacity(0.2))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('🎁 BOTÍN DE GUERRA',
-              style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.amber,
-                  letterSpacing: 0.5)),
-          const SizedBox(height: 2),
-          Text('500 🪙 y 50 💎 por derrotar al Titán.',
-              style: TextStyle(
-                  fontSize: 10,
-                  color: isDark ? Colors.white70 : Colors.black87)),
         ],
       ),
-    );
-  }
-
-  Widget _buildLandscapeMonsterDamage(ClanDetails details, dynamic theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('⚔️ DAÑO AL TITÁN',
-                style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-            Text('${details.monsterDamageTotal} HP',
-                style:
-                    const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            value: (details.monsterDamageTotal / 100000).clamp(0.0, 1.0),
-            minHeight: 8,
-            backgroundColor: theme.primaryColor.withOpacity(0.1),
-            valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
-          ),
-        ),
-      ],
     );
   }
 
@@ -229,7 +74,7 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('🛡️', style: TextStyle(fontSize: 60)), // Reducido de 80
+            const Text('🛡️', style: TextStyle(fontSize: 60)),
             const SizedBox(height: 16),
             Text(
               'LOGIAS CERRADAS',
@@ -268,122 +113,286 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
 
     return Column(
       children: [
-        // 1. Cabecera del Clan (Guerra de Monstruos)
-        _buildClanHeader(details, isDark, theme),
+        // 1. Cabecera del Clan ultra-compacta
+        _buildCompactClanHeader(details, isDark, theme),
 
-        // 2. Chat y Miembros
+        // 2. Tab Bar Personalizado (Inmune a Reconstrucciones de Foco)
+        _buildCustomTabBar(theme, isDark),
+
+        // 3. Contenedor de Vistas Estable
         Expanded(
-          child: DefaultTabController(
-            length: 2,
-            child: Column(
-              children: [
-                TabBar(
-                  labelColor: theme.primaryColor,
-                  unselectedLabelColor: Colors.grey,
-                  indicatorColor: theme.primaryColor,
-                  tabs: const [
-                    Tab(text: 'SALA DE LOGIA'),
-                    Tab(text: 'MIEMBROS'),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      _buildChatView(state, isDark, theme),
-                      _buildMembersList(state, isDark, theme),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          child: IndexedStack(
+            index: _activeTab,
+            children: [
+              _buildHomeTab(details, isDark, theme),
+              _buildChatView(state, isDark, theme),
+              _buildMembersList(state, isDark, theme),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildClanHeader(ClanDetails details, bool isDark, dynamic theme) {
+  Widget _buildCompactClanHeader(
+      ClanDetails details, bool isDark, dynamic theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF16161E) : Colors.white,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)
+        color: isDark ? const Color(0xFF0B0B12) : const Color(0xFFF9F9FC),
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+            width: 1,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        top: false,
+        child: Row(
+          children: [
+            // Tiny tag badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: theme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                details.tag,
+                style: GoogleFonts.outfit(
+                  color: theme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Clan Name
+            Expanded(
+              child: Text(
+                details.name,
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // Leave Button
+            IconButton(
+              onPressed: () => _showLeaveClanDialog(context, theme),
+              icon: const Icon(
+                Icons.logout_rounded,
+                color: Colors.redAccent,
+                size: 18,
+              ),
+              tooltip: 'Abandonar Logia',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomTabBar(dynamic theme, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF111116) : Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          _buildTabButton(0, 'INICIO', theme, isDark),
+          _buildTabButton(1, 'MENSAJES', theme, isDark),
+          _buildTabButton(2, 'MIEMBROS', theme, isDark),
         ],
       ),
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.primaryColor.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Text(details.tag,
-                    style: TextStyle(
-                        color: theme.primaryColor,
-                        fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _buildTabButton(int index, String title, dynamic theme, bool isDark) {
+    final bool isSelected = _activeTab == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _activeTab = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isSelected ? theme.primaryColor : Colors.transparent,
+                width: 2.5,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+              color: isSelected
+                  ? theme.primaryColor
+                  : (isDark ? Colors.white38 : Colors.black38),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHomeTab(ClanDetails details, bool isDark, dynamic theme) {
+    final double progress =
+        (details.monsterDamageTotal / 100000).clamp(0.0, 1.0);
+    final percent = (progress * 100).toInt();
+
+    // Detección responsiva de columnas de dificultad según orientación
+    final int crossCount =
+        MediaQuery.of(context).orientation == Orientation.landscape ? 4 : 2;
+    final double aspect =
+        MediaQuery.of(context).orientation == Orientation.landscape ? 3.0 : 2.2;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Tarjeta del Titán Activo (Limpia y minimalista)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF13131A) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(details.name,
+                    const Text('👾', style: TextStyle(fontSize: 22)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'TITÁN ACTIVO',
                         style: GoogleFonts.outfit(
-                            fontSize: 22, fontWeight: FontWeight.bold)),
-                    Text(details.description,
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.grey),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: theme.primaryColor,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              IconButton(
-                onPressed: () => _showLeaveClanDialog(context, theme),
-                icon: const Icon(Icons.logout_rounded,
-                    color: Colors.redAccent, size: 20),
-                tooltip: 'Abandonar Logia',
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'Omega Sudoku',
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Resuelvan tableros colectivamente para derrotar al monstruo de la semana.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // HP de Titán y Barra de Daño Limpia
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Vida del Titán: $percent%',
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      '${(details.monsterDamageTotal / 1000).toStringAsFixed(1)}k / 100k HP',
+                      style: GoogleFonts.shareTechMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: theme.primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 10,
+                    backgroundColor: theme.primaryColor.withOpacity(0.08),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(theme.primaryColor),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 24),
-          // --- NUEVO: BOTÍN DE GUERRA INFO ---
+          const SizedBox(height: 16),
+          // Card del Botín de Guerra Semanal (Minimalista, suave)
           Container(
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.only(bottom: 16),
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.05),
+              color: Colors.amber.withOpacity(0.06),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.amber.withOpacity(0.2)),
+              border: Border.all(
+                color: Colors.amber.withOpacity(0.15),
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
-                const Text('🎁', style: TextStyle(fontSize: 20)),
+                const Text('🎁', style: TextStyle(fontSize: 24)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'BOTÍN DE GUERRA SEMANAL',
-                        style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.amber,
-                            letterSpacing: 1),
-                      ),
                       Text(
-                        'Derroten al Titán para recibir 500 🪙 y 50 💎 cada uno.',
+                        'BOTÍN DE GUERRA SEMANAL',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.amber[800] ?? Colors.amber,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Derroten al Titán para recibir 500 monedas 🪙 y 50 gemas 💎 cada miembro al final de la semana.',
                         style: TextStyle(
-                            fontSize: 11,
-                            color: isDark ? Colors.white70 : Colors.black87),
+                          fontSize: 11,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
                       ),
                     ],
                   ),
@@ -391,36 +400,107 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
               ],
             ),
           ),
-          // Barra de Daño Colectivo
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 24),
+          // Sección de combate e invitación a jugar
+          Text(
+            '¡AL COMBATE!',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white70 : Colors.black87,
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Cada partida de Sudoku que resuelvas infligirá daño directo al Titán. ¡Escoge tu nivel y ataca!',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Grid de Dificultades / Botones de Ataque
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: crossCount,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: aspect,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('⚔️ DAÑO AL MONSTRUO',
-                      style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1)),
-                  Text('${details.monsterDamageTotal} / 100,000 HP',
-                      style: const TextStyle(
-                          fontSize: 10, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: LinearProgressIndicator(
-                  value: (details.monsterDamageTotal / 100000).clamp(0.0, 1.0),
-                  minHeight: 12,
-                  backgroundColor: theme.primaryColor.withOpacity(0.1),
-                  valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
-                ),
-              ),
+              _buildAttackButton(
+                  context, 'Fácil', 'normal', '+10 Daño', '⚡', theme, isDark),
+              _buildAttackButton(
+                  context, 'Medio', 'normal', '+25 Daño', '🔥', theme, isDark),
+              _buildAttackButton(context, 'Difícil', 'normal', '+50 Daño', '💥',
+                  theme, isDark),
+              _buildAttackButton(context, 'Experto', 'normal', '+100 Daño',
+                  '👑', theme, isDark),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAttackButton(
+    BuildContext context,
+    String difficulty,
+    String modeType,
+    String damageText,
+    String emoji,
+    dynamic theme,
+    bool isDark,
+  ) {
+    return InkWell(
+      onTap: () {
+        PreGameModal.show(
+          context,
+          title: difficulty,
+          modeType: modeType,
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF13131A) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: theme.primaryColor.withOpacity(0.15),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 14)),
+                const SizedBox(width: 4),
+                Text(
+                  difficulty,
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              damageText,
+              style: GoogleFonts.shareTechMono(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: theme.primaryColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -474,14 +554,31 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                             bottomRight: Radius.circular(isMe ? 0 : 20),
                           ),
                         ),
-                        child: Text(msg.message,
-                            style: TextStyle(
-                                fontSize: 14,
-                                color: isMe
-                                    ? Colors.white
-                                    : (isDark
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(msg.message,
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    color: isMe
                                         ? Colors.white
-                                        : Colors.black87))),
+                                        : (isDark
+                                            ? Colors.white
+                                            : Colors.black87))),
+                            if (isMe) ...[
+                              const SizedBox(height: 2),
+                              Icon(
+                                msg.isSent
+                                    ? Icons.done_all_rounded
+                                    : Icons.done_rounded,
+                                size: 12,
+                                color: msg.isSent
+                                    ? Colors.white.withOpacity(0.9)
+                                    : Colors.white.withOpacity(0.4),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -562,12 +659,16 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
   }
 
   Widget _buildMembersList(ClanState state, bool isDark, dynamic theme) {
+    final String currentUser = ref.read(profileProvider).username;
+    final bool isCurrentUserLeader = state.members
+        .any((m) => m.username == currentUser && m.role == 'leader');
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: state.members.length,
       itemBuilder: (context, index) {
         final member = state.members[index];
-        final int weeklyDamage = member['monster_damage_weekly'] ?? 0;
+        final int weeklyDamage = member.monsterDamageWeekly;
         final bool isMVP = index == 0 && weeklyDamage > 0;
 
         return Container(
@@ -587,7 +688,7 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
               children: [
                 CircleAvatar(
                   backgroundColor: theme.primaryColor.withOpacity(0.1),
-                  child: Text('${member['level']}',
+                  child: Text('${member.level}',
                       style: TextStyle(
                           color: theme.primaryColor,
                           fontWeight: FontWeight.bold,
@@ -603,10 +704,10 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
             ),
             title: Row(
               children: [
-                Text(member['username'],
+                Text(member.username,
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 15)),
-                if (member['role'] == 'leader')
+                if (member.role == 'leader')
                   Container(
                     margin: const EdgeInsets.only(left: 8),
                     padding:
@@ -623,26 +724,46 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
               ],
             ),
             subtitle: Text(
-                'Miembro desde: ${member['joined_at'].toString().substring(0, 10)}',
+                'Miembro desde: ${member.joinedAt.length >= 10 ? member.joinedAt.substring(0, 10) : member.joinedAt}',
                 style: const TextStyle(fontSize: 11)),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '⚔️ $weeklyDamage',
-                  style: GoogleFonts.shareTechMono(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isMVP
-                          ? Colors.amber
-                          : (isDark ? Colors.white70 : Colors.black87)),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '⚔️ $weeklyDamage',
+                      style: GoogleFonts.shareTechMono(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isMVP
+                              ? Colors.amber
+                              : (isDark ? Colors.white70 : Colors.black87)),
+                    ),
+                    const Text('DAÑO SEMANAL',
+                        style: TextStyle(
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5)),
+                  ],
                 ),
-                const Text('DAÑO SEMANAL',
-                    style: TextStyle(
-                        fontSize: 7,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5)),
+                if (isCurrentUserLeader && member.username != currentUser) ...[
+                  const SizedBox(width: 12),
+                  IconButton(
+                    onPressed: () =>
+                        _showKickConfirmDialog(context, member.username, theme),
+                    icon: const Icon(
+                      Icons.person_remove_rounded,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
+                    tooltip: 'Expulsar de la Logia',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ],
             ),
           ),
@@ -697,12 +818,12 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
                 child: ListTile(
-                  title: Text(clan['name'],
+                  title: Text(clan.name,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(clan['description']),
+                  subtitle: Text(clan.description),
                   trailing: ElevatedButton(
                     onPressed: () =>
-                        ref.read(clanProvider.notifier).joinClan(clan['id']),
+                        ref.read(clanProvider.notifier).joinClan(clan.id),
                     child: const Text('UNIRSE'),
                   ),
                 ),
@@ -739,6 +860,43 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
             },
             child: const Text('ABANDONAR',
                 style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showKickConfirmDialog(
+      BuildContext context, String targetUsername, dynamic theme) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Expulsar Miembro?'),
+        content: Text(
+            '¿Estás seguro de que deseas expulsar a $targetUsername de la logia?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CANCELAR')),
+          TextButton(
+            onPressed: () async {
+              final success = await ref
+                  .read(clanProvider.notifier)
+                  .kickMember(targetUsername);
+              if (mounted) {
+                Navigator.pop(context);
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'Has expulsado a $targetUsername de la logia.')),
+                  );
+                }
+              }
+            },
+            child: const Text('EXPULSAR',
+                style: TextStyle(
+                    color: Colors.redAccent, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
