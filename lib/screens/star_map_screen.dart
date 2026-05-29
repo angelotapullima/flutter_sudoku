@@ -21,6 +21,12 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final campaign = ref.watch(campaignNotifierProvider);
     final userProfile = ref.watch(profileProvider);
@@ -136,8 +142,11 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
   }
 
   Widget _buildHeaderOverlay(dynamic profile, dynamic theme) {
+    final double topPadding = MediaQuery.of(context).padding.top;
+
     return Container(
-      padding: const EdgeInsets.only(top: 50, bottom: 20, left: 24, right: 24),
+      padding:
+          EdgeInsets.only(top: topPadding > 0 ? topPadding : 20, bottom: 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -145,50 +154,57 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
           colors: [Colors.black.withOpacity(0.8), Colors.transparent],
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: ResponsiveContentWrapper(
+        maxWidth: 550,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'CONSTELACIÓN DEL ORIGEN',
-                style: GoogleFonts.outfit(
-                  color: Colors.white54,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'CONSTELACIÓN DEL ORIGEN',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white54,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  Text(
+                    'Sector ${profile.campaignLevel}',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                'Sector ${profile.campaignLevel}',
-                style: GoogleFonts.outfit(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Row(
+                  children: [
+                    const Text('🪙 ', style: TextStyle(fontSize: 14)),
+                    Text(
+                      '${profile.coins}',
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: Row(
-              children: [
-                const Text('🪙 ', style: TextStyle(fontSize: 14)),
-                Text(
-                  '${profile.coins}',
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
