@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../providers/settings_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/profile_provider.dart';
@@ -20,9 +21,11 @@ class SettingsScreen extends ConsumerWidget {
     final userProfile = ref.watch(profileProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
+      backgroundColor:
+          isDark ? const Color(0xFF12121A) : const Color(0xFFF9F9FC),
       appBar: AppBar(
-        title: Text('Ajustes', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text('Ajustes',
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: isDark ? Colors.white : Colors.black87,
@@ -47,7 +50,8 @@ class SettingsScreen extends ConsumerWidget {
                   title: 'Mostrar Cronómetro',
                   subtitle: 'Visualiza el tiempo transcurrido.',
                   value: settings.showTimer,
-                  onChanged: (val) => ref.read(settingsProvider.notifier).toggleShowTimer(),
+                  onChanged: (val) =>
+                      ref.read(settingsProvider.notifier).toggleShowTimer(),
                   theme: sudokuTheme,
                 ),
                 _buildSettingSwitch(
@@ -55,7 +59,9 @@ class SettingsScreen extends ConsumerWidget {
                   title: 'Números Restantes',
                   subtitle: 'Muestra cuántos números faltan colocar.',
                   value: settings.showRemainingNumbers,
-                  onChanged: (val) => ref.read(settingsProvider.notifier).toggleShowRemainingNumbers(),
+                  onChanged: (val) => ref
+                      .read(settingsProvider.notifier)
+                      .toggleShowRemainingNumbers(),
                   theme: sudokuTheme,
                 ),
                 _buildSettingSwitch(
@@ -63,7 +69,9 @@ class SettingsScreen extends ConsumerWidget {
                   title: 'Resaltado Inteligente',
                   subtitle: 'Resaltar números iguales y errores.',
                   value: settings.enableHighlighting,
-                  onChanged: (val) => ref.read(settingsProvider.notifier).toggleEnableHighlighting(),
+                  onChanged: (val) => ref
+                      .read(settingsProvider.notifier)
+                      .toggleEnableHighlighting(),
                   theme: sudokuTheme,
                 ),
                 _buildSettingSwitch(
@@ -71,7 +79,9 @@ class SettingsScreen extends ConsumerWidget {
                   title: 'Límite de Errores',
                   subtitle: 'Perder tras cometer 3 errores.',
                   value: settings.enableErrorLimit,
-                  onChanged: (val) => ref.read(settingsProvider.notifier).toggleEnableErrorLimit(),
+                  onChanged: (val) => ref
+                      .read(settingsProvider.notifier)
+                      .toggleEnableErrorLimit(),
                   theme: sudokuTheme,
                 ),
                 _buildSettingSwitch(
@@ -79,7 +89,9 @@ class SettingsScreen extends ConsumerWidget {
                   title: 'Vibración Háptica',
                   subtitle: 'Respuesta táctil al jugar.',
                   value: settings.enableVibration,
-                  onChanged: (val) => ref.read(settingsProvider.notifier).toggleEnableVibration(),
+                  onChanged: (val) => ref
+                      .read(settingsProvider.notifier)
+                      .toggleEnableVibration(),
                   theme: sudokuTheme,
                 ),
               ], isDark),
@@ -90,22 +102,39 @@ class SettingsScreen extends ConsumerWidget {
               _buildSectionTitle('Personalización'),
               _buildSettingsGroup([
                 _buildSettingSwitch(
-                  icon: isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  icon: isDark
+                      ? Icons.dark_mode_rounded
+                      : Icons.light_mode_rounded,
                   title: 'Modo Oscuro',
                   subtitle: 'Cambia el brillo de la interfaz.',
                   value: isDark,
-                  onChanged: (val) => ref.read(themeProvider.notifier).toggleDarkMode(),
+                  onChanged: (val) =>
+                      ref.read(themeProvider.notifier).toggleDarkMode(),
                   theme: sudokuTheme,
                 ),
               ], isDark),
 
               const SizedBox(height: 40),
               // Footer
-              Center(
-                child: Text(
-                  'Sudoku Arena v1.0.0',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                ),
+              FutureBuilder<PackageInfo>(
+                future: PackageInfo.fromPlatform(),
+                builder: (context, snapshot) {
+                  String versionStr = 'Sudoku Arena';
+                  if (snapshot.hasData && snapshot.data != null) {
+                    final info = snapshot.data!;
+                    versionStr =
+                        'Sudoku Arena v${info.version} (v${info.buildNumber})';
+                  }
+                  return Center(
+                    child: Text(
+                      versionStr,
+                      style: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
             ],
@@ -130,19 +159,23 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAccountCard(BuildContext context, WidgetRef ref, UserProfile user, dynamic theme, bool isDark) {
+  Widget _buildAccountCard(BuildContext context, WidgetRef ref,
+      UserProfile user, dynamic theme, bool isDark) {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
             if (!user.isRegistered) {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginScreen()));
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()));
             }
           },
           borderRadius: BorderRadius.circular(24),
@@ -154,7 +187,9 @@ class SettingsScreen extends ConsumerWidget {
                   radius: 26,
                   backgroundColor: theme.primaryColor.withOpacity(0.1),
                   child: Icon(
-                    user.isRegistered ? Icons.person_rounded : Icons.person_add_rounded,
+                    user.isRegistered
+                        ? Icons.person_rounded
+                        : Icons.person_add_rounded,
                     color: theme.primaryColor,
                     size: 28,
                   ),
@@ -166,10 +201,13 @@ class SettingsScreen extends ConsumerWidget {
                     children: [
                       Text(
                         user.isRegistered ? user.username : 'Usuario Invitado',
-                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.outfit(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        user.isRegistered ? user.email : 'Toca para sincronizar progreso',
+                        user.isRegistered
+                            ? user.email
+                            : 'Toca para sincronizar progreso',
                         style: TextStyle(color: Colors.grey[600], fontSize: 13),
                       ),
                     ],
@@ -178,10 +216,12 @@ class SettingsScreen extends ConsumerWidget {
                 if (user.isRegistered)
                   IconButton(
                     onPressed: () => _showLogoutDialog(context, ref, isDark),
-                    icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                    icon: const Icon(Icons.logout_rounded,
+                        color: Colors.redAccent),
                   )
                 else
-                  Icon(Icons.arrow_forward_ios_rounded, size: 16, color: theme.primaryColor),
+                  Icon(Icons.arrow_forward_ios_rounded,
+                      size: 16, color: theme.primaryColor),
               ],
             ),
           ),
@@ -195,7 +235,9 @@ class SettingsScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+        ],
       ),
       child: Column(children: children),
     );
@@ -213,7 +255,8 @@ class SettingsScreen extends ConsumerWidget {
       value: value,
       onChanged: onChanged,
       secondary: Icon(icon, color: theme.primaryColor),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+      title: Text(title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
       subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
       activeColor: theme.primaryColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
@@ -230,13 +273,16 @@ class SettingsScreen extends ConsumerWidget {
         title: const Text('¿Cerrar Sesión?'),
         content: const Text('Tu progreso en la nube se mantendrá seguro.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
               ref.read(profileProvider.notifier).logout();
               Navigator.pop(context);
             },
-            child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('Cerrar Sesión',
+                style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
