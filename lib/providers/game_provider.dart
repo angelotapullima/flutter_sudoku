@@ -11,7 +11,7 @@ import 'profile_provider.dart';
 import 'gamification_provider.dart';
 import 'settings_provider.dart';
 import '../features/missions/presentation/providers/mission_notifier.dart';
-import 'campaign_provider.dart';
+import '../features/campaign/presentation/providers/campaign_notifier.dart';
 
 class GameState {
   final List<List<SudokuCell>> grid;
@@ -930,7 +930,7 @@ class GameNotifier extends StateNotifier<GameState> {
       // --- LÓGICA DE CAMPAÑA (Fase 3 - Desbloqueo de Niveles) ---
       if (state.isCampaign && state.campaignLevelNumber != null) {
         _ref
-            .read(campaignProvider.notifier)
+            .read(campaignNotifierProvider.notifier)
             .completeLevel(state.campaignLevelNumber!);
       }
 

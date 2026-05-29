@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
-import '../providers/campaign_provider.dart';
+import '../features/campaign/presentation/providers/campaign_notifier.dart';
+import '../features/campaign/domain/entities/campaign_level.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/game_provider.dart';
@@ -21,7 +22,7 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final campaign = ref.watch(campaignProvider);
+    final campaign = ref.watch(campaignNotifierProvider);
     final userProfile = ref.watch(profileProvider);
     final sudokuTheme = ref.read(themeProvider.notifier).currentSudokuTheme;
 
@@ -34,13 +35,17 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
 
           // 2. El Camino Estelar (Mapa)
           if (campaign.isLoading)
-            const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+            const Center(
+                child: CircularProgressIndicator(color: Colors.cyanAccent))
           else if (campaign.error != null)
-            Center(child: Text('Error: ${campaign.error}', style: const TextStyle(color: Colors.white)))
+            Center(
+                child: Text('Error: ${campaign.error}',
+                    style: const TextStyle(color: Colors.white)))
           else
             ResponsiveContentWrapper(
               maxWidth: 550,
-              child: _buildMapPath(campaign.levels, userProfile.campaignLevel, sudokuTheme),
+              child: _buildMapPath(
+                  campaign.levels, userProfile.campaignLevel, sudokuTheme),
             ),
 
           // 3. Barra Superior Overlay
@@ -55,7 +60,8 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
     );
   }
 
-  Widget _buildMapPath(List<CampaignLevel> levels, int currentCampaignLevel, dynamic theme) {
+  Widget _buildMapPath(
+      List<CampaignLevel> levels, int currentCampaignLevel, dynamic theme) {
     return ListView.builder(
       controller: _scrollController,
       reverse: true, // Empezamos desde abajo
@@ -65,7 +71,7 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
         final level = levels[index];
         final bool isUnlocked = level.levelNumber <= currentCampaignLevel;
         final bool isCurrent = level.levelNumber == currentCampaignLevel;
-        
+
         // Lógica de posición serpenteante (Zig-Zag)
         double horizontalOffset = 60.0 * math.sin(index * 1.5);
 
@@ -84,7 +90,8 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
                     painter: _PathPainter(
                       startOffset: horizontalOffset,
                       endOffset: 60.0 * math.sin((index + 1) * 1.5),
-                      isUnlocked: isUnlocked && (level.levelNumber + 1 <= currentCampaignLevel),
+                      isUnlocked: isUnlocked &&
+                          (level.levelNumber + 1 <= currentCampaignLevel),
                       color: theme.primaryColor,
                     ),
                   ),
@@ -103,7 +110,9 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
                       _startLevel(level);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Este sistema estelar está bloqueado.')),
+                        const SnackBar(
+                            content:
+                                Text('Este sistema estelar está bloqueado.')),
                       );
                     }
                   },
@@ -118,13 +127,9 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
 
   void _startLevel(CampaignLevel level) {
     // Iniciar el juego con los datos fijos del nivel de campaña (Fase 3 Fix)
-    ref.read(gameProvider.notifier).startCampaignGame(
-      level.levelNumber, 
-      level.puzzleData, 
-      level.solutionData, 
-      level.difficulty
-    );
-    
+    ref.read(gameProvider.notifier).startCampaignGame(level.levelNumber,
+        level.puzzleData, level.solutionData, level.difficulty);
+
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const GameScreen()),
     );
@@ -177,7 +182,8 @@ class _StarMapScreenState extends ConsumerState<StarMapScreen> {
                 const Text('🪙 ', style: TextStyle(fontSize: 14)),
                 Text(
                   '${profile.coins}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -206,8 +212,8 @@ class _PlanetNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isBoss = level.isBoss();
-    final Color planetColor = isUnlocked 
-        ? (isBoss ? Colors.redAccent : theme.primaryColor) 
+    final Color planetColor = isUnlocked
+        ? (isBoss ? Colors.redAccent : theme.primaryColor)
         : Colors.grey.withOpacity(0.3);
 
     return GestureDetector(
@@ -219,8 +225,7 @@ class _PlanetNode extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               // Aura de brillo para el nivel actual
-              if (isCurrent)
-                _GlowingAura(color: planetColor),
+              if (isCurrent) _GlowingAura(color: planetColor),
 
               // Cuerpo del planeta
               Container(
@@ -236,24 +241,32 @@ class _PlanetNode extends StatelessWidget {
                     ],
                     stops: const [0.2, 0.6, 1.0],
                   ),
-                  boxShadow: isUnlocked ? [
-                    BoxShadow(
-                      color: planetColor.withOpacity(0.5),
-                      blurRadius: 20,
-                      spreadRadius: 2,
-                    )
-                  ] : [],
+                  boxShadow: isUnlocked
+                      ? [
+                          BoxShadow(
+                            color: planetColor.withOpacity(0.5),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          )
+                        ]
+                      : [],
                 ),
-                child: isUnlocked ? null : const Icon(Icons.lock_rounded, color: Colors.white24, size: 20),
+                child: isUnlocked
+                    ? null
+                    : const Icon(Icons.lock_rounded,
+                        color: Colors.white24, size: 20),
               ),
 
               // Texto del nivel
               if (isUnlocked && !isBoss)
                 Text(
                   '${level.levelNumber}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18),
                 ),
-              
+
               if (isBoss && isUnlocked)
                 const Icon(Icons.bolt_rounded, color: Colors.white, size: 40),
             ],
@@ -283,7 +296,8 @@ class _GlowingAura extends StatefulWidget {
   State<_GlowingAura> createState() => _GlowingAuraState();
 }
 
-class _GlowingAuraState extends State<_GlowingAura> with SingleTickerProviderStateMixin {
+class _GlowingAuraState extends State<_GlowingAura>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -377,9 +391,12 @@ class _PathPainter extends CustomPainter {
     final path = Path();
     path.moveTo(size.width / 2 + startOffset, 0);
     path.cubicTo(
-      size.width / 2 + startOffset, 90,
-      size.width / 2 + endOffset, 90,
-      size.width / 2 + endOffset, 180,
+      size.width / 2 + startOffset,
+      90,
+      size.width / 2 + endOffset,
+      90,
+      size.width / 2 + endOffset,
+      180,
     );
 
     canvas.drawPath(path, paint);
