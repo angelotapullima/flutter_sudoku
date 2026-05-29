@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "871305887230",
+    "project_id": "sudoku-arena-409d0",
+    "storage_bucket": "sudoku-arena-409d0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:871305887230:android:f1d3116d19ebae6e1014af",
+        "android_client_info": {
+          "package_name": "com.anked.dev.sudoku_arena"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlfR1Rie7dfk2fTmve5E-qPCrgOHMqAX8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
