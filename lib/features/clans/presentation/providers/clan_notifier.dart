@@ -304,6 +304,10 @@ class ClanNotifier extends StateNotifier<ClanState> {
       isSent: false, // Marcado como "enviando" (un solo check o gris)
     );
 
+    // Como la UI usa 'reverse: true', los mensajes más nuevos deben ir al final de la lista,
+    // o al principio dependiendo de cómo se está renderizando.
+    // En clan_screen.dart: final msg = state.messages[state.messages.length - 1 - index];
+    // Esto asume que el más nuevo está al final del array.
     state = state.copyWith(messages: [...state.messages, localMsg]);
 
     final result = await _sendClanMessageUseCase(text);
@@ -312,13 +316,20 @@ class ClanNotifier extends StateNotifier<ClanState> {
       (success) async {
         if (success) {
           // El mensaje real llegará por Socket.io ('new_message').
-          // Eliminamos el temporal para que no se duplique cuando llegue el oficial.
+          // Solo marcamos como enviado, dejaremos que el socket se encargue de no duplicar
+          // O lo removemos si confiamos plenamente en el socket. En móvil, si el socket falla,
+          // el mensaje temporal desaparecería. Mejor lo marcamos como enviado.
           state = state.copyWith(
-              messages: state.messages.where((m) => m.id != tempId).toList());
+              messages: state.messages.map((m) {
+            if (m.id == tempId) {
+              return m.copyWith(isSent: true);
+            }
+            return m;
+          }).toList());
         }
       },
       (failure) async {
-        // Si falla, podrías marcarlo como error o eliminarlo
+        // Si falla, lo quitamos de la lista optimista
         state = state.copyWith(
             messages: state.messages.where((m) => m.id != tempId).toList());
         if (failure.message == 'UNAUTHORIZED') {

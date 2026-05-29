@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import 'register_screen.dart';
 import '../features/auth/presentation/providers/auth_notifier.dart';
+import '../widgets/responsive_content_wrapper.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -43,6 +45,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await ref
             .read(profileProvider.notifier)
             .refreshProfileFromServerAfterAuth();
+
+        // Notificar al navegador que guarde/sincronice el formulario completado
+        TextInput.finishAutofillContext();
+
         if (!mounted) return;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -73,104 +79,113 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         foregroundColor: isDark ? Colors.white : Colors.black87,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40),
-                // Cabecera Minimalista y Elegante
-                Text(
-                  'Bienvenido\nde vuelta',
-                  style: GoogleFonts.outfit(
-                    fontSize: 42,
-                    fontWeight: FontWeight.bold,
-                    height: 1.1,
-                    color: isDark ? Colors.white : const Color(0xFF1A1A24),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  width: 60,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: sudokuTheme.primaryColor,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-                const SizedBox(height: 48),
-
-                // Campos de Texto
-                _buildTextField(
-                  controller: _emailController,
-                  label: 'Correo Electrónico',
-                  icon: Icons.alternate_email_rounded,
-                  isDark: isDark,
-                  theme: sudokuTheme,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _passwordController,
-                  label: 'Contraseña',
-                  icon: Icons.lock_outline_rounded,
-                  isDark: isDark,
-                  theme: sudokuTheme,
-                  isPassword: true,
-                ),
-
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      // Olvidé mi contraseña (concept)
-                    },
-                    child: Text(
-                      '¿Olvidaste tu contraseña?',
-                      style: TextStyle(
-                        color: sudokuTheme.primaryColor.withOpacity(0.8),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+        child: ResponsiveContentWrapper(
+          maxWidth: 450,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Form(
+              key: _formKey,
+              child: AutofillGroup(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 40),
+                    // Cabecera Minimalista y Elegante
+                    Text(
+                      'Bienvenido\nde vuelta',
+                      style: GoogleFonts.outfit(
+                        fontSize: 42,
+                        fontWeight: FontWeight.bold,
+                        height: 1.1,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A24),
                       ),
                     ),
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-                // Botón de Acción Principal
-                _buildLoginButton(sudokuTheme, isLoading),
-
-                const SizedBox(height: 40),
-                // Link a Registro
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '¿No tienes una cuenta? ',
-                        style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 60,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: sudokuTheme.primaryColor,
+                        borderRadius: BorderRadius.circular(3),
                       ),
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                              builder: (context) => const RegisterScreen()),
-                        ),
+                    ),
+                    const SizedBox(height: 48),
+
+                    // Campos de Texto
+                    _buildTextField(
+                      controller: _emailController,
+                      label: 'Correo Electrónico',
+                      icon: Icons.alternate_email_rounded,
+                      isDark: isDark,
+                      theme: sudokuTheme,
+                      autofillHints: const [AutofillHints.email],
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _passwordController,
+                      label: 'Contraseña',
+                      icon: Icons.lock_outline_rounded,
+                      isDark: isDark,
+                      theme: sudokuTheme,
+                      isPassword: true,
+                      autofillHints: const [AutofillHints.password],
+                    ),
+
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          // Olvidé mi contraseña (concept)
+                        },
                         child: Text(
-                          'Regístrate',
+                          '¿Olvidaste tu contraseña?',
                           style: TextStyle(
-                            color: sudokuTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
+                            color: sudokuTheme.primaryColor.withOpacity(0.8),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(height: 32),
+                    // Botón de Acción Principal
+                    _buildLoginButton(sudokuTheme, isLoading),
+
+                    const SizedBox(height: 40),
+                    // Link a Registro
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '¿No tienes una cuenta? ',
+                            style: TextStyle(
+                                color:
+                                    isDark ? Colors.white70 : Colors.black54),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                  builder: (context) => const RegisterScreen()),
+                            ),
+                            child: Text(
+                              'Regístrate',
+                              style: TextStyle(
+                                color: sudokuTheme.primaryColor,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -185,6 +200,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     required bool isDark,
     required dynamic theme,
     bool isPassword = false,
+    Iterable<String>? autofillHints,
+    TextInputType? keyboardType,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,6 +218,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         TextFormField(
           controller: controller,
           obscureText: isPassword && _obscurePassword,
+          autofillHints: autofillHints,
+          keyboardType: keyboardType,
+          textInputAction:
+              isPassword ? TextInputAction.done : TextInputAction.next,
+          onEditingComplete: isPassword ? _handleLogin : null,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: theme.primaryColor, size: 20),

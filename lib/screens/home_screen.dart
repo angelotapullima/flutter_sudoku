@@ -175,11 +175,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           GridView.count(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            crossAxisCount: (isDesktop || isLandscape) ? 4 : 2,
+                            // En escritorio mostrar 6 o 8 tarjetas por fila para que no sean gigantes,
+                            // en landscape 4, y en móvil 2.
+                            crossAxisCount:
+                                isDesktop ? 4 : (isLandscape ? 4 : 2),
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
+                            // Ajustar la proporción para que las tarjetas sean menos altas y más manejables.
                             childAspectRatio:
-                                (isDesktop || isLandscape) ? 1.45 : 1.25,
+                                isDesktop ? 2.0 : (isLandscape ? 1.6 : 1.25),
                             children: [
                               _buildModernDifficultyCard(context, ref,
                                   title: 'Iniciado',
@@ -703,47 +707,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: EdgeInsets.all(isLandscape ? 10.0 : 14.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(icon,
-                        style: TextStyle(fontSize: isLandscape ? 18 : 22)),
-                    Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                            color: accentColor, shape: BoxShape.circle)),
-                  ],
-                ),
-                SizedBox(height: isLandscape ? 8 : 10),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(title,
-                      style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.w900,
-                          fontSize: isLandscape ? 13 : 15,
-                          letterSpacing: 1,
-                          color:
-                              isDark ? Colors.white : const Color(0xFF2B2B36))),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(Icons.timer_outlined,
-                        size: isLandscape ? 8 : 10, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(bestTime > 0 ? '$min:$sec' : 'Sin Récord',
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(icon,
+                          style: TextStyle(fontSize: isLandscape ? 18 : 22)),
+                      Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                              color: accentColor, shape: BoxShape.circle)),
+                    ],
+                  ),
+                  SizedBox(height: isLandscape ? 8 : 10),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(title,
                         style: GoogleFonts.outfit(
-                            fontSize: isLandscape ? 9 : 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[500])),
-                  ],
-                ),
-              ],
+                            fontWeight: FontWeight.w900,
+                            fontSize: isLandscape ? 13 : 15,
+                            letterSpacing: 1,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF2B2B36))),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(Icons.timer_outlined,
+                          size: isLandscape ? 8 : 10, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(bestTime > 0 ? '$min:$sec' : 'Sin Récord',
+                          style: GoogleFonts.outfit(
+                              fontSize: isLandscape ? 9 : 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[500])),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -5,6 +5,7 @@ import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import 'login_screen.dart';
 import '../features/auth/presentation/providers/auth_notifier.dart';
+import '../widgets/responsive_content_wrapper.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -81,88 +82,98 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         foregroundColor: isDark ? Colors.white : Colors.black87,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
-                Text(
-                  'Crea tu\ncuenta',
-                  style: GoogleFonts.outfit(
-                    fontSize: 42,
-                    fontWeight: FontWeight.bold,
-                    height: 1.1,
-                    color: isDark ? Colors.white : const Color(0xFF1A1A24),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  width: 60,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: sudokuTheme.primaryColor,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                _buildTextField(
-                  controller: _usernameController,
-                  label: 'Nombre de Usuario',
-                  icon: Icons.person_outline_rounded,
-                  isDark: isDark,
-                  theme: sudokuTheme,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _emailController,
-                  label: 'Correo Electrónico',
-                  icon: Icons.alternate_email_rounded,
-                  isDark: isDark,
-                  theme: sudokuTheme,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _passwordController,
-                  label: 'Contraseña',
-                  icon: Icons.lock_outline_rounded,
-                  isDark: isDark,
-                  theme: sudokuTheme,
-                  isPassword: true,
-                ),
-                const SizedBox(height: 40),
-                _buildRegisterButton(sudokuTheme, isLoading),
-                const SizedBox(height: 32),
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '¿Ya tienes una cuenta? ',
-                        style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54),
+        child: ResponsiveContentWrapper(
+          maxWidth: 450,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Form(
+              key: _formKey,
+              child: AutofillGroup(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    Text(
+                      'Crea tu\ncuenta',
+                      style: GoogleFonts.outfit(
+                        fontSize: 42,
+                        fontWeight: FontWeight.bold,
+                        height: 1.1,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A24),
                       ),
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                              builder: (context) => const LoginScreen()),
-                        ),
-                        child: Text(
-                          'Inicia Sesión',
-                          style: TextStyle(
-                            color: sudokuTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 60,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: sudokuTheme.primaryColor,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    _buildTextField(
+                      controller: _usernameController,
+                      label: 'Nombre de Usuario',
+                      icon: Icons.person_outline_rounded,
+                      isDark: isDark,
+                      theme: sudokuTheme,
+                      autofillHints: const [AutofillHints.newUsername],
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _emailController,
+                      label: 'Correo Electrónico',
+                      icon: Icons.alternate_email_rounded,
+                      isDark: isDark,
+                      theme: sudokuTheme,
+                      autofillHints: const [AutofillHints.email],
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _passwordController,
+                      label: 'Contraseña',
+                      icon: Icons.lock_outline_rounded,
+                      isDark: isDark,
+                      theme: sudokuTheme,
+                      isPassword: true,
+                      autofillHints: const [AutofillHints.newPassword],
+                    ),
+                    const SizedBox(height: 40),
+                    _buildRegisterButton(sudokuTheme, isLoading),
+                    const SizedBox(height: 32),
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '¿Ya tienes una cuenta? ',
+                            style: TextStyle(
+                                color:
+                                    isDark ? Colors.white70 : Colors.black54),
                           ),
-                        ),
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginScreen()),
+                            ),
+                            child: Text(
+                              'Inicia Sesión',
+                              style: TextStyle(
+                                color: sudokuTheme.primaryColor,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
           ),
         ),
@@ -177,6 +188,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     required bool isDark,
     required dynamic theme,
     bool isPassword = false,
+    Iterable<String>? autofillHints,
+    TextInputType? keyboardType,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,6 +206,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         TextFormField(
           controller: controller,
           obscureText: isPassword && _obscurePassword,
+          autofillHints: autofillHints,
+          keyboardType: keyboardType,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: theme.primaryColor, size: 20),

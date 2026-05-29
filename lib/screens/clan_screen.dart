@@ -19,11 +19,34 @@ class ClanScreen extends ConsumerStatefulWidget {
 
 class _ClanScreenState extends ConsumerState<ClanScreen> {
   final _messageController = TextEditingController();
+  final _scrollController = ScrollController();
+  final _focusNode = FocusNode();
   int _activeTab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        // Cuando el teclado se abre, esperar a la animación y hacer scroll al fondo
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted && _scrollController.hasClients) {
+            _scrollController.animateTo(
+              0.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -511,80 +534,111 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
     return Column(
       children: [
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            itemCount: state.messages.length,
-            itemBuilder: (context, index) {
-              final msg = state.messages[index];
-              final bool isMe = msg.username == currentUser;
+          child: GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(),
+            child: ListView.builder(
+              controller: _scrollController,
+              reverse:
+                  true, // Ancla la lista a la parte inferior (Estilo WhatsApp)
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              itemCount: state.messages.length,
+              itemBuilder: (context, index) {
+                // Como la lista está invertida visualmente, obtenemos el mensaje desde el final hacia el principio
+                final msg = state.messages[state.messages.length - 1 - index];
+                final bool isMe = msg.username == currentUser;
 
-              return Align(
-                alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: Column(
-                    crossAxisAlignment: isMe
-                        ? CrossAxisAlignment.end
-                        : CrossAxisAlignment.start,
-                    children: [
-                      if (!isMe)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4.0, bottom: 4),
-                          child: Text(msg.username,
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.primaryColor)),
-                        ),
-                      Container(
-                        constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width * 0.75),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isMe
-                              ? theme.primaryColor
-                              : (isDark
-                                  ? Colors.white.withOpacity(0.08)
-                                  : Colors.grey[200]),
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(20),
-                            topRight: const Radius.circular(20),
-                            bottomLeft: Radius.circular(isMe ? 20 : 0),
-                            bottomRight: Radius.circular(isMe ? 0 : 20),
+                // Agrupación estilo WhatsApp: ¿Es el mensaje anterior (más viejo) del mismo usuario?
+                bool showName = !isMe;
+                if (!isMe && index + 1 < state.messages.length) {
+                  final olderMsg =
+                      state.messages[state.messages.length - 1 - (index + 1)];
+                  if (olderMsg.username == msg.username) {
+                    showName = false;
+                  }
+                }
+
+                // Espaciado: ¿Es el mensaje siguiente (más nuevo) del mismo usuario?
+                bool isLastInGroup = true;
+                if (index > 0) {
+                  final newerMsg =
+                      state.messages[state.messages.length - 1 - (index - 1)];
+                  if (newerMsg.username == msg.username) {
+                    isLastInGroup = false;
+                  }
+                }
+
+                return Align(
+                  alignment:
+                      isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Padding(
+                    padding:
+                        EdgeInsets.only(bottom: isLastInGroup ? 12.0 : 4.0),
+                    child: Column(
+                      crossAxisAlignment: isMe
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        if (showName)
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 4.0, bottom: 4),
+                            child: Text(msg.username,
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.primaryColor)),
+                          ),
+                        Container(
+                          constraints: BoxConstraints(
+                              maxWidth:
+                                  MediaQuery.of(context).size.width * 0.75),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isMe
+                                ? theme.primaryColor
+                                : (isDark
+                                    ? Colors.white.withOpacity(0.08)
+                                    : Colors.grey[200]),
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(20),
+                              topRight: const Radius.circular(20),
+                              bottomLeft: Radius.circular(isMe ? 20 : 0),
+                              bottomRight: Radius.circular(isMe ? 0 : 20),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(msg.message,
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: isMe
+                                          ? Colors.white
+                                          : (isDark
+                                              ? Colors.white
+                                              : Colors.black87))),
+                              if (isMe) ...[
+                                const SizedBox(height: 2),
+                                Icon(
+                                  msg.isSent
+                                      ? Icons.done_all_rounded
+                                      : Icons.done_rounded,
+                                  size: 12,
+                                  color: msg.isSent
+                                      ? Colors.white.withOpacity(0.9)
+                                      : Colors.white.withOpacity(0.4),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(msg.message,
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    color: isMe
-                                        ? Colors.white
-                                        : (isDark
-                                            ? Colors.white
-                                            : Colors.black87))),
-                            if (isMe) ...[
-                              const SizedBox(height: 2),
-                              Icon(
-                                msg.isSent
-                                    ? Icons.done_all_rounded
-                                    : Icons.done_rounded,
-                                size: 12,
-                                color: msg.isSent
-                                    ? Colors.white.withOpacity(0.9)
-                                    : Colors.white.withOpacity(0.4),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
         // Caja de entrada de texto optimizada
@@ -605,6 +659,7 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
               Expanded(
                 child: TextField(
                   controller: _messageController,
+                  focusNode: _focusNode,
                   style: TextStyle(
                       fontSize: 14,
                       color: isDark ? Colors.white : Colors.black87),
@@ -612,6 +667,11 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                     if (val.trim().isEmpty) return;
                     ref.read(clanProvider.notifier).sendChatMessage(val);
                     _messageController.clear();
+                    if (mounted && _scrollController.hasClients) {
+                      _scrollController.animateTo(0.0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut);
+                    }
                   },
                   decoration: InputDecoration(
                     hintText: 'Escribe un mensaje...',
@@ -638,6 +698,11 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                         .read(clanProvider.notifier)
                         .sendChatMessage(_messageController.text);
                     _messageController.clear();
+                    if (mounted && _scrollController.hasClients) {
+                      _scrollController.animateTo(0.0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut);
+                    }
                   },
                   borderRadius: BorderRadius.circular(24),
                   child: Container(

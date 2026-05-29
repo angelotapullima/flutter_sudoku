@@ -15,8 +15,8 @@ class ResponsiveContentWrapper extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final double width = constraints.maxWidth;
-        // Si es pantalla de escritorio, enmarcamos en una sección central refinada
-        if (width > 800) {
+        // Si la pantalla es más ancha que el máximo permitido, centramos y contenemos
+        if (width > maxWidth) {
           return Center(
             child: Container(
               constraints: BoxConstraints(maxWidth: maxWidth),
@@ -25,7 +25,7 @@ class ResponsiveContentWrapper extends StatelessWidget {
             ),
           );
         }
-        // En móviles, se renderiza de borde a borde normal
+        // Si no, renderizamos normalmente (aplica padding local si es necesario desde la vista)
         return child;
       },
     );

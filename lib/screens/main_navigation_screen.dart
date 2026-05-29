@@ -105,6 +105,9 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         }
 
         // Diseño Portrait Mobile (Original Protegido)
+        final bool isKeyboardOpen =
+            MediaQuery.of(context).viewInsets.bottom > 0;
+
         return Scaffold(
           backgroundColor: isCurrentTabDark
               ? const Color(0xFF0B0B12)
@@ -120,15 +123,16 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                     Expanded(
                         child: IndexedStack(
                             index: _selectedIndex, children: _screens)),
-                    const SizedBox(height: 85),
+                    if (!isKeyboardOpen) const SizedBox(height: 85),
                   ],
                 ),
-                Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 16,
-                    child: _buildGlassmorphicNavBar(
-                        sudokuTheme, isCurrentTabDark)),
+                if (!isKeyboardOpen)
+                  Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                      child: _buildGlassmorphicNavBar(
+                          sudokuTheme, isCurrentTabDark)),
               ],
             ),
           ),
