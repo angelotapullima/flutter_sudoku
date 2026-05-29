@@ -7,6 +7,7 @@
       "type": "dart",
       "program": "lib/main.dart",
       "args": [
+        "--flavor", "dev",
         "--dart-define-from-file=env/local.json"
       ]
     },
@@ -16,6 +17,7 @@
       "type": "dart",
       "program": "lib/main.dart",
       "args": [
+        "--flavor", "dev",
         "--dart-define-from-file=env/dev.json"
       ]
     },
@@ -25,6 +27,7 @@
       "type": "dart",
       "program": "lib/main.dart",
       "args": [
+        "--flavor", "prod",
         "--dart-define-from-file=env/prod.json"
       ]
     },
@@ -37,7 +40,8 @@
         "-d",
         "chrome",
         "--web-port",
-        "8080"
+        "8080",
+        "--dart-define-from-file=env/dev.json"
       ]
     },
     {
@@ -50,7 +54,7 @@
         "chrome",
         "--web-port",
         "8080",
-        "--dart-define=BASE_URL=http://localhost:3000/api"
+        "--dart-define-from-file=env/local.json"
       ]
     }
   ]
