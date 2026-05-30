@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_profile.dart';
 import '../services/storage_service.dart';
@@ -6,9 +7,11 @@ import '../services/push_notification_service.dart';
 import 'storage_provider.dart';
 import '../utils/enums.dart';
 import '../features/auth/presentation/providers/auth_notifier.dart';
+import '../utils/cosmic_logger.dart';
 
 class ProfileNotifier extends StateNotifier<UserProfile> {
   final StorageService _storageService;
+  Timer? _syncDebounceTimer;
   final Ref ref;
 
   // Canal/callback para alertar a la interfaz sobre eventos especiales de gamificación
@@ -204,21 +207,46 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
 
   /// SINCRONIZAR PROGRESO CON EL SERVIDOR
   Future<void> syncWithServer() async {
-    if (!state.isRegistered) return;
-
-    final localProgress = getLocalProgressMap();
-    final result = await ApiService.syncProfile(localProgress: localProgress);
-
-    if (result['success']) {
-      final serverProfile = result['data'];
-      await _saveServerProfileLocally(serverProfile);
-      print('✅ Progreso sincronizado exitosamente con la nube.');
-    } else {
-      print('⚠️ Error al sincronizar con el backend: ${result['message']}');
-      if (result['status'] == 401) {
-        await logout();
-      }
+    if (!state.isRegistered) {
+      CosmicLogger.warning(
+          'Sincronización cancelada: El usuario actual navega como "Invitado". REGÍSTRATE para acumular daño al monstruo del clan.');
+      return;
     }
+
+    // Cancelar el timer activo si hay múltiples llamadas seguidas en caliente
+    _syncDebounceTimer?.cancel();
+
+    // Pequeño retardo (debounce) de 400ms para coalescer las múltiples llamadas consecutivas
+    // en un único POST consolidado al final del frame o flujo de victoria
+    _syncDebounceTimer = Timer(const Duration(milliseconds: 400), () async {
+      final localProgress = getLocalProgressMap();
+      CosmicLogger.info(
+          '🚀 [DEBOUNCED] Iniciando sincronización de progreso consolidado...');
+      CosmicLogger.json('Payload Consolidado', localProgress);
+
+      try {
+        final result =
+            await ApiService.syncProfile(localProgress: localProgress);
+
+        if (result['success']) {
+          final serverProfile = result['data'];
+          await _saveServerProfileLocally(serverProfile);
+          CosmicLogger.success(
+              '¡Progreso consolidado sincronizado con éxito en el servidor!');
+        } else {
+          CosmicLogger.error(
+              'Fallo en sincronización con el servidor: ${result['message']}');
+          if (result['status'] == 401) {
+            CosmicLogger.warning('Sesión expirada (401), deslogueando...');
+            await logout();
+          }
+        }
+      } catch (e) {
+        CosmicLogger.error(
+            'Error de conexión al sincronizar progreso consolidado con el backend',
+            e);
+      }
+    });
   }
 
   /// OBTENER PERFIL ACTUAL DE LA NUBE
@@ -429,6 +457,12 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
     state = state.copyWith(campaignLevel: newCampaignLevel);
     _storageService.saveCampaignLevel(newCampaignLevel);
     syncWithServer();
+  }
+
+  @override
+  void dispose() {
+    _syncDebounceTimer?.cancel();
+    super.dispose();
   }
 }
 

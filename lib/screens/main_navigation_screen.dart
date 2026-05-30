@@ -14,10 +14,14 @@ import 'settings_screen.dart';
 import 'clan_screen.dart';
 import 'how_to_play_screen.dart';
 import '../providers/tutorial_keys_provider.dart';
+import '../services/push_notification_service.dart';
 import '../utils/enums.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
+
+  /// Instancia activa de la pantalla de navegación para control global de pestañas
+  static _MainNavigationScreenState? activeState;
 
   @override
   ConsumerState<MainNavigationScreen> createState() =>
@@ -27,6 +31,9 @@ class MainNavigationScreen extends ConsumerStatefulWidget {
 class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   int _selectedIndex = 0;
 
+  /// Obtiene la pestaña activa actual
+  int get selectedIndex => _selectedIndex;
+
   final List<Widget> _screens = const [
     HomeScreen(),
     StarMapScreen(),
@@ -34,6 +41,47 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     DailyChallengeScreen(),
     StatsScreen(),
   ];
+
+  /// Cambia programáticamente la pestaña activa
+  void setSelectedIndex(int index) {
+    if (mounted) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    MainNavigationScreen.activeState = this;
+
+    // Verificar si hay acciones de navegación push pendientes en el arranque (Cold Start)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Importamos PushNotificationService dinámicamente si es necesario, o lo leemos directamente
+      importNotificationServiceAndCheckPending();
+    });
+  }
+
+  void importNotificationServiceAndCheckPending() {
+    try {
+      final pendingData = PushNotificationService.pendingNotificationData;
+      if (pendingData != null) {
+        PushNotificationService.pendingNotificationData =
+            null; // Consumir acción
+        final type = pendingData['type'];
+        if (type == 'new_chat_message' || type == 'clan_kicked') {
+          setSelectedIndex(2); // Pestaña de Logias
+        }
+      }
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    MainNavigationScreen.activeState = null;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

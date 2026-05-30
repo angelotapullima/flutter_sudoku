@@ -9,6 +9,7 @@ import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/pre_game_modal.dart';
 import 'login_screen.dart';
+import '../utils/enums.dart';
 
 class ClanScreen extends ConsumerStatefulWidget {
   const ClanScreen({super.key});
@@ -147,7 +148,7 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
           child: IndexedStack(
             index: _activeTab,
             children: [
-              _buildHomeTab(details, isDark, theme),
+              _buildHomeTab(state, isDark, theme),
               _buildChatView(state, isDark, theme),
               _buildMembersList(state, isDark, theme),
             ],
@@ -277,9 +278,10 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
     );
   }
 
-  Widget _buildHomeTab(ClanDetails details, bool isDark, dynamic theme) {
+  Widget _buildHomeTab(ClanState state, bool isDark, dynamic theme) {
+    final details = state.details!;
     final double progress =
-        (details.monsterDamageTotal / 100000).clamp(0.0, 1.0);
+        (details.monsterDamageTotal / details.monsterHpMax).clamp(0.0, 1.0);
     final percent = (progress * 100).toInt();
 
     // Detección responsiva de columnas de dificultad según orientación
@@ -356,7 +358,7 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                       ),
                     ),
                     Text(
-                      '${(details.monsterDamageTotal / 1000).toStringAsFixed(1)}k / 100k HP',
+                      '${(details.monsterDamageTotal / 1000).toStringAsFixed(1)}k / ${(details.monsterHpMax / 1000).toStringAsFixed(0)}k HP',
                       style: GoogleFonts.shareTechMono(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -423,6 +425,8 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 20),
+          _buildBattleLog(state, isDark, theme),
           const SizedBox(height: 24),
           // Sección de combate e invitación a jugar
           Text(
@@ -452,14 +456,22 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
             mainAxisSpacing: 12,
             childAspectRatio: aspect,
             children: [
-              _buildAttackButton(
-                  context, 'Fácil', 'normal', '+10 Daño', '⚡', theme, isDark),
-              _buildAttackButton(
-                  context, 'Medio', 'normal', '+25 Daño', '🔥', theme, isDark),
-              _buildAttackButton(context, 'Difícil', 'normal', '+50 Daño', '💥',
-                  theme, isDark),
-              _buildAttackButton(context, 'Experto', 'normal', '+100 Daño',
-                  '👑', theme, isDark),
+              _buildAttackButton(context, GameDifficulty.apprentice, 'normal',
+                  '+10 Daño', '⚡', theme, isDark),
+              _buildAttackButton(context, GameDifficulty.cadet, 'normal',
+                  '+18 Daño', '🛡️', theme, isDark),
+              _buildAttackButton(context, GameDifficulty.explorer, 'normal',
+                  '+28 Daño', '🚀', theme, isDark),
+              _buildAttackButton(context, GameDifficulty.traveler, 'normal',
+                  '+40 Daño', '🔥', theme, isDark),
+              _buildAttackButton(context, GameDifficulty.strategist, 'normal',
+                  '+55 Daño', '🌌', theme, isDark),
+              _buildAttackButton(context, GameDifficulty.expert, 'normal',
+                  '+75 Daño', '💥', theme, isDark),
+              _buildAttackButton(context, GameDifficulty.master, 'normal',
+                  '+105 Daño', '🔮', theme, isDark),
+              _buildAttackButton(context, GameDifficulty.legend, 'normal',
+                  '+150 Daño', '👑', theme, isDark),
             ],
           ),
         ],
@@ -469,7 +481,7 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
 
   Widget _buildAttackButton(
     BuildContext context,
-    String difficulty,
+    GameDifficulty difficulty,
     String modeType,
     String damageText,
     String emoji,
@@ -480,7 +492,7 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
       onTap: () {
         PreGameModal.show(
           context,
-          title: difficulty,
+          title: difficulty.label,
           modeType: modeType,
         );
       },
@@ -503,12 +515,16 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
               children: [
                 Text(emoji, style: const TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
-                Text(
-                  difficulty,
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: isDark ? Colors.white : Colors.black87,
+                Expanded(
+                  child: Text(
+                    difficulty.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                 ),
               ],
@@ -736,6 +752,31 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
         final int weeklyDamage = member.monsterDamageWeekly;
         final bool isMVP = index == 0 && weeklyDamage > 0;
 
+        final bool isTop1 = index == 0 && weeklyDamage > 0;
+        final bool isTop2 = index == 1 && weeklyDamage > 0;
+        final bool isTop3 = index == 2 && weeklyDamage > 0;
+
+        String medalPrefix = '';
+        if (isTop1) medalPrefix = '🥇 ';
+        if (isTop2) medalPrefix = '🥈 ';
+        if (isTop3) medalPrefix = '🥉 ';
+
+        String hunterTitle = 'Recluta Silencioso';
+        Color titleColor = isDark ? Colors.white38 : Colors.black38;
+        if (weeklyDamage >= 1500) {
+          hunterTitle = 'Erradicador Cósmico 🌌';
+          titleColor = const Color(0xFFD08CF2);
+        } else if (weeklyDamage >= 800) {
+          hunterTitle = 'Gladiador Estelar ⚔️';
+          titleColor = const Color(0xFFFFD700);
+        } else if (weeklyDamage >= 300) {
+          hunterTitle = 'Defensor de la Logia 🛡️';
+          titleColor = const Color(0xFF64B5F6);
+        } else if (weeklyDamage > 0) {
+          hunterTitle = 'Cazador Iniciado 🚀';
+          titleColor = const Color(0xFF81C784);
+        }
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
@@ -769,6 +810,8 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
             ),
             title: Row(
               children: [
+                if (medalPrefix.isNotEmpty)
+                  Text(medalPrefix, style: const TextStyle(fontSize: 14)),
                 Text(member.username,
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 15)),
@@ -788,9 +831,29 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
                   ),
               ],
             ),
-            subtitle: Text(
-                'Miembro desde: ${member.joinedAt.length >= 10 ? member.joinedAt.substring(0, 10) : member.joinedAt}',
-                style: const TextStyle(fontSize: 11)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 2),
+                Text(
+                  hunterTitle,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    color: titleColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Miembro desde: ${member.joinedAt.length >= 10 ? member.joinedAt.substring(0, 10) : member.joinedAt}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDark ? Colors.white30 : Colors.black38,
+                  ),
+                ),
+              ],
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1071,5 +1134,160 @@ class _ClanScreenState extends ConsumerState<ClanScreen> {
         );
       }),
     );
+  }
+
+  Widget _buildBattleLog(ClanState state, bool isDark, dynamic theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF13131A) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('⚔️', style: TextStyle(fontSize: 18)),
+              const SizedBox(width: 8),
+              Text(
+                'BITÁCORA DE COMBATE',
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  color: theme.primaryColor,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (state.recentAttacks.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'El cosmos está en silencio. Ningún cazador ha atacado al Titán esta semana. ¡Sé el primero en golpear!',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
+              ),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: state.recentAttacks.length,
+              itemBuilder: (context, index) {
+                final attack = state.recentAttacks[index];
+                final emoji = _getDifficultyEmoji(attack.difficulty);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor.withOpacity(0.06),
+                          shape: BoxShape.circle,
+                        ),
+                        child:
+                            Text(emoji, style: const TextStyle(fontSize: 12)),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              attack.username,
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.87)
+                                    : Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              'Atacó en ${attack.difficulty}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: isDark ? Colors.white38 : Colors.black38,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '+${attack.damage} Daño',
+                            style: GoogleFonts.shareTechMono(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: theme.primaryColor,
+                            ),
+                          ),
+                          Text(
+                            _formatRelativeTime(attack.createdAt),
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: isDark ? Colors.white30 : Colors.black38,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatRelativeTime(DateTime dateTime) {
+    final difference = DateTime.now().difference(dateTime);
+    if (difference.inSeconds < 60) {
+      return 'hace instantes';
+    } else if (difference.inMinutes < 60) {
+      return 'hace ${difference.inMinutes} min';
+    } else if (difference.inHours < 24) {
+      return 'hace ${difference.inHours} h';
+    } else {
+      return 'hace ${difference.inDays} d';
+    }
+  }
+
+  String _getDifficultyEmoji(String difficulty) {
+    switch (difficulty) {
+      case 'Iniciado':
+        return '⚡';
+      case 'Cadete':
+        return '🛡️';
+      case 'Explorador':
+        return '🚀';
+      case 'Viajero':
+        return '🔥';
+      case 'Estratega':
+        return '🌌';
+      case 'Experto':
+        return '💥';
+      case 'Maestro':
+        return '🔮';
+      case 'Leyenda del Cosmos':
+        return '👑';
+      default:
+        return '⚔️';
+    }
   }
 }

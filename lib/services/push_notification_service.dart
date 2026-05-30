@@ -3,7 +3,9 @@ import 'dart:ui' show ImageFilter;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/env_config.dart';
+import '../screens/main_navigation_screen.dart';
 import '../../services/api_service.dart';
 
 class PushNotificationService {
@@ -15,6 +17,9 @@ class PushNotificationService {
   /// Llave global para acceder al contexto y overlays de la app en cualquier pantalla
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
+
+  /// Almacena datos de notificaciones pendientes de procesar si la app se inicia en frío (Cold Start)
+  static Map<String, dynamic>? pendingNotificationData;
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   bool _initialized = false;
@@ -48,27 +53,83 @@ class PushNotificationService {
       });
 
       // 4. Configurar escuchas de mensajes en primer plano (Foreground)
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
         debugPrint(
             '🔔 FCM: Mensaje recibido en primer plano: ${message.notification?.title}');
+
+        // Filtrar si el mensaje es del propio usuario remitente para no duplicar alertas
+        final senderUsername = message.data['senderUsername'];
+        if (senderUsername != null) {
+          final prefs = await SharedPreferences.getInstance();
+          final myUsername = prefs.getString('sudoku_username') ?? 'Invitado';
+          if (senderUsername == myUsername) {
+            debugPrint(
+                '🔔 FCM: Notificación ignorada porque fue enviada por el propio usuario actual ($myUsername).');
+            return;
+          }
+        }
+
+        // Filtrar si el mensaje es de tipo new_chat_message y el usuario ya está viendo la pestaña de Logia (índice 2)
+        final type = message.data['type'];
+        if (type == 'new_chat_message') {
+          final mainState = MainNavigationScreen.activeState;
+          if (mainState != null && mainState.selectedIndex == 2) {
+            debugPrint(
+                '🔔 FCM: Notificación de chat ignorada en primer plano porque el usuario ya está en la pestaña de Logia/Clan.');
+            return;
+          }
+        }
 
         final title = message.notification?.title ?? 'Mensaje Estelar';
         final body = message.notification?.body ?? '';
 
-        showInAppNotification(title, body);
+        showInAppNotification(title, body, message.data);
       });
 
-      // 5. Configurar escuchas de interacción (cuando el usuario toca la notificación)
+      // 5. Configurar escuchas de interacción cuando el usuario toca la notificación en Background
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         debugPrint(
             '🔔 FCM: El usuario abrió la app desde una notificación: ${message.data}');
-        // Aquí se puede manejar redirección inteligente a pantallas del juego
+        _handleNotificationClick(message.data);
       });
+
+      // 6. Verificar si la app se abrió desde un estado cerrado por una notificación (Cold Start)
+      RemoteMessage? initialMessage = await _fcm.getInitialMessage();
+      if (initialMessage != null) {
+        debugPrint(
+            '🔔 FCM: La app se abrió desde un estado cerrado por notificación: ${initialMessage.data}');
+        _handleNotificationClick(initialMessage.data);
+      }
 
       _initialized = true;
       debugPrint('🔔 FCM: Servicio inicializado exitosamente.');
     } catch (e) {
       debugPrint('⚠️ FCM: Error al inicializar servicio push: $e');
+    }
+  }
+
+  /// Procesa la acción de hacer click en una notificación (redirección)
+  static void _handleNotificationClick(Map<String, dynamic> data) {
+    debugPrint('🔔 FCM: Procesando click en notificación con datos: $data');
+    final type = data['type'];
+    if (type == 'new_chat_message' || type == 'clan_kicked') {
+      try {
+        final mainState = MainNavigationScreen.activeState;
+        if (mainState != null) {
+          // Si ya estamos montados en la pantalla principal
+          // Regresar de cualquier pantalla secundaria profunda (ej. a mitad de un juego o ajustes)
+          navigatorKey.currentState?.popUntil((route) => route.isFirst);
+          // Cambiar de pestaña al clan (índice 2)
+          mainState.setSelectedIndex(2);
+        } else {
+          // Si la app está en pleno Splash Screen, guardar como pendiente para ser consumida en el arranque
+          pendingNotificationData = data;
+          debugPrint(
+              '🔔 FCM: Guardada acción de navegación como pendiente para el arranque de la pantalla principal.');
+        }
+      } catch (e) {
+        debugPrint('⚠️ FCM: Error al procesar click de navegación: $e');
+      }
     }
   }
 
@@ -81,6 +142,15 @@ class PushNotificationService {
 
       String? token = await _fcm.getToken(vapidKey: vapidKey);
       if (token != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final syncedToken = prefs.getString('sudoku_fcm_token_synced');
+
+        if (syncedToken == token) {
+          debugPrint(
+              '🔔 FCM: El token push actual ya se encuentra sincronizado con el servidor. Saltando petición POST de red redundancies.');
+          return;
+        }
+
         debugPrint('🔔 FCM: Registrando Token Push actual: $token');
         await _sendTokenToServer(token);
       } else {
@@ -97,7 +167,10 @@ class PushNotificationService {
       // Intentar registrar el token. Solo se enviará si el usuario está autenticado
       final result = await ApiService.registerPushToken(token);
       if (result) {
-        debugPrint('✅ FCM: Token push sincronizado con el servidor.');
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('sudoku_fcm_token_synced', token);
+        debugPrint(
+            '✅ FCM: Token push sincronizado con el servidor y guardado localmente.');
       } else {
         debugPrint(
             '⚠️ FCM: Saltado registro en servidor (Usuario no autenticado o error temporal).');
@@ -130,7 +203,8 @@ class PushNotificationService {
   }
 
   /// Muestra una notificación in-app flotante y animada cuando la app está abierta en primer plano
-  static void showInAppNotification(String title, String body) {
+  static void showInAppNotification(
+      String title, String body, Map<String, dynamic> data) {
     final overlay = navigatorKey.currentState?.overlay;
     if (overlay == null) {
       debugPrint(
@@ -143,6 +217,7 @@ class PushNotificationService {
       builder: (context) => _InAppNotificationWidget(
         title: title,
         body: body,
+        data: data,
         onDismiss: () {
           try {
             entry.remove();
@@ -159,11 +234,13 @@ class PushNotificationService {
 class _InAppNotificationWidget extends StatefulWidget {
   final String title;
   final String body;
+  final Map<String, dynamic> data;
   final VoidCallback onDismiss;
 
   const _InAppNotificationWidget({
     required this.title,
     required this.body,
+    required this.data,
     required this.onDismiss,
   });
 
@@ -239,155 +316,169 @@ class _InAppNotificationWidgetState extends State<_InAppNotificationWidget>
               key: UniqueKey(),
               direction: DismissDirection.up,
               onDismissed: (_) => widget.onDismiss(),
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 480),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: shadowColor,
-                      blurRadius: 24,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(
-                        sigmaX: 12,
-                        sigmaY: 12), // ¡Efecto Glassmorphism premium!
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: bgColor,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: isDark
-                              ? const Color(0x2AFFFFFF)
-                              : const Color(0x1A000000),
-                          width: 1.5,
-                        ),
+              child: Material(
+                type: MaterialType
+                    .transparency, // Envoltura en Material para erradicar las doble líneas amarillas
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: shadowColor,
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 8),
                       ),
-                      child: Stack(
-                        children: [
-                          // Sutil destello de luz cósmica en el fondo
-                          if (isDark)
-                            Positioned(
-                              top: -40,
-                              left: -40,
-                              child: Container(
-                                width: 100,
-                                height: 100,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: RadialGradient(
-                                    colors: [
-                                      Color(0x335E5CE6),
-                                      Color(0x005E5CE6),
-                                    ],
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(
+                          sigmaX: 12,
+                          sigmaY: 12), // ¡Efecto Glassmorphism premium!
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0x2AFFFFFF)
+                                : const Color(0x1A000000),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Stack(
+                          children: [
+                            // Sutil destello de luz cósmica en el fondo
+                            if (isDark)
+                              Positioned(
+                                top: -40,
+                                left: -40,
+                                child: Container(
+                                  width: 100,
+                                  height: 100,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        Color(0x335E5CE6),
+                                        Color(0x005E5CE6),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0, vertical: 14.0),
-                            child: Row(
-                              children: [
-                                // Contenedor del Icono con gradiente estelar y resplandor
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF5E5CE6),
-                                        Color(0xFF8A3FFC)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 14.0),
+                              child: Row(
+                                children: [
+                                  // Contenedor del Icono con gradiente estelar y resplandor
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF5E5CE6),
+                                          Color(0xFF8A3FFC)
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(0x4D5E5CE6),
+                                          blurRadius: 10,
+                                          offset: Offset(0, 4),
+                                        ),
                                       ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
                                     ),
-                                    borderRadius: BorderRadius.circular(14),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x4D5E5CE6),
-                                        blurRadius: 10,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons
-                                        .auto_awesome, // Destello mágico RPG cósmico
-                                    color: Colors.white,
-                                    size: 22,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        widget.title,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
-                                          letterSpacing: 0.3,
-                                          color: isDark
-                                              ? Colors.white
-                                              : const Color(0xFF1C1C1E),
-                                          fontFamily:
-                                              'Outfit', // Tipografía premium del juego
-                                        ),
-                                      ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        widget.body,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 12.5,
-                                          height: 1.3,
-                                          color: isDark
-                                              ? const Color(0xFFB0B0C3)
-                                              : const Color(0xFF5F5F6E),
-                                          fontFamily: 'Outfit',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                // Botón de descarte translúcido
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(12),
-                                    onTap: _dismiss,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? const Color(0x1AFFFFFF)
-                                            : const Color(0x0A000000),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: const Icon(
-                                        Icons.close,
-                                        size: 16,
-                                        color: Color(0xFFA0A0B0),
-                                      ),
+                                    child: const Icon(
+                                      Icons
+                                          .auto_awesome, // Destello mágico RPG cósmico
+                                      color: Colors.white,
+                                      size: 22,
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          widget.title,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 14,
+                                            letterSpacing: 0.3,
+                                            color: isDark
+                                                ? Colors.white
+                                                : const Color(0xFF1C1C1E),
+                                            fontFamily:
+                                                'Outfit', // Tipografía premium del juego
+                                            decoration: TextDecoration
+                                                .none, // Evita la línea amarilla de texto
+                                          ),
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          widget.body,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 12.5,
+                                            height: 1.3,
+                                            color: isDark
+                                                ? const Color(0xFFB0B0C3)
+                                                : const Color(0xFF5F5F6E),
+                                            fontFamily: 'Outfit',
+                                            decoration: TextDecoration
+                                                .none, // Evita la línea amarilla de texto
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Botón de descarte translúcido
+                                  Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12),
+                                      onTap: () {
+                                        _dismiss();
+                                        PushNotificationService
+                                            ._handleNotificationClick(
+                                                widget.data);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? const Color(0x1AFFFFFF)
+                                              : const Color(0x0A000000),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: const Icon(
+                                          Icons.close,
+                                          size: 16,
+                                          color: Color(0xFFA0A0B0),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

@@ -10,6 +10,7 @@ import '../../data/repositories/clan_repository_impl.dart';
 import '../../domain/entities/clan_details.dart';
 import '../../domain/entities/clan_member.dart';
 import '../../domain/entities/clan_message.dart';
+import '../../domain/entities/clan_monster_attack.dart';
 import '../../domain/entities/my_clan_info.dart';
 import '../../domain/repositories/clan_repository.dart';
 import '../../domain/usecases/fund_clan_usecase.dart';
@@ -24,6 +25,7 @@ class ClanState {
   final ClanDetails? details;
   final List<ClanMember> members;
   final List<ClanMessage> messages;
+  final List<ClanMonsterAttack> recentAttacks;
   final List<ClanDetails> availableClans;
   final bool isLoading;
   final String? error;
@@ -33,6 +35,7 @@ class ClanState {
     this.details,
     this.members = const [],
     this.messages = const [],
+    this.recentAttacks = const [],
     this.availableClans = const [],
     this.isLoading = false,
     this.error,
@@ -43,6 +46,7 @@ class ClanState {
     ClanDetails? details,
     List<ClanMember>? members,
     List<ClanMessage>? messages,
+    List<ClanMonsterAttack>? recentAttacks,
     List<ClanDetails>? availableClans,
     bool? isLoading,
     String? error,
@@ -52,6 +56,7 @@ class ClanState {
       details: details ?? this.details,
       members: members ?? this.members,
       messages: messages ?? this.messages,
+      recentAttacks: recentAttacks ?? this.recentAttacks,
       availableClans: availableClans ?? this.availableClans,
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -196,6 +201,7 @@ class ClanNotifier extends StateNotifier<ClanState> {
             details: myClanInfo.details,
             members: myClanInfo.members,
             messages: myClanInfo.messages,
+            recentAttacks: myClanInfo.recentAttacks,
             isLoading: false,
           );
 

@@ -5,6 +5,7 @@ import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/game_provider.dart';
 import '../screens/game_screen.dart';
+import '../utils/enums.dart';
 
 /// Modal interactivo de preparación pre-partida y equipamiento de suministros RPG.
 class PreGameModal extends ConsumerWidget {
@@ -76,16 +77,29 @@ class PreGameModal extends ConsumerWidget {
     if (modeType == 'daily') {
       return {'coins': 80, 'xp': 600};
     }
-    switch (title) {
-      case 'Fácil':
+    final diffEnum = GameDifficultyExtension.fromString(title);
+    switch (diffEnum) {
+      case GameDifficulty.apprentice:
         return {'coins': 10, 'xp': 100};
-      case 'Medio':
+      case GameDifficulty.cadet:
+        return {'coins': 15, 'xp': 150};
+      case GameDifficulty.explorer:
         return {'coins': 25, 'xp': 250};
-      case 'Difícil':
-        return {'coins': 50, 'xp': 500};
-      case 'Experto':
+      case GameDifficulty.traveler:
+        return {'coins': 40, 'xp': 400};
+      case GameDifficulty.strategist:
+        return {'coins': 60, 'xp': 600};
+      case GameDifficulty.expert:
         return {'coins': 100, 'xp': 1000};
+      case GameDifficulty.master:
+        return {'coins': 150, 'xp': 1500};
+      case GameDifficulty.legend:
+        return {'coins': 250, 'xp': 2500};
       default:
+        // Soporte de compatibilidad clásico
+        if (title == 'Fácil') return {'coins': 10, 'xp': 100};
+        if (title == 'Medio') return {'coins': 25, 'xp': 250};
+        if (title == 'Difícil') return {'coins': 100, 'xp': 1000};
         return {'coins': 20, 'xp': 150};
     }
   }

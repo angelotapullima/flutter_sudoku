@@ -2,6 +2,7 @@ import '../../../../services/api_service.dart';
 import '../../domain/entities/clan_details.dart';
 import '../../domain/entities/clan_member.dart';
 import '../../domain/entities/clan_message.dart';
+import '../../domain/entities/clan_monster_attack.dart';
 import '../../domain/entities/my_clan_info.dart';
 
 abstract class ClanRemoteDataSource {
@@ -37,12 +38,15 @@ class ClanRemoteDataSourceImpl implements ClanRemoteDataSource {
     final detailsJson = response['details'];
     final membersList = response['members'] as List? ?? [];
     final messagesList = response['messages'] as List? ?? [];
+    final attacksList = response['recentAttacks'] as List? ?? [];
 
     return MyClanInfo(
       inClan: true,
       details: detailsJson != null ? ClanDetails.fromJson(detailsJson) : null,
       members: membersList.map((m) => ClanMember.fromJson(m)).toList(),
       messages: messagesList.map((m) => ClanMessage.fromJson(m)).toList(),
+      recentAttacks:
+          attacksList.map((a) => ClanMonsterAttack.fromJson(a)).toList(),
     );
   }
 
