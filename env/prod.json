@@ -1,5 +1,6 @@
 {
-  "BASE_URL": "https://apisudokudev.anked.dev/api",
+  "BASE_URL": "https://apisudoku.anked.dev/api",
   "APP_NAME": "Sudoku Premium",
-  "ENV": "prod"
+  "ENV": "prod",
+  "VAPID_KEY": "TU_CLAVE_VAPID_PROD_AQUÍ"
 }

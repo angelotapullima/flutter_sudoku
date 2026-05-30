@@ -4,6 +4,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../../../../core/utils/result.dart';
 import '../../../../providers/profile_provider.dart';
 import '../../../../services/api_service.dart';
+import '../../../../services/push_notification_service.dart';
 import '../../data/datasources/clan_remote_data_source.dart';
 import '../../data/repositories/clan_repository_impl.dart';
 import '../../domain/entities/clan_details.dart';
@@ -183,6 +184,13 @@ class ClanNotifier extends StateNotifier<ClanState> {
         if (myClanInfo.inClan) {
           print(
               '✅ ClanNotifier.refresh: Usuario está en el clan: ${myClanInfo.details?.name}');
+
+          final oldClanId = state.details?.id;
+          final newClanId = myClanInfo.details?.id;
+          if (oldClanId != null && oldClanId != newClanId) {
+            PushNotificationService().unsubscribeFromClan(oldClanId);
+          }
+
           state = state.copyWith(
             inClan: true,
             details: myClanInfo.details,
@@ -190,9 +198,19 @@ class ClanNotifier extends StateNotifier<ClanState> {
             messages: myClanInfo.messages,
             isLoading: false,
           );
+
+          if (newClanId != null) {
+            PushNotificationService().subscribeToClan(newClanId);
+          }
         } else {
           print(
               'ℹ️ ClanNotifier.refresh: Usuario no está en un clan. Obteniendo lista disponible...');
+
+          final oldClanId = state.details?.id;
+          if (oldClanId != null) {
+            PushNotificationService().unsubscribeFromClan(oldClanId);
+          }
+
           // 2. Si no tengo clan, listar disponibles
           final listResult = await _listAvailableClansUseCase();
           listResult.fold(
@@ -242,6 +260,7 @@ class ClanNotifier extends StateNotifier<ClanState> {
         if (success) {
           await refresh();
           if (state.inClan && state.details != null) {
+            PushNotificationService().subscribeToClan(state.details!.id);
             _socket?.emit('join_clan', state.details!.id);
           }
           return true;
@@ -268,6 +287,7 @@ class ClanNotifier extends StateNotifier<ClanState> {
     return await result.fold(
       (success) async {
         if (success) {
+          PushNotificationService().subscribeToClan(clanId);
           await refresh();
           if (state.inClan && state.details != null) {
             _socket?.emit('join_clan', state.details!.id);
@@ -340,12 +360,16 @@ class ClanNotifier extends StateNotifier<ClanState> {
   }
 
   Future<bool> leaveClan() async {
+    final oldClanId = state.details?.id;
     state = state.copyWith(isLoading: true);
     final result = await _leaveClanUseCase();
 
     return await result.fold(
       (success) async {
         if (success) {
+          if (oldClanId != null) {
+            PushNotificationService().unsubscribeFromClan(oldClanId);
+          }
           state = state.copyWith(
             inClan: false,
             details: null,

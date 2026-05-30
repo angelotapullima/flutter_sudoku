@@ -1,5 +1,6 @@
 {
   "BASE_URL": "http://192.168.1.56:3000/api",
   "APP_NAME": "Sudoku Local",
-  "ENV": "local"
+  "ENV": "local",
+  "VAPID_KEY": "BBen0Bawo8JFY7hz4bjiUIS4nOzLfJkFaGkEIfA81hgWpuSg5883ynDbn03EaqXADjKOVBMB5-tcRXpx5P0Ofp0"
 }

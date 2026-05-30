@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/env_config.dart';
@@ -546,6 +548,33 @@ class ApiService {
       };
     } catch (e) {
       return {'success': false, 'error': 'Sin conexión.', 'status': 500};
+    }
+  }
+
+  static Future<bool> registerPushToken(String token) async {
+    final tokenStored = await getToken();
+    if (tokenStored == null) {
+      // El usuario no está logueado, no podemos asociar el token push
+      return false;
+    }
+
+    final url = Uri.parse('$baseUrl/profile/push-token');
+    final headers = await _getHeaders();
+    final body = jsonEncode({
+      'token': token,
+      'deviceType': kIsWeb ? 'web' : (Platform.isAndroid ? 'android' : 'ios'),
+    });
+    _log('REQ', 'POST', '/profile/push-token');
+
+    try {
+      final response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 10));
+      _log('RES', 'POST', '/profile/push-token',
+          statusCode: response.statusCode, responseBody: response.body);
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
 

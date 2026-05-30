@@ -12,6 +12,7 @@ import 'config/env_config.dart';
 import 'config/firebase_options_dev.dart' as dev;
 import 'config/firebase_options_prod.dart' as prod;
 import 'services/local_storage_service.dart';
+import 'services/push_notification_service.dart';
 import 'providers/storage_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/animated_splash_screen.dart';
@@ -30,9 +31,16 @@ void main() async {
           ? prod.DefaultFirebaseOptions.currentPlatform
           : dev.DefaultFirebaseOptions.currentPlatform;
 
-      await Firebase.initializeApp(options: options);
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(options: options);
+      }
       debugPrint(
           '🔥 Firebase inicializado en entorno: ${EnvConfig.isProd ? "PROD" : "DEV"}');
+
+      // Inicializar FCM después de Firebase de forma no bloqueante para Android y Web
+      if (kIsWeb || Platform.isAndroid) {
+        PushNotificationService().init();
+      }
 
       // Configurar Firebase Crashlytics solo si NO es Web (Crashlytics web no está soportado de la misma manera)
       if (!kIsWeb) {
@@ -82,6 +90,7 @@ class MyApp extends ConsumerWidget {
     final baseTheme = isDark ? ThemeData.dark() : ThemeData.light();
 
     return MaterialApp(
+      navigatorKey: PushNotificationService.navigatorKey,
       title: 'Sudoku Arena',
       debugShowCheckedModeBanner: false,
       theme: baseTheme.copyWith(

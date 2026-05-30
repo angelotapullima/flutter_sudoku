@@ -1,5 +1,6 @@
 {
   "BASE_URL": "https://apisudokudev.anked.dev/api",
   "APP_NAME": "Sudoku Dev",
-  "ENV": "dev"
+  "ENV": "dev",
+  "VAPID_KEY": "BBen0Bawo8JFY7hz4bjiUIS4nOzLfJkFaGkEIfA81hgWpuSg5883ynDbn03EaqXADjKOVBMB5-tcRXpx5P0Ofp0"
 }

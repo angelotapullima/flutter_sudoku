@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_profile.dart';
 import '../services/storage_service.dart';
 import '../services/api_service.dart';
+import '../services/push_notification_service.dart';
 import 'storage_provider.dart';
 import '../utils/enums.dart';
 import '../features/auth/presentation/providers/auth_notifier.dart';
@@ -195,6 +196,7 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
     if (result['success']) {
       final serverProfile = result['data'];
       await _saveServerProfileLocally(serverProfile);
+      PushNotificationService().registerToken();
       return true;
     }
     return false;
@@ -228,6 +230,7 @@ class ProfileNotifier extends StateNotifier<UserProfile> {
     if (result['success']) {
       final serverProfile = result['data'];
       await _saveServerProfileLocally(serverProfile);
+      PushNotificationService().registerToken();
     } else {
       if (result['status'] == 401) {
         await logout();

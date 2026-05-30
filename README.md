@@ -39,36 +39,75 @@ Para correr la app en un emulador o dispositivo físico conectado:
 flutter run
 ```
 
-### 📦 Compilación para Producción (Release)
+### 📦 Compilación y Despliegue (Release)
 
-#### Android
-Genera un APK o un App Bundle (para Google Play):
+Este proyecto utiliza **Flavors** para separar los entornos de Desarrollo y Producción. Es fundamental usar el archivo de entorno (`.json`) correspondiente para que la app apunte al backend y al proyecto de Firebase correcto.
 
-```bash
-# Generar APK
-flutter build apk --release
-
-# Generar App Bundle (AAB)
-flutter build appbundle --release
-```
-*El resultado se encontrará en: `build/app/outputs/flutter-apk/app-release.apk`*
-
-#### iOS
-Requiere macOS y Xcode:
+#### 🛠️ Entorno de Desarrollo (Dev - Pruebas Cerradas)
+Ideal para subir a Google Play Console en el canal de pruebas internas o cerradas:
 
 ```bash
-# Preparar la compilación de iOS
-flutter build ios --release
+flutter build appbundle --flavor dev --release --obfuscate --split-debug-info=build/app/outputs/symbols --dart-define-from-file=env/dev.json
 ```
-*Luego abre `ios/Runner.xcworkspace` en Xcode para archivar y subir a la App Store.*
+
+#### 🚀 Entorno de Producción (Prod - Play Store)
+Comando oficial para el lanzamiento al público general:
+
+```bash
+flutter build appbundle --flavor prod --release --obfuscate --split-debug-info=build/app/outputs/symbols --dart-define-from-file=env/prod.json
+```
+
+#### 📱 Generación de APK rápido
+Si solo necesitas un archivo instalable para pruebas manuales rápidas:
+
+```bash
+# APK de Desarrollo
+flutter build apk --flavor dev --release --dart-define-from-file=env/dev.json
+
+# APK de Producción
+flutter build apk --flavor prod --release --dart-define-from-file=env/prod.json
+```
+*Los archivos se encontrarán en: `build/app/outputs/flutter-apk/`*
+
+#### 🌐 Web
+Para desplegar la versión web en tu servidor:
+
+```bash
+# Web de Desarrollo (sudokudev.anked.dev)
+flutter build web --release --dart-define-from-file=env/dev.json
+
+# Web de Producción (sudoku.anked.dev)
+flutter build web --release --dart-define-from-file=env/prod.json
+```
+*El resultado se encuentra en: `build/web/`*
+
+---
+
+## 🔔 Configuración de Notificaciones Push (FCM & Web Push)
+
+Este proyecto cuenta con soporte integrado para **Firebase Cloud Messaging (FCM)** en **Android** y **Web**.
+
+### 🌐 Certificado de Web Push (Clave VAPID)
+
+Para que las notificaciones push funcionen en la versión Web en sus respectivos entornos, debes configurar la clave pública **VAPID**:
+
+1. Ve a la **Consola de Firebase** -> **Configuración del proyecto** ⚙️.
+2. Abre la pestaña **Cloud Messaging**.
+3. Desplázate hasta la sección **Configuración web** (Web configuration).
+4. En **Certificados push web**, haz clic en **Generar par de claves**.
+5. Copia la clave pública generada y configúrala en el archivo de entorno respectivo:
+   - **Desarrollo**: Colócala en el campo `"VAPID_KEY"` dentro de [env/dev.json](file:///C:/Users/angel/Desktop/flutter/sudoku/flutter_sudoku/env/dev.json).
+   - **Producción**: Colócala en el campo `"VAPID_KEY"` dentro [env/prod.json](file:///C:/Users/angel/Desktop/flutter/sudoku/flutter_sudoku/env/prod.json).
+
+*(En el archivo `env/local.json`, puedes dejar el campo `"VAPID_KEY": ""` vacío; esto desactivará automáticamente y de forma segura las notificaciones web en local sin arrojar excepciones en tu entorno de depuración).*
 
 ---
 
 ## 🆔 Información del Proyecto
 
-- **Nombre:** Sudoku Master
-- **Package ID (Android/iOS):** `com.anked.sudoku_master`
-- **Tema Principal:** Azul Océano (#0F62FE)
+- **Nombre:** Sudoku Arena
+- **Package ID (Android):** `com.anked.dev.sudoku_arena`
+- **Flavors:** `dev`, `prod`
 
 ---
 Desarrollado con ❤️ para los amantes de los acertijos.
